@@ -1,5 +1,4 @@
-localhost
-
+172.16.2.51:4024
 # Remote Debugging Configuration
 # Provided by Daniel S. Buckstein
 # Only the first line of this file is used, and must have one of the following formats: 
