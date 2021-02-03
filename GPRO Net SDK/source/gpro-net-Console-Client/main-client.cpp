@@ -61,6 +61,11 @@ int main(int const argc, char const* const argv[])
 
 	printf("Enter server IP or hit enter for 127.0.0.1\n");
 	scanf("%s", str);
+
+	char name[16];
+	printf("Enter nickname (16 character max)\n");
+	printf("%s", str);
+	strncpy(name, str, 16);
 	if (str[0] == 0) {
 		strcpy(str, "172.16.2.64");
 	}
