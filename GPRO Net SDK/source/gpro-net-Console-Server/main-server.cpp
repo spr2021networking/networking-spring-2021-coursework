@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 
 #include "RakNet/RakPeerInterface.h"
@@ -36,7 +37,7 @@
 #include "RakNet/RakNetTypes.h"  // MessageID
 
 
-
+using namespace std;
 #define MAX_CLIENTS 10
 #define SERVER_PORT 7777
 
@@ -50,6 +51,7 @@ int main(int const argc, char const* const argv[])
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
 	bool isServer;
 	RakNet::Packet* packet;
+	ofstream serverLog;
 
 	//printf("(C) or (S)erver?\n");
 	//scanf("%s", str);
@@ -60,6 +62,7 @@ int main(int const argc, char const* const argv[])
 	isServer = true;
 	//}
 
+	serverLog.open("serverlog.txt");
 
 	// TODO - Add code body here
 	if (isServer)
@@ -126,6 +129,8 @@ int main(int const argc, char const* const argv[])
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
+				serverLog << rs.C_String(); 
+				serverLog << "\n";
 			}
 			break;
 
@@ -135,7 +140,7 @@ int main(int const argc, char const* const argv[])
 			}
 		}
 	}
-
+	serverLog.close();
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
 	return 0;
