@@ -26,7 +26,7 @@
 
 #include <cstdio>
 #include <stdlib.h>
-#include <string.h>
+#include <string>
 #include <iostream>
 #include <stdio.h>
 
@@ -46,6 +46,7 @@ enum GameMessages
 int main(int const argc, char const* const argv[])
 {
 	char inputBuffer[512];
+	std::string stringBuffer;
 	char ip[512];
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
 	bool isServer;
@@ -60,21 +61,32 @@ int main(int const argc, char const* const argv[])
 	peer->Startup(1, &sd, 1);
 	isServer = false;
 
-	printf("Enter server IP or hit enter for 127.0.0.1\n");
-	scanf("%s", inputBuffer);
-
-	if (inputBuffer[0] == 0) {
-		strcpy(inputBuffer, "172.16.2.64");
+	printf("Enter server IP or hit enter for 172.16.2.64\n");
+	//std::cin >> inputBuffer;
+	std::getline(std::cin, stringBuffer);
+	stringBuffer.copy(inputBuffer, stringBuffer.length());
+	if (stringBuffer.length() == 0)
+	{
+		inputBuffer[0] = 0;
 	}
+	if (inputBuffer[0] == 0) {
+
+		strcpy(inputBuffer, "172.16.2.64");
+		inputBuffer[12] = 0;
+		printf("Test\n");
+	}
+
 	strcpy(ip, inputBuffer);
 
+	//parse a name
 	char name[17];
 	printf("Enter nickname (16 character max)\n");
 	scanf("%s", inputBuffer);
 	strncpy(name, inputBuffer, 16);
 	name[16] = 0;
-	printf("%s\n", name);
-	printf("%i\n", (int)strnlen(inputBuffer, 16));
+
+	printf("%i\n", (int)sizeof(time_t));
+
 	printf("Starting the client.\n");
 	peer->Connect(ip, SERVER_PORT, 0, 0);
 
@@ -107,10 +119,11 @@ int main(int const argc, char const* const argv[])
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				if (!hasNameBeenSent)
 				{
+					RakNet::BitStream bsOut2;
 					hasNameBeenSent = true;
-					bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
-					bsOut.Write(name);
-					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+					bsOut2.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+					bsOut2.Write(name);
+					peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				}
 			}
 			break;
