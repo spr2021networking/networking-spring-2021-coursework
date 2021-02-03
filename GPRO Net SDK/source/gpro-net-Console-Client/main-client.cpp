@@ -45,7 +45,8 @@ enum GameMessages
 
 int main(int const argc, char const* const argv[])
 {
-	char str[512];
+	char inputBuffer[512];
+	char ip[512];
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
 	bool isServer;
 	RakNet::Packet* packet;
@@ -60,19 +61,24 @@ int main(int const argc, char const* const argv[])
 	isServer = false;
 
 	printf("Enter server IP or hit enter for 127.0.0.1\n");
-	scanf("%s", str);
+	scanf("%s", inputBuffer);
 
-	if (str[0] == 0) {
-		strcpy(str, "172.16.2.64");
+	if (inputBuffer[0] == 0) {
+		strcpy(inputBuffer, "172.16.2.64");
 	}
+	strcpy(ip, inputBuffer);
 
-	char name[16];
+	char name[17];
 	printf("Enter nickname (16 character max)\n");
-	printf("%s", str);
-	strncpy(name, str, 16);
-
+	scanf("%s", inputBuffer);
+	strncpy(name, inputBuffer, 16);
+	name[16] = 0;
+	printf("%s\n", name);
+	printf("%i\n", (int)strnlen(inputBuffer, 16));
 	printf("Starting the client.\n");
-	peer->Connect(str, SERVER_PORT, 0, 0);
+	peer->Connect(ip, SERVER_PORT, 0, 0);
+
+	bool hasNameBeenSent = false;
 	// TODO - Add code body here
 	while (1)
 	{
@@ -99,6 +105,13 @@ int main(int const argc, char const* const argv[])
 				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 				bsOut.Write("Hello world");
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				if (!hasNameBeenSent)
+				{
+					hasNameBeenSent = true;
+					bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+					bsOut.Write(name);
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
 			}
 			break;
 			case ID_NEW_INCOMING_CONNECTION:
