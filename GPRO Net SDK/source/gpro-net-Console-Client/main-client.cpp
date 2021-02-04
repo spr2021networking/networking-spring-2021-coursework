@@ -45,44 +45,33 @@ enum GameMessages
 
 int main(int const argc, char const* const argv[])
 {
-	char inputBuffer[512];
+	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
+	RakNet::Packet* packet;
+	RakNet::SocketDescriptor sd;
+
+	peer->Startup(1, &sd, 1);
+
+	//Use this for inputs
 	std::string stringBuffer;
 	char ip[512];
-	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
-	bool isServer;
-	RakNet::Packet* packet;
-	//printf("(C) or (S)erver?\n");
-	//scanf("%s", str);
-	//if ((str[0] == 'c') || (str[0] == 'C'))
-	//{
-		
-	//}
-	RakNet::SocketDescriptor sd;
-	peer->Startup(1, &sd, 1);
-	isServer = false;
+	char name[17];
 
-	printf("Enter server IP or hit enter for 172.16.2.64\n");
+	bool isServer = false;
+
+	printf("Enter server IP or hit enter for 172.16.2.57\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
-	stringBuffer.copy(inputBuffer, stringBuffer.length());
 	if (stringBuffer.length() == 0)
 	{
-		inputBuffer[0] = 0;
-	}
-	if (inputBuffer[0] == 0) {
-
-		strcpy(inputBuffer, "172.16.2.64");
-		inputBuffer[12] = 0;
-		printf("Test\n");
+		stringBuffer = "172.16.2.57\0";
 	}
 
-	strcpy(ip, inputBuffer);
+	stringBuffer.copy(ip, stringBuffer.length());
 
 	//parse a name
-	char name[17];
 	printf("Enter nickname (16 character max)\n");
-	scanf("%s", inputBuffer);
-	strncpy(name, inputBuffer, 16);
+	std::getline(std::cin, stringBuffer);
+	strncpy(name, stringBuffer.c_str(), 16);
 	name[16] = 0;
 
 	printf("%i\n", (int)sizeof(time_t));
