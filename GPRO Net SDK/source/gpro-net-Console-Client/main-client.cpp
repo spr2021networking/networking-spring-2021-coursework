@@ -144,6 +144,7 @@ int main(int const argc, char const* const argv[])
 
 			case ID_GAME_MESSAGE_1:
 			{
+				//would output a text message if we received it.
 				RakNet::RakString rs;
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
@@ -159,8 +160,7 @@ int main(int const argc, char const* const argv[])
 				message[16] = 0;
 
 				RakNet::BitStream bsOut2;
-				hasNameBeenSent = true;
-				bsOut2.Write((RakNet::MessageID)ID_GAME_MESSAGE_2);
+				bsOut2.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
 				bsOut2.Write(message);
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
