@@ -161,7 +161,7 @@ int main(int const argc, char const* const argv[])
 				serverLog << "\n";
 				RakNet::BitStream bsOut2;
 				bsOut2.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
-				bsOut2.Write(IPToUserName[packet->systemAddress] + " sent: " + temp);
+				bsOut2.Write(IPToUserName[packet->systemAddress] + " sent: " + temp + "\n");
 				bsOut2.Write("Enter Message");
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
