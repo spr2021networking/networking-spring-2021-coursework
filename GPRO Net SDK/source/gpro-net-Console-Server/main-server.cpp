@@ -145,7 +145,7 @@ int main(int const argc, char const* const argv[])
 				serverLog << "\n";
 				RakNet::BitStream bsOut2;
 				bsOut2.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
-				bsOut2.Write("Welcome, " + temp + "! Please enter a message.");
+				bsOut2.Write("Welcome, ! Please enter a message.");
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
@@ -161,9 +161,10 @@ int main(int const argc, char const* const argv[])
 				serverLog << "\n";
 				RakNet::BitStream bsOut2;
 				bsOut2.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
-				bsOut2.Write(IPToUserName[packet->systemAddress] + " sent: " + temp + "\n");
+				//bsOut2.Write(IPToUserName[packet->systemAddress] + " sent: " + temp + "\n");
 				bsOut2.Write("Enter Message");
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				break;
 			}
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
