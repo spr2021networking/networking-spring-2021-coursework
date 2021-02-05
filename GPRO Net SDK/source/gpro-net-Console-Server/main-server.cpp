@@ -30,6 +30,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
+#include <map>
 
 #include "RakNet/RakPeerInterface.h"
 #include "RakNet/MessageIdentifiers.h"
@@ -43,7 +44,8 @@ using namespace std;
 
 enum GameMessages
 {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
+	ID_GAME_MESSAGE_2
 };
 
 int main(int const argc, char const* const argv[])
@@ -52,6 +54,8 @@ int main(int const argc, char const* const argv[])
 	bool isServer;
 	RakNet::Packet* packet;
 	ofstream serverLog;
+
+	map<RakNet::SystemAddress, string> IPToUserName;
 
 	//printf("(C) or (S)erver?\n");
 	//scanf("%s", str);
@@ -63,6 +67,10 @@ int main(int const argc, char const* const argv[])
 	//}
 
 	serverLog.open("serverlog.txt");
+	if (serverLog.is_open())
+	{
+		printf("file exists \n");
+	}
 
 	// TODO - Add code body here
 	if (isServer)
@@ -74,6 +82,7 @@ int main(int const argc, char const* const argv[])
 
 	while (1)
 	{
+		serverLog.open("serverlog.txt", std::ios_base::app);
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			switch (packet->data[0])
@@ -129,8 +138,12 @@ int main(int const argc, char const* const argv[])
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
-				serverLog << rs.C_String(); 
+				string temp = rs.C_String();
+				serverLog << temp;
 				serverLog << "\n";
+				RakNet::BitStream bsOut2;
+				bsOut2.Write((RakNet::MessageID)ID_GAME_MESSAGE_2);
+				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
 
@@ -139,8 +152,9 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
+		serverLog.close();
 	}
-	serverLog.close();
+	
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
 	return 0;
