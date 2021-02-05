@@ -86,6 +86,7 @@ int main(int const argc, char const* const argv[])
 		serverLog.open("serverlog.txt", std::ios_base::app);
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
+			RakNet::BitStream bsOut;
 			switch (packet->data[0])
 			{
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
@@ -103,7 +104,6 @@ int main(int const argc, char const* const argv[])
 
 				// Use a BitStream to write a custom user message
 				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
-				RakNet::BitStream bsOut;
 				bsOut.Write((RakNet::MessageID)ID_USERNAME);
 				bsOut.Write("Hello world");
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
@@ -143,10 +143,9 @@ int main(int const argc, char const* const argv[])
 				IPToUserName[packet->systemAddress] = temp;
 				serverLog << temp;
 				serverLog << "\n";
-				RakNet::BitStream bsOut2;
-				bsOut2.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
-				bsOut2.Write("Welcome, ! Please enter a message.");
-				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				bsOut.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
+				bsOut.Write("Welcome, ! Please enter a message.");
+				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
 			case ID_RECEIVE_MESSAGE:
@@ -159,11 +158,10 @@ int main(int const argc, char const* const argv[])
 				string temp = rs.C_String();
 				serverLog << temp;
 				serverLog << "\n";
-				RakNet::BitStream bsOut2;
-				bsOut2.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
+				bsOut.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
 				//bsOut2.Write(IPToUserName[packet->systemAddress] + " sent: " + temp + "\n");
-				bsOut2.Write("Enter Message");
-				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				bsOut.Write("Enter Message");
+				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				break;
 			}
 			default:
