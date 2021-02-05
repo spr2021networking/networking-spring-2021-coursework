@@ -40,8 +40,9 @@
 
 enum GameMessages
 {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
-	ID_GAME_MESSAGE_2
+	ID_USERNAME = ID_USER_PACKET_ENUM + 1,
+	ID_RECEIVE_MESSAGE,
+	ID_PROMPT_MESSAGE
 };
 
 int main(int const argc, char const* const argv[])
@@ -106,14 +107,14 @@ int main(int const argc, char const* const argv[])
 				// Use a BitStream to write a custom user message
 				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
 				RakNet::BitStream bsOut;
-				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				bsOut.Write((RakNet::MessageID)ID_USERNAME);
 				bsOut.Write("Hello world");
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				if (!hasNameBeenSent)
 				{
 					RakNet::BitStream bsOut2;
 					hasNameBeenSent = true;
-					bsOut2.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+					bsOut2.Write((RakNet::MessageID)ID_USERNAME);
 					bsOut2.Write(name);
 					peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				}
@@ -142,7 +143,7 @@ int main(int const argc, char const* const argv[])
 				}
 				break;
 
-			case ID_GAME_MESSAGE_1:
+			case ID_USERNAME:
 			{
 				//would output a text message if we received it.
 				RakNet::RakString rs;
@@ -153,14 +154,20 @@ int main(int const argc, char const* const argv[])
 			}
 				break;
 
-			case ID_GAME_MESSAGE_2:
+			case ID_PROMPT_MESSAGE:
 			{
+				RakNet::RakString rs;
+				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				bsIn.Read(rs);
+				printf("%s\n", rs.C_String());
+
 				std::getline(std::cin, stringBuffer);
 				strncpy(message, stringBuffer.c_str(), 16);
 				message[16] = 0;
 
 				RakNet::BitStream bsOut2;
-				bsOut2.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				bsOut2.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
 				bsOut2.Write(message);
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}

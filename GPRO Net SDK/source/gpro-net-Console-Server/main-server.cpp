@@ -44,8 +44,9 @@ using namespace std;
 
 enum GameMessages
 {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
-	ID_GAME_MESSAGE_2
+	ID_USERNAME = ID_USER_PACKET_ENUM + 1,
+	ID_RECEIVE_MESSAGE,
+	ID_PROMPT_MESSAGE,
 };
 
 int main(int const argc, char const* const argv[])
@@ -103,7 +104,7 @@ int main(int const argc, char const* const argv[])
 				// Use a BitStream to write a custom user message
 				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
 				RakNet::BitStream bsOut;
-				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
+				bsOut.Write((RakNet::MessageID)ID_USERNAME);
 				bsOut.Write("Hello world");
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
@@ -131,7 +132,24 @@ int main(int const argc, char const* const argv[])
 				}
 				break;
 
-			case ID_GAME_MESSAGE_1:
+			case ID_USERNAME:
+			{
+				RakNet::RakString rs;
+				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				bsIn.Read(rs);
+				printf("%s\n", rs.C_String());
+				string temp = rs.C_String();
+				IPToUserName[packet->systemAddress] = temp;
+				serverLog << temp;
+				serverLog << "\n";
+				RakNet::BitStream bsOut2;
+				bsOut2.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
+				bsOut2.Write("Enter Message");
+				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			}
+			break;
+			case ID_RECEIVE_MESSAGE:
 			{
 				RakNet::RakString rs;
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -142,11 +160,11 @@ int main(int const argc, char const* const argv[])
 				serverLog << temp;
 				serverLog << "\n";
 				RakNet::BitStream bsOut2;
-				bsOut2.Write((RakNet::MessageID)ID_GAME_MESSAGE_2);
+				bsOut2.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
+				bsOut2.Write(IPToUserName[packet->systemAddress] + " sent: " + temp);
+				bsOut2.Write("Enter Message");
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
-			break;
-
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
