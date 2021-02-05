@@ -162,8 +162,9 @@ int main(int const argc, char const* const argv[])
 				//bsOut2.Write(IPToUserName[packet->systemAddress] + " sent: " + temp + "\n");
 				bsOut.Write("Enter Message");
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				break;
+				
 			}
+			break;
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
