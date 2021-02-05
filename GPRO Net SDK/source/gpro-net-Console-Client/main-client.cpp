@@ -40,7 +40,8 @@
 
 enum GameMessages
 {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,
+	ID_GAME_MESSAGE_2
 };
 
 int main(int const argc, char const* const argv[])
@@ -55,6 +56,7 @@ int main(int const argc, char const* const argv[])
 	std::string stringBuffer;
 	char ip[512];
 	char name[17];
+	char message[17];
 
 	bool isServer = false;
 
@@ -66,7 +68,8 @@ int main(int const argc, char const* const argv[])
 		stringBuffer = "172.16.2.57\0";
 	}
 
-	stringBuffer.copy(ip, stringBuffer.length());
+	stringBuffer.copy(ip, stringBuffer.length() + 1);
+	ip[stringBuffer.length()] = 0;
 
 	//parse a name
 	printf("Enter nickname (16 character max)\n");
@@ -147,7 +150,21 @@ int main(int const argc, char const* const argv[])
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
 			}
-			break;
+				break;
+
+			case ID_GAME_MESSAGE_2:
+			{
+				std::getline(std::cin, stringBuffer);
+				strncpy(message, stringBuffer.c_str(), 16);
+				message[16] = 0;
+
+				RakNet::BitStream bsOut2;
+				hasNameBeenSent = true;
+				bsOut2.Write((RakNet::MessageID)ID_GAME_MESSAGE_2);
+				bsOut2.Write(message);
+				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			}
+				break;
 
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
