@@ -56,7 +56,7 @@ int main(int const argc, char const* const argv[])
 	RakNet::Packet* packet;
 	ofstream serverLog;
 
-	map<RakNet::SystemAddress, string> IPToUserName;
+	map<string, string> IPToUserName;
 
 	//printf("(C) or (S)erver?\n");
 	//scanf("%s", str);
@@ -126,6 +126,9 @@ int main(int const argc, char const* const argv[])
 			case ID_CONNECTION_LOST:
 				if (isServer) {
 					printf("A client lost the connection.\n");
+					//RakNet::BitStream bsIn(packet->data, packet->length, false);
+					//get username w/ systemaddress
+					//search map and then remove
 				}
 				else {
 					printf("Connection lost.\n");
@@ -140,11 +143,13 @@ int main(int const argc, char const* const argv[])
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
 				string temp = rs.C_String();
-				IPToUserName[packet->systemAddress] = temp;
+				printf("%s\n", packet->systemAddress.ToString());
+				IPToUserName[packet->systemAddress.ToString()] = temp;
 				serverLog << temp;
 				serverLog << "\n";
+				temp = "Welcome, " + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
 				bsOut.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
-				bsOut.Write("Welcome, ! Please enter a message.");
+				bsOut.Write(temp.c_str());
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
@@ -159,7 +164,8 @@ int main(int const argc, char const* const argv[])
 				serverLog << temp;
 				serverLog << "\n";
 				bsOut.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
-				//bsOut2.Write(IPToUserName[packet->systemAddress] + " sent: " + temp + "\n");
+				temp = IPToUserName[packet->systemAddress.ToString()] + " sent: " + temp;
+				bsOut.Write(temp.c_str());
 				bsOut.Write("Enter Message");
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				
