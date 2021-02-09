@@ -34,6 +34,7 @@
 #include "RakNet/MessageIdentifiers.h"
 #include "RakNet/BitStream.h"
 #include "RakNet/RakNetTypes.h"  // MessageID
+#include "RakNet/GetTime.h"
 
 #define MAX_CLIENTS 10
 #define SERVER_PORT 7777
@@ -86,19 +87,27 @@ int main(int const argc, char const* const argv[])
 
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
 	ip[stringBuffer.length()] = 0;
-
-	//parse a name
-	printf("Enter nickname (16 character max)\n");
-	std::getline(std::cin, stringBuffer);
-	printf("Removing any spaces that may exist ...");
-	stringTrim(stringBuffer);
-	printf("Removing any extra characters...");
-	stringBuffer = stringBuffer.substr(0, 16);
+	stringBuffer = "";
+	while (stringBuffer.length() == 0)
+	{
+		//parse a name
+		printf("Enter nickname (16 character max)\n");
+		std::getline(std::cin, stringBuffer);
+		printf("Removing any spaces that may exist ...\n");
+		stringTrim(stringBuffer);
+		printf("Removing any extra characters...\n");
+		stringBuffer = stringBuffer.substr(0, min(stringBuffer.length(), 16));
+		if (stringBuffer.length() == 0)
+		{
+			printf("Username was empty, please try again. ");
+		}
+	}
 	
 	strcpy(name, stringBuffer.c_str());
 	name[16] = 0;
 
-	//printf("%i\n", (int)sizeof(time_t));
+	printf("%i\n", (int)sizeof(RakNet::Time));
+	printf("%i\n", (int)sizeof(char));
 
 	printf("Starting the client.\n");
 	peer->Connect(ip, SERVER_PORT, 0, 0);
@@ -188,6 +197,7 @@ int main(int const argc, char const* const argv[])
 
 				RakNet::BitStream bsOut2;
 				bsOut2.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
+				bsOut2.Write(RakNet::GetTime());
 				bsOut2.Write(message);
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
