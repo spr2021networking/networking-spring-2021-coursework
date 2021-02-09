@@ -45,6 +45,21 @@ enum GameMessages
 	ID_PROMPT_MESSAGE
 };
 
+/// <summary>
+/// Takes in a string reference (pointers don't allow for array access as easily) and removes all spaces.
+/// </summary>
+/// <param name="strToTrim"></param>
+void stringTrim(std::string& strToTrim)
+{
+	for (int i = 0; i < strToTrim.length(); i++)
+	{
+		if (std::isspace(strToTrim[i]))
+		{
+			strToTrim.erase(i, 1);
+		}
+	}
+}
+
 int main(int const argc, char const* const argv[])
 {
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
@@ -61,12 +76,12 @@ int main(int const argc, char const* const argv[])
 
 	bool isServer = false;
 
-	printf("Enter server IP or hit enter for 172.16.2.68\n");
+	printf("Enter server IP or hit enter for 172.16.2.186\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.68\0";
+		stringBuffer = "172.16.2.186\0";
 	}
 
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
@@ -75,10 +90,15 @@ int main(int const argc, char const* const argv[])
 	//parse a name
 	printf("Enter nickname (16 character max)\n");
 	std::getline(std::cin, stringBuffer);
-	strncpy(name, stringBuffer.c_str(), 16);
+	printf("Removing any spaces that may exist ...");
+	stringTrim(stringBuffer);
+	printf("Removing any extra characters...");
+	stringBuffer = stringBuffer.substr(0, 16);
+	
+	strcpy(name, stringBuffer.c_str());
 	name[16] = 0;
 
-	printf("%i\n", (int)sizeof(time_t));
+	//printf("%i\n", (int)sizeof(time_t));
 
 	printf("Starting the client.\n");
 	peer->Connect(ip, SERVER_PORT, 0, 0);
