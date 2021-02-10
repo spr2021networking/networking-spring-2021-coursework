@@ -164,7 +164,7 @@ int main(int const argc, char const* const argv[])
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
-			case ID_RECEIVE_MESSAGE:
+			case ID_TIMESTAMP:
 			{
 				RakNet::RakString rs;
 				RakNet::Time time;

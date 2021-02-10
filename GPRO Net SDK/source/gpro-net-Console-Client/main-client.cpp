@@ -78,12 +78,12 @@ int main(int const argc, char const* const argv[])
 
 	bool isServer = false;
 
-	printf("Enter server IP or hit enter for 172.16.2.69\n");
+	printf("Enter server IP or hit enter for 172.16.2.65\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.69\0";
+		stringBuffer = "172.16.2.65\0";
 	}
 
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
