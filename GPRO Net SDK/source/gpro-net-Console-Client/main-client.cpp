@@ -195,16 +195,18 @@ int main(int const argc, char const* const argv[])
 				std::getline(std::cin, stringBuffer);
 				strncpy(message, stringBuffer.c_str(), 16);
 				message[16] = 0;
+				RakNet::RakString messageRk("%s", message);
 
 				RakNet::Time timeStamp;
 				RakNet::MessageID useTimeStamp;
+				RakNet::MessageID messageID;
 				useTimeStamp = ID_TIMESTAMP;
 				timeStamp = RakNet::GetTime();
 				RakNet::BitStream bsOut2;
 				bsOut2.Write(useTimeStamp);
 				bsOut2.Write(timeStamp);
-				bsOut2.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
-				bsOut2.Write(message);
+				bsOut2.Write(messageID);
+				bsOut2.Write(messageRk);
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 				break;
