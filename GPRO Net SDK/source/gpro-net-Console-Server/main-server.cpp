@@ -167,7 +167,10 @@ int main(int const argc, char const* const argv[])
 			{
 				RakNet::RakString rs;
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				char vals[sizeof(RakNet::Time)];
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				bsIn.Read(vals, sizeof(RakNet::Time));
+				RakNet::Time time = *(RakNet::Time*)&vals;
 				bsIn.IgnoreBytes(sizeof(RakNet::Time));
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
