@@ -171,7 +171,7 @@ int main(int const argc, char const* const argv[])
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				bsIn.Read(vals, sizeof(RakNet::Time));
 				RakNet::Time time = *(RakNet::Time*)&vals;
-				bsIn.IgnoreBytes(sizeof(RakNet::Time));
+				bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
 				string temp = rs.C_String();
