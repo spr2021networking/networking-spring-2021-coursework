@@ -168,15 +168,17 @@ int main(int const argc, char const* const argv[])
 			{
 				RakNet::RakString rs;
 				RakNet::Time time;
+				RakNet::MessageID message2;
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
 				//char vals[sizeof(RakNet::Time)];
-				bsIn.IgnoreBytes(sizeof(RakNet::Time));
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				//bsIn.Read(vals, sizeof(RakNet::Time));
 				//RakNet::Time time = *(RakNet::Time*)&vals;
 				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
 				bsIn.Read(time);
 				printf("%" PRINTF_64_BIT_MODIFIER "u ", time);
-				bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
+				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
+				bsIn.Read(message2);
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
 				string temp = rs.C_String();
