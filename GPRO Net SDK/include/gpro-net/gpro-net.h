@@ -25,10 +25,13 @@
 #ifndef _GPRO_NET_H_
 #define _GPRO_NET_H_
 
+#include "RakNet/RakNetTypes.h"  // MessageID
+
 typedef struct ChatMessage ChatMessage;
 
 struct ChatMessage
 {
+	RakNet::MessageID id;
 	char message[17];
 };
 

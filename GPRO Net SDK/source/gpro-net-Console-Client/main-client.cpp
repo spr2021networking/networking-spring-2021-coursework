@@ -212,6 +212,7 @@ int main(int const argc, char const* const argv[])
 				message[16] = 0;
 				ChatMessage cMessage;
 				strncpy(cMessage.message, message, 17);
+				cMessage.id = ID_RECEIVE_MESSAGE;
 				RakNet::BitStream bsOut2;
 				bsOut2.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
 				bsOut2.Write((char*)&cMessage);
