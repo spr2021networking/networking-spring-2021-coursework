@@ -77,12 +77,12 @@ int main(int const argc, char const* const argv[])
 
 	bool isServer = false;
 
-	printf("Enter server IP or hit enter for 172.16.2.59\n");
+	printf("Enter server IP or hit enter for 172.16.2.197\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.59\0";
+		stringBuffer = "172.16.2.197\0";
 	}
 
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
@@ -210,11 +210,11 @@ int main(int const argc, char const* const argv[])
 				std::getline(std::cin, stringBuffer);
 				strncpy(message, stringBuffer.c_str(), 16);
 				message[16] = 0;
-
+				ChatMessage cMessage;
+				strncpy(cMessage.message, message, 17);
 				RakNet::BitStream bsOut2;
 				bsOut2.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
-				bsOut2.Write(RakNet::GetTime());
-				bsOut2.Write(message);
+				bsOut2.Write((char*)&cMessage);
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 				break;
