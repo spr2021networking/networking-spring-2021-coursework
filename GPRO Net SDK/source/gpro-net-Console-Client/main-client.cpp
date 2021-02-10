@@ -214,7 +214,6 @@ int main(int const argc, char const* const argv[])
 				strncpy(cMessage.message, message, 17);
 				cMessage.id = ID_RECEIVE_MESSAGE;
 				RakNet::BitStream bsOut2;
-				bsOut2.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
 				bsOut2.Write((char*)&cMessage);
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
