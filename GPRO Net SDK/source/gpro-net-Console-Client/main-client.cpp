@@ -77,12 +77,12 @@ int main(int const argc, char const* const argv[])
 
 	bool isServer = false;
 
-	printf("Enter server IP or hit enter for 172.16.2.69\n");
+	printf("Enter server IP or hit enter for 172.16.2.59\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.69\0";
+		stringBuffer = "172.16.2.59\0";
 	}
 
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
@@ -113,6 +113,22 @@ int main(int const argc, char const* const argv[])
 	peer->Connect(ip, SERVER_PORT, 0, 0);
 
 	bool hasNameBeenSent = false;
+	//if (true)
+	//{
+	//	RakNet::BitStream outTest;
+	//	RakNet::Time time = RakNet::GetTime();
+	//	char* bytes = (char*)malloc(sizeof(char) * 1000);
+	//	char* timeStr = (char*)&time;
+	//	outTest.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
+	//	outTest.Write(timeStr, sizeof(RakNet::Time));
+	//	outTest.Write("Hello");
+	//	//printf("%i\n", (int)(sizeof(RakNet::MessageID) + 1 + sizeof(RakNet::Time) + 1));
+	//	RakNet::BitStream inTest(outTest.GetData(), outTest.GetNumberOfBytesUsed(), true);
+	//	inTest.IgnoreBytes(sizeof(RakNet::MessageID));
+	//	RakNet::RakString* strr = new RakNet::RakString();
+	//	inTest.Read(*strr);
+	//	int i = 0;
+	//}
 	// TODO - Add code body here
 	while (1)
 	{

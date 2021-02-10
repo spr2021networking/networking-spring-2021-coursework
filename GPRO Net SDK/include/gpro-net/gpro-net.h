@@ -25,6 +25,12 @@
 #ifndef _GPRO_NET_H_
 #define _GPRO_NET_H_
 
+typedef struct ChatMessage ChatMessage;
+
+struct ChatMessage
+{
+	char message[17];
+};
 
 
 #endif	// !_GPRO_NET_H_
