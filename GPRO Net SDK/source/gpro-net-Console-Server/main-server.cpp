@@ -126,7 +126,17 @@ int main(int const argc, char const* const argv[])
 			case ID_CONNECTION_LOST:
 				if (isServer) {
 					printf("A client lost the connection.\n");
-					//RakNet::BitStream bsIn(packet->data, packet->length, false);
+					RakNet::RakString rs;
+					RakNet::BitStream bsIn(packet->data, packet->length, false);
+					bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+					bsIn.Read(rs);
+					string temp = rs.C_String();
+					map <string, string>::iterator userNameToRemove;
+					userNameToRemove = IPToUserName.find(temp);
+					if (userNameToRemove != IPToUserName.end())
+					{
+						IPToUserName.erase(userNameToRemove);
+					}
 					//get username w/ systemaddress
 					//search map and then remove
 				}
