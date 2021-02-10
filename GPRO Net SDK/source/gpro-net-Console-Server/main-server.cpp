@@ -165,16 +165,21 @@ int main(int const argc, char const* const argv[])
 			break;
 			case ID_RECEIVE_MESSAGE:
 			{
+				//store time as raknet time variable, not weird
+				//too much size allocated?
 				RakNet::RakString rs;
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
-				char vals[sizeof(RakNet::Time)];
-				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-				bsIn.Read(vals, sizeof(RakNet::Time));
-				RakNet::Time time = *(RakNet::Time*)&vals;
-				bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
-				bsIn.Read(rs);
-				printf("%s\n", rs.C_String());
-				string temp = rs.C_String();
+				/*char vals[sizeof(RakNet::Time)];*/
+				//bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				/*bsIn.Read(vals, sizeof(RakNet::Time));
+				RakNet::Time time = *(RakNet::Time*)&vals;*/
+				/*bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));*/
+				ChatMessage* cMessage = (ChatMessage*)packet->data;
+				//ChatMessage cMessage;
+				/*cMessage->message[16] = 0;
+				bsIn.Read(cMessage);*/
+				printf("%s\n", cMessage->message);
+				string temp = cMessage->message;
 				serverLog << temp;
 				serverLog << "\n";
 				bsOut.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
