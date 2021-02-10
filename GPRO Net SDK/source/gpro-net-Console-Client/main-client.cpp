@@ -68,6 +68,7 @@ int main(int const argc, char const* const argv[])
 	RakNet::SocketDescriptor sd;
 
 	peer->Startup(1, &sd, 1);
+	peer->SetOccasionalPing(true);
 
 	//Use this for inputs
 	std::string stringBuffer;
@@ -195,9 +196,14 @@ int main(int const argc, char const* const argv[])
 				strncpy(message, stringBuffer.c_str(), 16);
 				message[16] = 0;
 
+				RakNet::Time timeStamp;
+				RakNet::MessageID useTimeStamp;
+				useTimeStamp = ID_TIMESTAMP;
+				timeStamp = RakNet::GetTime();
 				RakNet::BitStream bsOut2;
+				bsOut2.Write(useTimeStamp);
+				bsOut2.Write(timeStamp);
 				bsOut2.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
-				bsOut2.Write(RakNet::GetTime());
 				bsOut2.Write(message);
 				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}

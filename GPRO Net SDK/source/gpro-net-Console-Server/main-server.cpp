@@ -64,6 +64,7 @@ int main(int const argc, char const* const argv[])
 	//{
 	RakNet::SocketDescriptor sd(SERVER_PORT, 0);
 	peer->Startup(MAX_CLIENTS, &sd, 1);
+	peer->SetOccasionalPing(true);
 	isServer = true;
 	//}
 
@@ -166,11 +167,15 @@ int main(int const argc, char const* const argv[])
 			case ID_RECEIVE_MESSAGE:
 			{
 				RakNet::RakString rs;
+				RakNet::Time time;
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
-				char vals[sizeof(RakNet::Time)];
-				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-				bsIn.Read(vals, sizeof(RakNet::Time));
-				RakNet::Time time = *(RakNet::Time*)&vals;
+				//char vals[sizeof(RakNet::Time)];
+				bsIn.IgnoreBytes(sizeof(RakNet::Time));
+				//bsIn.Read(vals, sizeof(RakNet::Time));
+				//RakNet::Time time = *(RakNet::Time*)&vals;
+				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
+				bsIn.Read(time);
+				printf("%" PRINTF_64_BIT_MODIFIER "u ", time);
 				bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
