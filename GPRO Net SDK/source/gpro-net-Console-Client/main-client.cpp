@@ -74,7 +74,7 @@ int main(int const argc, char const* const argv[])
 	std::string stringBuffer;
 	char ip[512];
 	char name[17];
-	char message[17];
+	char message[129];
 
 	bool isServer = false;
 

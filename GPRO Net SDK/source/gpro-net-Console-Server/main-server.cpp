@@ -202,8 +202,18 @@ int main(int const argc, char const* const argv[])
 				temp = IPToUserName[packet->systemAddress.ToString()] + " sent: " + temp;
 				bsOut.Write(temp.c_str());
 				bsOut.Write("Enter Message (everything before the first space is the user the message is sent to)");
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				
+				if (strcmp(temp.c_str(), "all") == 0 || strcmp(temp.c_str(), "server") == 0)
+				{
+					map<string, string>::iterator it;
+					for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+					{
+						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+					}
+				}
+				else
+				{
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
 			}
 			break;
 			default:
