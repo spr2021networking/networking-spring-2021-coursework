@@ -25,6 +25,20 @@
 #ifndef _GPRO_NET_H_
 #define _GPRO_NET_H_
 
+#include <stdlib.h>
+
+char* chopStr(char* in, int length, char delim)
+{
+	for (int i = 0; i < length; i++)
+	{
+		if (in[i] == delim)
+		{
+			in[i] = 0;
+			return in + i + 1;
+		}
+	}
+	return in;
+}
 
 
 #endif	// !_GPRO_NET_H_
