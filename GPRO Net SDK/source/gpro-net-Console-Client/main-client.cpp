@@ -35,6 +35,7 @@
 #include "RakNet/BitStream.h"
 #include "RakNet/RakNetTypes.h"  // MessageID
 #include "RakNet/GetTime.h"
+#include "Windows.h"
 
 #define MAX_CLIENTS 10
 #define SERVER_PORT 7777
@@ -216,6 +217,22 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
+		bool hasInput = false;
+		for (int i = VK_SPACE; i <= 'Z'; i++)
+		{
+			short ks = GetKeyState(i) >> 8;
+			if (ks != 0)
+			{
+				hasInput = true;
+				break;
+			}
+		}
+		if (hasInput)
+		{
+			std::getline(std::cin, stringBuffer);
+			//get input
+		}
+
 	}
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
