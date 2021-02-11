@@ -88,7 +88,21 @@ int main(int const argc, char const* const argv[])
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			RakNet::BitStream bsOut;
-			switch (packet->data[0])
+			RakNet::Time time;
+			int idIndex = 0;
+			RakNet::BitStream bsIn(packet->data, packet->length, false);
+			if (packet->data[0] == ID_TIMESTAMP)
+			{
+				//char vals[sizeof(RakNet::Time)];
+				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				//bsIn.Read(vals, sizeof(RakNet::Time));
+				//RakNet::Time time = *(RakNet::Time*)&vals;
+				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
+				bsIn.Read(time);
+				idIndex += sizeof(RakNet::MessageID) + sizeof(RakNet::Time);
+			}
+
+			switch (packet->data[idIndex])
 			{
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
 				printf("Another client has disconnected.\n");
@@ -128,7 +142,7 @@ int main(int const argc, char const* const argv[])
 				if (isServer) {
 					printf("A client lost the connection.\n");
 					RakNet::RakString rs;
-					RakNet::BitStream bsIn(packet->data, packet->length, false);
+					//RakNet::BitStream bsIn(packet->data, packet->length, false);
 					bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 					bsIn.Read(rs);
 					string temp = rs.C_String();
@@ -149,7 +163,7 @@ int main(int const argc, char const* const argv[])
 			case ID_USERNAME:
 			{
 				RakNet::RakString rs;
-				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				//RakNet::BitStream bsIn(packet->data, packet->length, false);
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
@@ -164,12 +178,11 @@ int main(int const argc, char const* const argv[])
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
-			case ID_TIMESTAMP:
+			case ID_RECEIVE_MESSAGE:
 			{
 				RakNet::RakString rs;
-				RakNet::Time time;
 				RakNet::MessageID message2;
-				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				//RakNet::BitStream bsIn(packet->data, packet->length, false);
 				//char vals[sizeof(RakNet::Time)];
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				//bsIn.Read(vals, sizeof(RakNet::Time));
