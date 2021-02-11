@@ -184,23 +184,24 @@ int main(int const argc, char const* const argv[])
 				RakNet::MessageID message2;
 				//RakNet::BitStream bsIn(packet->data, packet->length, false);
 				//char vals[sizeof(RakNet::Time)];
-				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				//bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				//bsIn.Read(vals, sizeof(RakNet::Time));
 				//RakNet::Time time = *(RakNet::Time*)&vals;
 				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
-				bsIn.Read(time);
+				//bsIn.Read(time);
 				printf("%" PRINTF_64_BIT_MODIFIER "u ", time);
 				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
 				bsIn.Read(message2);
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
 				string temp = rs.C_String();
+				string newString = chopStr((char*)temp.c_str(), (int)temp.length(), ' ');
 				serverLog << temp;
 				serverLog << "\n";
 				bsOut.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
 				temp = IPToUserName[packet->systemAddress.ToString()] + " sent: " + temp;
 				bsOut.Write(temp.c_str());
-				bsOut.Write("Enter Message");
+				bsOut.Write("Enter Message (everything before the first space is the user the message is sent to)");
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				
 			}
