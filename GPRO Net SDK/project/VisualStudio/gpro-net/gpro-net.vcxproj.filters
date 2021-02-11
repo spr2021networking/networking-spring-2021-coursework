@@ -20,7 +20,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\source\gpro-net\gpro-net.c">
+    <ClCompile Include="..\..\..\source\gpro-net\gpro-net.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

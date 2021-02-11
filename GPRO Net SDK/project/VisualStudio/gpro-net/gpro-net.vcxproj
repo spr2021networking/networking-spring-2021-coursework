@@ -178,7 +178,7 @@
     <ClInclude Include="..\..\..\include\gpro-net\gpro-net.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\source\gpro-net\gpro-net.c" />
+    <ClCompile Include="..\..\..\source\gpro-net\gpro-net.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

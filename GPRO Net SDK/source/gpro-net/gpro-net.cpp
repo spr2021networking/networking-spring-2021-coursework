@@ -23,3 +23,13 @@
 */
 
 #include "gpro-net/gpro-net.h"
+#include "RakNet/RakString.h"
+
+typedef struct ChatMessage ChatMessage;
+struct ChatMessage
+{
+	bool isPublic;
+	bool isCommand;
+	RakNet::RakString recipient;
+	RakNet::RakString message;
+};
