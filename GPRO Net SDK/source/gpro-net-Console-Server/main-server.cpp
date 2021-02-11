@@ -26,7 +26,8 @@
 
 #include <cstdio>
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> //these two are actually different! This one's for C, the one below is for C++
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <stdio.h>
@@ -173,7 +174,7 @@ int main(int const argc, char const* const argv[])
 				serverLog << temp;
 				serverLog << "\n";
 				temp = "Welcome, " + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
-				bsOut.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
+				bsOut.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
 				bsOut.Write(temp.c_str());
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
@@ -198,11 +199,22 @@ int main(int const argc, char const* const argv[])
 				string newString = chopStr((char*)temp.c_str(), (int)temp.length(), ' ');
 				serverLog << temp;
 				serverLog << "\n";
-				bsOut.Write((RakNet::MessageID)ID_PROMPT_MESSAGE);
-				temp = IPToUserName[packet->systemAddress.ToString()] + " sent: " + temp;
-				bsOut.Write(temp.c_str());
-				bsOut.Write("Enter Message (everything before the first space is the user the message is sent to)");
-				if (strcmp(temp.c_str(), "all") == 0 || strcmp(temp.c_str(), "server") == 0)
+				bsOut.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
+				string output = "[";
+				output = output + std::to_string(time);
+				output = output + "] " + IPToUserName[packet->systemAddress.ToString()]; //need to make sure we don't get an invalid user!!
+				bool dm = temp != newString && strcmp(temp.c_str(), "all") != 0 && strcmp(temp.c_str(), "server") != 0;
+				if (dm)
+				{
+					output += " (privately)";
+				}
+				else
+				{
+					output += " (publicly)";
+				}
+				output += ": " + newString;
+				bsOut.Write(output.c_str());
+				if (!dm)
 				{
 					map<string, string>::iterator it;
 					for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)

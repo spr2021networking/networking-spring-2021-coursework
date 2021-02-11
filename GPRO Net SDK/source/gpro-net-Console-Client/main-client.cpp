@@ -79,12 +79,12 @@ int main(int const argc, char const* const argv[])
 
 	bool isServer = false;
 
-	printf("Enter server IP or hit enter for 172.16.2.61\n");
+	printf("Enter server IP or hit enter for 172.16.2.51\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.61\0";
+		stringBuffer = "172.16.2.51\0";
 	}
 
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
@@ -115,6 +115,8 @@ int main(int const argc, char const* const argv[])
 	peer->Connect(ip, SERVER_PORT, 0, 0);
 
 	bool hasNameBeenSent = false;
+
+	RakNet::SystemAddress serverAddress;
 	// TODO - Add code body here
 	while (1)
 	{
@@ -147,7 +149,7 @@ int main(int const argc, char const* const argv[])
 					hasNameBeenSent = true;
 					bsOut2.Write((RakNet::MessageID)ID_USERNAME);
 					bsOut2.Write(name);
-					peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+					peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress = packet->systemAddress, false);
 				}
 			}
 			break;
@@ -185,30 +187,13 @@ int main(int const argc, char const* const argv[])
 			}
 				break;
 
-			case ID_PROMPT_MESSAGE:
+			case ID_RECEIVE_MESSAGE:
 			{
 				RakNet::RakString rs;
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				bsIn.Read(rs);
 				printf("%s\n", rs.C_String());
-
-				std::getline(std::cin, stringBuffer);
-				strncpy(message, stringBuffer.c_str(), 128);
-				message[128] = 0;
-				RakNet::RakString messageRk("%s", message);
-
-				RakNet::Time timeStamp;
-				RakNet::MessageID useTimeStamp;
-				RakNet::MessageID messageID = ID_RECEIVE_MESSAGE;
-				useTimeStamp = ID_TIMESTAMP;
-				timeStamp = RakNet::GetTime();
-				RakNet::BitStream bsOut2;
-				bsOut2.Write(useTimeStamp);
-				bsOut2.Write(timeStamp);
-				bsOut2.Write(messageID);
-				bsOut2.Write(messageRk);
-				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 				break;
 
@@ -230,7 +215,21 @@ int main(int const argc, char const* const argv[])
 		if (hasInput)
 		{
 			std::getline(std::cin, stringBuffer);
-			//get input
+			strncpy(message, stringBuffer.c_str(), 128);
+			message[128] = 0;
+			RakNet::RakString messageRk("%s", message);
+
+			RakNet::Time timeStamp;
+			RakNet::MessageID useTimeStamp;
+			RakNet::MessageID messageID = ID_RECEIVE_MESSAGE;
+			useTimeStamp = ID_TIMESTAMP;
+			timeStamp = RakNet::GetTime();
+			RakNet::BitStream bsOut2;
+			bsOut2.Write(useTimeStamp);
+			bsOut2.Write(timeStamp);
+			bsOut2.Write(messageID);
+			bsOut2.Write(messageRk);
+			peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 		}
 
 	}
