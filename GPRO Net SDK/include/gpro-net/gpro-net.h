@@ -29,19 +29,9 @@
 #include "RakNet/RakString.h"
 #include "RakNet/RakNetTypes.h"
 #include "RakNet/BitStream.h"
+#include "RakNet/MessageIdentifiers.h"
 
-char* chopStr(char* in, int length, char delim)
-{
-	for (int i = 0; i < length; i++)
-	{
-		if (in[i] == delim)
-		{
-			in[i] = 0;
-			return in + i + 1;
-		}
-	}
-	return in;
-}
+char* chopStr(char* in, int length, char delim);
 
 #pragma pack(push, 1)
 typedef struct ChatMessage ChatMessage;
@@ -56,34 +46,23 @@ struct ChatMessage
 };
 #pragma pack(pop)
 
-ChatMessage parseMessage(RakNet::Packet* packet)
-{
-	//RakNet::MessageID message2;
-	RakNet::BitStream bsIn(packet->data, packet->length, false);
-	RakNet::MessageID tmp;
-	bsIn.Read(tmp);
-	RakNet::Time tm;
-	bsIn.Read(tm);
-	bsIn.Read(tmp);
-	//char vals[sizeof(RakNet::Time)];
-	//bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-	//bsIn.Read(vals, sizeof(RakNet::Time));
-	//RakNet::Time time = *(RakNet::Time*)&vals;
-	//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
-	//bsIn.Read(time);
-	float betterTime = (float)tm;
-	float seconds = betterTime / 1000.0f;
-	float minutes = seconds / 60.0f;
-	float hour = minutes / 60.0f;
-	int hourVal = (int)hour % 12 + 1;
-	int minutesInt = (int)((hour - (int)hour) * 60);
-	printf("%d:%d\n", hourVal, minutesInt + 20);
-	//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
-	//bsIn.Read(message2);
-	ChatMessage m;// = (ChatMessage*)bsIn.GetData();
-	bsIn.Read(m);
-	return m;
-}
+ChatMessage parseMessage(RakNet::Packet* packet);
 
+enum GameMessages
+{
+	ID_USERNAME = ID_USER_PACKET_ENUM + 1,
+	ID_RECEIVE_MESSAGE,
+	ID_MESSAGE_STRUCT
+};
+
+enum MessageFlag
+{
+	PUBLIC = 0,
+	PRIVATE,
+	COMMAND,
+	ISADMIN = 4 // set to 4 as a flag. 4 technically means "public admin", 5 = "private admin", 6 = "command admin"
+};
+
+void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::MessageID mType = ID_MESSAGE_STRUCT);
 
 #endif	// !_GPRO_NET_H_

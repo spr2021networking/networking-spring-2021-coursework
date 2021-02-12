@@ -23,3 +23,47 @@
 */
 
 #include "gpro-net/gpro-net.h"
+
+char* chopStr(char* in, int length, char delim)
+{
+	for (int i = 0; i < length; i++)
+	{
+		if (in[i] == delim)
+		{
+			in[i] = 0;
+			return in + i + 1;
+		}
+	}
+	return in;
+}
+
+ChatMessage parseMessage(RakNet::Packet* packet)
+{
+	RakNet::BitStream bsIn(packet->data, packet->length, false);
+	RakNet::MessageID mID;
+	RakNet::Time time;
+	ChatMessage m;
+
+	//skip the bytes that need to be sent before this message is sent
+	bsIn.Read(mID);
+	bsIn.Read(time);
+	bsIn.Read(mID);
+
+	float betterTime = (float)time;
+	float seconds = betterTime / 1000.0f;
+	float minutes = seconds / 60.0f;
+	float hour = minutes / 60.0f;
+	int hourVal = (int)hour % 12 + 1;
+	int minutesInt = (int)((hour - (int)hour) * 60);
+	printf("%d:%d\n", hourVal, minutesInt + 20); //for some reason, the timestamp is off by about 20 minutes.
+
+	bsIn.Read(m);
+	return m;
+}
+
+void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::MessageID mType)
+{
+	stream->Write((RakNet::MessageID)ID_TIMESTAMP);
+	stream->Write(time);
+	stream->Write(mType);
+}

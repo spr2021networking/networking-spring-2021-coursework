@@ -44,18 +44,16 @@ using namespace std;
 #define MAX_CLIENTS 5
 #define SERVER_PORT 7777
 
-enum GameMessages
-{
-	ID_USERNAME = ID_USER_PACKET_ENUM + 1,
-	ID_RECEIVE_MESSAGE,
-	ID_PROMPT_MESSAGE,
-};
-
 
 RakNet::RakPeerInterface* peer;
 map<string, string> IPToUserName;
 ofstream serverLog;
 
+/// <summary>
+/// Handle public, private, and command messages
+/// </summary>
+/// <param name="m"></param>
+/// <param name="packet"></param>
 void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 {
 	float betterTime = (float)m->time;
@@ -69,17 +67,20 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	string output = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()]; //timestamp + user who sent this
 
 	RakNet::BitStream outStream;
-	outStream.Write((RakNet::MessageID)ID_TIMESTAMP);
-	outStream.Write((RakNet::Time)RakNet::GetTime());
-	outStream.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
-	//ChatMessage response;
+	prepBitStream(&outStream, RakNet::GetTime());
+	ChatMessage response;
+	response.id2 = ID_MESSAGE_STRUCT;
+	response.isTimestamp = ID_TIMESTAMP;
+	response.messageType = 0;
 	switch (m->messageType)
 	{
-	case 0: //public
+	case PUBLIC: //public
 	{
 		output += " (publicly): ";
 		output += m->message;
-		outStream.Write(output.c_str());
+		strncpy(response.message, output.c_str(), output.length());
+		response.message[output.length()] = 0;
+		outStream.Write(response);
 		map<string, string>::iterator it;
 		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
 		{
@@ -87,11 +88,13 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		}
 	}
 	break;
-	case 1: //private
+	case PRIVATE: //private
 	{
 		output += " (privately): ";
 		output += m->message;
-		outStream.Write(output.c_str());
+		strncpy(response.message, output.c_str(), output.length());
+		response.message[output.length()] = 0;
+		outStream.Write(response);
 		map<string, string>::iterator it;
 		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
 		{
@@ -103,7 +106,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		}
 	}
 	break;
-	case 2: //command
+	case COMMAND: //command
 	{
 		output += " (userlist): ";
 		map<string, string>::iterator it;
@@ -113,6 +116,9 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			output += "\n";
 			
 		}
+		strncpy(response.message, output.c_str(), output.length());
+		response.message[output.length()] = 0;
+		outStream.Write(response);
 		if (true)
 		{
 			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
@@ -124,6 +130,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	serverLog << output << std::endl;
 }
 
+string adminName = "IAmTheAdmin";
 int main(int const argc, char const* const argv[])
 {
 	peer = RakNet::RakPeerInterface::GetInstance();
@@ -191,6 +198,7 @@ int main(int const argc, char const* const argv[])
 
 				// Use a BitStream to write a custom user message
 				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
+				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
 				bsOut.Write((RakNet::MessageID)ID_USERNAME);
 				bsOut.Write("Hello world");
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
@@ -232,7 +240,7 @@ int main(int const argc, char const* const argv[])
 				}
 				break;
 
-			case ID_USERNAME:
+			case ID_USERNAME: //todo send this as a chat message, with the admin flag set too
 			{
 				RakNet::RakString rs;
 				//RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -250,7 +258,7 @@ int main(int const argc, char const* const argv[])
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
-			case ID_RECEIVE_MESSAGE:
+			/*case ID_RECEIVE_MESSAGE: //This section used to be relevant but it no longer is.
 			{
 				RakNet::RakString rs;
 				RakNet::MessageID message2;
@@ -305,8 +313,8 @@ int main(int const argc, char const* const argv[])
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				}
 				break;
-			}
-			case ID_PROMPT_MESSAGE:
+			}*/
+			case ID_MESSAGE_STRUCT:
 			{
 				ChatMessage m = parseMessage(packet);
 
