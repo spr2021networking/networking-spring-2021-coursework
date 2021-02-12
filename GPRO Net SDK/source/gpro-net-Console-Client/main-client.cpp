@@ -22,6 +22,12 @@
 	Main source for console client application.
 */
 
+/*
+* main-client.cpp
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: message handling (receiving from server and sending our own), joining and leaving server.
+*/
+
 #include "gpro-net/gpro-net.h"
 
 #include <cstdio>
@@ -60,6 +66,9 @@ RakNet::SystemAddress serverAddress;
 char name[17];
 bool quitting = false;
 
+/// <summary>
+/// Closes our connection to the server after 300 ms, sending a notification that we're leaving first.
+/// </summary>
 void quit()
 {
 	RakNet::BitStream out;
@@ -85,6 +94,7 @@ int main(int const argc, char const* const argv[])
 
 	bool isServer = false;
 
+	//retrieve IP and name
 	printf("Enter server IP or hit enter for 172.16.2.51\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
@@ -164,13 +174,13 @@ int main(int const argc, char const* const argv[])
 				{
 					hasNameBeenSent = true;
 
-					RakNet::BitStream bsOut2;
-					prepBitStream(&bsOut2, RakNet::GetTime(), ID_USERNAME);
+					//create a ChatMessage and send our username
+					prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
 					ChatMessage mess;
 					strncpy(mess.sender, name, stringBuffer.length());
 					mess.sender[stringBuffer.length()] = 0;
-					bsOut2.Write(mess);
-					peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress = packet->systemAddress, false);
+					bsOut.Write(mess);
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress = packet->systemAddress, false);
 				}
 			}
 			break;
@@ -191,11 +201,12 @@ int main(int const argc, char const* const argv[])
 
 			case ID_USERNAME:
 			{
+				//if messageType is -1, the user already exists and we quit.
 				ChatMessage m = parseMessage(packet);
 				printf("%s\n", m.message);
 				if (m.messageType == -1)
 				{
-					quit();
+					peer->Shutdown(300); //quit() requires a username, so we do this instead
 				}
 				else
 				{
@@ -204,7 +215,7 @@ int main(int const argc, char const* const argv[])
 			}
 			break;
 
-			case ID_RECEIVE_MESSAGE:
+			case ID_RECEIVE_MESSAGE: //legacy, currently unused.
 			{
 				ChatMessage m = parseMessage(packet);
 				printf("%s\n", m.message);
@@ -212,6 +223,7 @@ int main(int const argc, char const* const argv[])
 			break;
 			case ID_MESSAGE_STRUCT:
 			{
+				//parse message and output relevant data
 				ChatMessage m = parseMessage(packet);
 				printf("%s\n", m.message);
 				break;
@@ -225,6 +237,8 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
+
+		//check for user input! Iterate through keys and see if we're using any of them, if so let us type
 		bool hasInput = false;
 		for (int i = VK_SPACE; i <= 'Z'; i++)
 		{
@@ -248,19 +262,20 @@ int main(int const argc, char const* const argv[])
 			useTimeStamp = ID_TIMESTAMP;
 			timeStamp = RakNet::GetTime();
 
-			if (false)
+			if (false) //this was how we used to send messages, it's not in use anymore.
 			{
-				RakNet::BitStream bsOut2;
-				bsOut2.Write(useTimeStamp);
-				bsOut2.Write(timeStamp);
-				bsOut2.Write(messageID);
-				bsOut2.Write(messageBackup);
-				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+				RakNet::BitStream bsOut;
+				bsOut.Write(useTimeStamp);
+				bsOut.Write(timeStamp);
+				bsOut.Write(messageID);
+				bsOut.Write(messageBackup);
+				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 			}
 			else
 			{
-				RakNet::BitStream bsOut3;
-				prepBitStream(&bsOut3, timeStamp);
+				//prepare the bitstream and the ChatMessage
+				RakNet::BitStream bsOut;
+				prepBitStream(&bsOut, timeStamp);
 				ChatMessage messageToSend;
 				messageToSend.isTimestamp = ID_TIMESTAMP;
 				messageToSend.time = timeStamp;
@@ -304,23 +319,24 @@ int main(int const argc, char const* const argv[])
 						}
 						else
 						{
+							//copy message recipient and body into ChatMessage from input
 							std::string messageBody = startOfMessageBody;
 							strncpy(messageToSend.recipient, secondWord.c_str(), (int)secondWord.length());
 							strncpy(messageToSend.message, messageBody.c_str(), (int)messageBody.length());
 							messageToSend.message[messageBody.length()] = 0; //null terminate
 						}
 					}
-					else if (strncmp(stringBuffer.c_str(), "command", 7) == 0)
+					else if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
 					{
 						messageToSend.messageType = 2;
-
-						if (strncmp(secondWord.c_str(), "userlist", 8) == 0)
+						//checking what command typ
+						if (strncmp(secondWord.c_str(), "userlist", 8) == 0) //userlist
 						{
 							strncpy(messageToSend.recipient, "userlist", 8);
 							messageToSend.recipient[8] = 0;
 							messageToSend.message[0] = ' ';
 						}
-						else if (strncmp(secondWord.c_str(), "kick", 4) == 0)
+						else if (strncmp(secondWord.c_str(), "kick", 4) == 0) //kick (admin only)
 						{
 							if (!isAdmin)
 							{
@@ -339,12 +355,12 @@ int main(int const argc, char const* const argv[])
 								{
 									std::string messageBody = startOfKickTarget;
 									strncpy(messageToSend.recipient, secondWord.c_str(), (int)secondWord.length());
-									strncpy(messageToSend.message, messageBody.c_str(), (int)messageBody.length());
+									strncpy(messageToSend.message, messageBody.c_str(), (int)messageBody.length()); //copy kick target 
 									messageToSend.message[messageBody.length()] = 0; //null terminate
 								}
 							}
 						}
-						else if (strncmp(secondWord.c_str(), "stop", 4) == 0)
+						else if (strncmp(secondWord.c_str(), "stop", 4) == 0) //stop server
 						{
 							if (!isAdmin)
 							{
@@ -363,7 +379,7 @@ int main(int const argc, char const* const argv[])
 							messageToSend.message[0] = 0;
 						}
 					}
-					else
+					else //defaulting to a public message because the first word wasn't recognized as anything
 					{
 						messageToSend.messageType = 0;
 						strncpy(messageToSend.message, messageBackup.C_String(), (int)messageBackup.GetLength());
@@ -374,12 +390,12 @@ int main(int const argc, char const* const argv[])
 				{
 					messageToSend.messageType |= ISADMIN;
 				}
-				if (messageToSend.message[0] != 0) //prevents empty messages
+				if (messageToSend.message[0] != 0) //prevents empty messages or invalid messages.
 				{
-					strncpy(messageToSend.sender, name, strnlen(name, 17));
-					messageToSend.sender[strnlen(name, 17)] = 0;
-					bsOut3.Write(messageToSend);
-					peer->Send(&bsOut3, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+					strncpy(messageToSend.sender, name, strnlen(name, 16));
+					messageToSend.sender[strnlen(name, 16)] = 0; //this warning is irrelevant, we are always writing less data than this
+					bsOut.Write(messageToSend);
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 				}
 			}
 		}
