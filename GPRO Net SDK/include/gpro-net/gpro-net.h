@@ -22,6 +22,12 @@
 	Main include for framework.
 */
 
+/*
+* gpro-net.h
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: shared functions that the server and client both use.
+*/
+
 #ifndef _GPRO_NET_H_
 #define _GPRO_NET_H_
 

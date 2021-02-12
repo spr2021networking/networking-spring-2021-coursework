@@ -22,6 +22,12 @@
 	Main source for framework.
 */
 
+/*
+* gpro-net.cpp
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: shared functions that the server and client both use.
+*/
+
 #include "gpro-net/gpro-net.h"
 
 char* chopStr(char* in, int length, char delim)
