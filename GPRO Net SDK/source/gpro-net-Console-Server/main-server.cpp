@@ -232,6 +232,11 @@ int main(int const argc, char const* const argv[])
 			{
 				//RakNet::MessageID message2;
 				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				RakNet::MessageID tmp;
+				bsIn.Read(tmp);
+				RakNet::Time tm;
+				bsIn.Read(tm);
+				bsIn.Read(tmp);
 				//char vals[sizeof(RakNet::Time)];
 				//bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				//bsIn.Read(vals, sizeof(RakNet::Time));
@@ -241,9 +246,9 @@ int main(int const argc, char const* const argv[])
 				printf("%" PRINTF_64_BIT_MODIFIER "u ", time);
 				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
 				//bsIn.Read(message2);
-				ChatMessage* m = (ChatMessage*)bsIn.GetData();
+				ChatMessage m;// = (ChatMessage*)bsIn.GetData();
 				
-				//bsIn.Read(m);
+				bsIn.Read(m);
 				break;
 			}
 			default:

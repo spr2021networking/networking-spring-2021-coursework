@@ -237,7 +237,8 @@ int main(int const argc, char const* const argv[])
 				m.id2 = ID_PROMPT_MESSAGE;
 				m.isCommand = false;
 				m.isPublic = false;
-				m.message = messageRk;
+				strncpy(m.message, message, messageRk.GetLength());
+				m.message[messageRk.GetLength()] = 0;
 				RakNet::BitStream bsOut3;
 
 				//bsOut3.Write(useTimeStamp);

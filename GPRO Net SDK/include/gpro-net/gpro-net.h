@@ -50,8 +50,8 @@ struct ChatMessage
 	RakNet::MessageID id2;
 	bool isPublic;
 	bool isCommand;
-	RakNet::RakString recipient;
-	RakNet::RakString message;
+	char recipient[17];
+	char message[129];
 };
 #pragma pack(pop)
 
