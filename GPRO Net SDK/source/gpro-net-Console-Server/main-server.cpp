@@ -37,6 +37,7 @@
 #include "RakNet/MessageIdentifiers.h"
 #include "RakNet/BitStream.h"
 #include "RakNet/RakNetTypes.h"  // MessageID
+#include "RakNet/GetTime.h"
 
 
 using namespace std;
@@ -50,27 +51,69 @@ enum GameMessages
 	ID_PROMPT_MESSAGE,
 };
 
+
+RakNet::RakPeerInterface* peer;
+map<string, string> IPToUserName;
+ofstream serverLog;
+
 void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 {
+	float betterTime = (float)m->time;
+	float seconds = betterTime / 1000.0f;
+	float minutes = seconds / 60.0f;
+	float hour = minutes / 60.0f;
+	int hourVal = (int)hour % 12 + 11;
+	hourVal %= 12;
+	int minutesInt = (int)((hour - (int)hour) * 60);
+	printf("%d:%d\n", hourVal, minutesInt + 20);
+	string output = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()]; //timestamp + user who sent this
+
+	RakNet::BitStream outStream;
+	outStream.Write((RakNet::MessageID)ID_TIMESTAMP);
+	outStream.Write((RakNet::Time)RakNet::GetTime());
+	outStream.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
+	//ChatMessage response;
 	switch (m->messageType)
 	{
 	case 0: //public
-		break;
+	{
+		output += " (publicly): ";
+		output += m->message;
+		outStream.Write(output.c_str());
+		map<string, string>::iterator it;
+		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+		{
+			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+		}
+	}
+	break;
 	case 1: //private
-		break;
+	{
+		output += " (privately): ";
+		output += m->message;
+		outStream.Write(output.c_str());
+		map<string, string>::iterator it;
+		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+		{
+			if (strncmp(it->second.c_str(), m->recipient, it->second.size()) == 0)
+			{
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+				break;
+			}
+		}
+	}
+	break;
 	case 2: //command
 		break;
 	}
+	serverLog << output << std::endl;
 }
 
 int main(int const argc, char const* const argv[])
 {
-	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
+	peer = RakNet::RakPeerInterface::GetInstance();
 	bool isServer;
 	RakNet::Packet* packet;
-	ofstream serverLog;
-
-	map<string, string> IPToUserName;
 
 	//printf("(C) or (S)erver?\n");
 	//scanf("%s", str);
@@ -250,32 +293,9 @@ int main(int const argc, char const* const argv[])
 			}
 			case ID_PROMPT_MESSAGE:
 			{
-				//RakNet::MessageID message2;
-				RakNet::BitStream bsIn(packet->data, packet->length, false);
-				RakNet::MessageID tmp;
-				bsIn.Read(tmp);
-				RakNet::Time tm;
-				bsIn.Read(tm);
-				bsIn.Read(tmp);
-				//char vals[sizeof(RakNet::Time)];
-				//bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-				//bsIn.Read(vals, sizeof(RakNet::Time));
-				//RakNet::Time time = *(RakNet::Time*)&vals;
-				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
-				//bsIn.Read(time);
-				float betterTime = (float)tm;
-				float seconds = betterTime / 1000.0f;
-				float minutes = seconds / 60.0f;
-				float hour = minutes / 60.0f;
-				int hourVal = (int)hour % 12 + 1;
-				int minutesInt = (int)((hour - (int)hour) * 60);
-				printf("%d:%d\n", hourVal, minutesInt + 20);
-				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
-				//bsIn.Read(message2);
-				ChatMessage m;// = (ChatMessage*)bsIn.GetData();
-				bsIn.Read(m);
+				ChatMessage m = parseMessage(packet);
 
-				handleMessage(&m, &packet);
+				handleMessage(&m, packet);
 				break;
 			}
 			default:
@@ -285,7 +305,7 @@ int main(int const argc, char const* const argv[])
 		}
 		serverLog.close();
 	}
-	
+
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
 	return 0;

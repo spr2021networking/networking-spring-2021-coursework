@@ -235,10 +235,11 @@ int main(int const argc, char const* const argv[])
 				m.isTimestamp = ID_TIMESTAMP;
 				m.time = timeStamp;
 				m.id2 = ID_PROMPT_MESSAGE;
-				m.isCommand = false;
-				m.isPublic = false;
+				m.messageType = 1;
+				strncpy(m.recipient, message, messageRk.GetLength()); //wrong but good for testing
 				strncpy(m.message, message, messageRk.GetLength());
 				m.message[messageRk.GetLength()] = 0;
+				m.recipient[messageRk.GetLength()] = 0;
 				RakNet::BitStream bsOut3;
 
 				//bsOut3.Write(useTimeStamp);
