@@ -55,9 +55,22 @@ void stringTrim(std::string& strToTrim)
 	}
 }
 
+RakNet::RakPeerInterface* peer;
+RakNet::SystemAddress serverAddress;
+char name[17];
+
+//http://www.cplusplus.com/reference/cstdlib/atexit/
+void quit()
+{
+	RakNet::BitStream out;
+	prepBitStream(&out, RakNet::GetTime(), ID_CONNECTION_LOST);
+	out.Write(name);
+	peer->Send(&out, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+}
+
 int main(int const argc, char const* const argv[])
 {
-	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
+	peer = RakNet::RakPeerInterface::GetInstance();
 	RakNet::Packet* packet;
 	RakNet::SocketDescriptor sd;
 
@@ -67,7 +80,6 @@ int main(int const argc, char const* const argv[])
 	//Use this for inputs
 	std::string stringBuffer;
 	char ip[512];
-	char name[17];
 	char message[129];
 
 	bool isServer = false;
@@ -109,8 +121,6 @@ int main(int const argc, char const* const argv[])
 
 	bool hasNameBeenSent = false;
 
-	RakNet::SystemAddress serverAddress;
-
 	bool isAdmin = false;
 	while (1)
 	{
@@ -142,22 +152,16 @@ int main(int const argc, char const* const argv[])
 			{
 				printf("Our connection request has been accepted.\n");
 
-				// Use a BitStream to write a custom user message
-				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
 				RakNet::BitStream bsOut;
-				//bsOut.Write((RakNet::MessageID)ID_USERNAME);
-				//bsOut.Write("Hello world");
-				//peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				if (!hasNameBeenSent)
+				if (!hasNameBeenSent) //we send our username to the server here, and we receive an ID_USERNAME message back that sets our admin status
 				{
+					hasNameBeenSent = true;
+
 					RakNet::BitStream bsOut2;
 					prepBitStream(&bsOut2, RakNet::GetTime(), ID_USERNAME);
 					ChatMessage mess;
 					strncpy(mess.message, name, stringBuffer.length());
 					mess.message[stringBuffer.length()] = 0;
-					hasNameBeenSent = true;
-					//bsOut2.Write((RakNet::MessageID)ID_USERNAME);
-					//bsOut2.Write(name);
 					bsOut2.Write(mess);
 					peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress = packet->systemAddress, false);
 				}
@@ -178,12 +182,7 @@ int main(int const argc, char const* const argv[])
 				}
 				break;
 			case ID_CONNECTION_LOST:
-				if (isServer) {
-					printf("A client lost the connection.\n");
-				}
-				else {
 					printf("Connection lost.\n");
-				}
 				break;
 
 			case ID_USERNAME:
@@ -254,12 +253,26 @@ int main(int const argc, char const* const argv[])
 				messageToSend.id2 = ID_MESSAGE_STRUCT;
 
 				char* startOfSecondWord = chopStr((char*)stringBuffer.c_str(), (int)stringBuffer.length(), ' ');
-				if (startOfSecondWord == stringBuffer.c_str()) //there's no space in the message
+
+				if (strncmp(stringBuffer.c_str(), "quit", 4) == 0 && stringBuffer.length() == 4)
 				{
-					//set message to public and load the entire string buffer into the message.
-					messageToSend.messageType = 0;
-					strncpy(messageToSend.message, stringBuffer.c_str(), (int)stringBuffer.length());
-					messageToSend.message[stringBuffer.length()] = 0;
+					quit();
+					break;
+				}
+				else if (startOfSecondWord == stringBuffer.c_str()) //there's no space in the message
+				{
+					if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command
+					{
+						//set message to public and load the entire string buffer into the message.
+						messageToSend.messageType = 0;
+						strncpy(messageToSend.message, stringBuffer.c_str(), (int)stringBuffer.length());
+						messageToSend.message[stringBuffer.length()] = 0;
+					}
+					else
+					{
+						printf("[Error] Cannot send empty command\n");
+						messageToSend.message[0] = 0;
+					}
 				}
 				else
 				{
@@ -286,6 +299,13 @@ int main(int const argc, char const* const argv[])
 					else if (strncmp(stringBuffer.c_str(), "command", 7) == 0)
 					{
 						messageToSend.messageType = 2;
+
+						if (strncmp(secondWord.c_str(), "userlist", 8) == 0)
+						{
+							strncpy(messageToSend.recipient, "userlist", 8);
+							messageToSend.recipient[8] = 0;
+							messageToSend.message[0] = ' ';
+						}
 					}
 					else
 					{

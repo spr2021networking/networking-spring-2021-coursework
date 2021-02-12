@@ -82,10 +82,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		response.message[output.length()] = 0;
 		outStream.Write(response);
 		map<string, string>::iterator it;
-		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
-		{
-			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
-		}
+		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(), true);
 	}
 	break;
 	case PRIVATE: //private
@@ -101,6 +98,9 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			if (strncmp(it->second.c_str(), m->recipient, it->second.size()) == 0)
 			{
 				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+				string logOutput = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()];
+				logOutput += " (privately to " + it->second + "): " + m->message;
+				serverLog << logOutput << std::endl;
 				break;
 			}
 		}
@@ -108,26 +108,52 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	break;
 	case COMMAND: //command
 	{
-		output += " (userlist): ";
-		map<string, string>::iterator it;
-		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+		if (strncmp(m->recipient, "userlist", 8) == 0)
 		{
-			output += it->second.c_str();
-			output += "\n";
-			
-		}
-		strncpy(response.message, output.c_str(), output.length());
-		response.message[output.length()] = 0;
-		outStream.Write(response);
-		if (true)
-		{
-			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-			break;
+			output += " requested User List:";
+			map<string, string>::iterator it;
+			for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+			{
+				output += "\n";
+				string tmp;
+
+				if ((m->messageType & ISADMIN) > 0) //if admin, add IP. This now makes it possible for a string to be too long to send
+				{
+					tmp += it->first + " ";
+				}
+				tmp += it->second.c_str();
+
+				if (output.length() + tmp.length() >= 128) //if string length is too long for us to add tmp, send what we have and reset the bitstream
+				{
+					strncpy(response.message, output.c_str(), output.length());
+					response.message[output.length()] = 0;
+					outStream.Write(response);
+					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false); //send part of message
+					outStream.Reset(); //clear bitstream
+					prepBitStream(&outStream, RakNet::GetTime()); //reset bitstream to receive new response
+					output = tmp; //store tmp in output to prepare for next loop.
+				}
+				else
+				{
+					output += tmp;
+				}
+			}
+			strncpy(response.message, output.c_str(), output.length()); //output final loop iteration.
+			response.message[output.length()] = 0;
+			outStream.Write(response);
+			if (true)
+			{
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				break;
+			}
 		}
 	}
-		break;
+	break;
 	}
-	serverLog << output << std::endl;
+	if ((m->messageType & 3) != PRIVATE) //private has its own logging behavior
+	{
+		serverLog << output << std::endl;
+	}
 }
 
 string adminName = "IAmTheAdmin";
@@ -221,19 +247,30 @@ int main(int const argc, char const* const argv[])
 			case ID_CONNECTION_LOST:
 				if (isServer) {
 					printf("A client lost the connection.\n");
-					RakNet::RakString rs;
-					//RakNet::BitStream bsIn(packet->data, packet->length, false);
-					bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-					bsIn.Read(rs);
-					string temp = rs.C_String();
 					map <string, string>::iterator userNameToRemove;
-					userNameToRemove = IPToUserName.find(temp);
+					userNameToRemove = IPToUserName.find(packet->systemAddress.ToString());
+					string output = "";
 					if (userNameToRemove != IPToUserName.end())
 					{
+						output += userNameToRemove->second;
 						IPToUserName.erase(userNameToRemove);
 					}
-					//get username w/ systemaddress
-					//search map and then remove
+					RakNet::Time t = RakNet::GetTime();
+					prepBitStream(&bsOut, t);
+
+					float betterTime = (float)t;
+					float seconds = betterTime / 1000.0f;
+					float minutes = seconds / 60.0f;
+					float hour = minutes / 60.0f;
+					int hourVal = (int)hour % 12 + 11;
+					hourVal %= 12;
+					int minutesInt = (int)((hour - (int)hour) * 60);
+					output = "[Received at " + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + output + " has disconnected.";
+					bsOut.Write(output);
+					serverLog << output << '\n';
+
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(), true);
+
 				}
 				else {
 					printf("Connection lost.\n");
@@ -246,7 +283,7 @@ int main(int const argc, char const* const argv[])
 				IPToUserName[packet->systemAddress.ToString()] = m.message;
 
 				ChatMessage response;
-				prepBitStream(&bsOut, RakNet::GetTime());
+				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
 				if (strncmp(adminName.c_str(), m.message, adminName.length()) == 0)
 				{
 					response.messageType = ISADMIN;
@@ -256,7 +293,7 @@ int main(int const argc, char const* const argv[])
 					response.messageType = 0;
 				}
 				string insert = (response.messageType == ISADMIN ? "Admin " : "");
-				string output =  "Welcome, " + insert + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
+				string output = "Welcome, " + insert + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
 				strncpy(response.message, output.c_str(), output.length());
 				response.message[output.length()] = 0;
 				//bsOut.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);

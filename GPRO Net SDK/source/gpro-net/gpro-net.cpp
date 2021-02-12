@@ -55,7 +55,7 @@ ChatMessage parseMessage(RakNet::Packet* packet)
 	float hour = minutes / 60.0f;
 	int hourVal = (int)hour % 12 + 1;
 	int minutesInt = (int)((hour - (int)hour) * 60);
-	printf("%d:%d\n", hourVal, minutesInt + 20); //for some reason, the timestamp is off by about 20 minutes.
+	//printf("%d:%d\n", hourVal, minutesInt + 20); //for some reason, the timestamp is off by about 20 minutes.
 
 	bsIn.Read(m);
 	return m;
