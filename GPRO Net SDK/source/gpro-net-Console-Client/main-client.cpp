@@ -142,7 +142,7 @@ int main(int const argc, char const* const argv[])
 	bool isAdmin = false;
 	while (!quitting)
 	{
-		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = !quitting ? peer->Receive() : nullptr)
+		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			//this function checks if there's a timestamp stored in the packet. If there is, we advance the switch past the timestamp
 			int idIndex = 0;
@@ -339,7 +339,12 @@ int main(int const argc, char const* const argv[])
 						}
 						else if (strncmp(secondWord.c_str(), "kick", 4) == 0) //kick (admin only)
 						{
-							if (!isAdmin)
+							if (true)
+							{
+								printf("[Error] Kicking currently does not function correctly!\n");
+								messageToSend.message[0] = 0;
+							}
+							else if (!isAdmin)
 							{
 								printf("[Error] Only admins can kick!\n");
 								messageToSend.message[0] = 0;
