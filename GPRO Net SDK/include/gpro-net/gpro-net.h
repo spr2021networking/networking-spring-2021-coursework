@@ -48,8 +48,7 @@ struct ChatMessage
 	RakNet::MessageID isTimestamp;
 	RakNet::Time time;
 	RakNet::MessageID id2;
-	bool isPublic;
-	bool isCommand;
+	int messageType; //public = 0; private = 1; command = 2
 	char recipient[17];
 	char message[129];
 };

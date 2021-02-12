@@ -50,6 +50,19 @@ enum GameMessages
 	ID_PROMPT_MESSAGE,
 };
 
+void handleMessage(ChatMessage* m, RakNet::Packet* packet)
+{
+	switch (m->messageType)
+	{
+	case 0: //public
+		break;
+	case 1: //private
+		break;
+	case 2: //command
+		break;
+	}
+}
+
 int main(int const argc, char const* const argv[])
 {
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
@@ -197,9 +210,7 @@ int main(int const argc, char const* const argv[])
 				int hourVal = (int)hour % 12 + 11;
 				hourVal %= 12;
 				int minutesInt = (int)((hour - (int)hour) * 60);
-				int secondsInt = (int)((hour - (int)hour - minutesInt));
-				printf("%d:%d:%d\n", hourVal, minutesInt + 20, secondsInt);
-				printf("%" PRINTF_64_BIT_MODIFIER "u ", time);
+				printf("%d:%d\n", hourVal, minutesInt + 20);
 				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
 				bsIn.Read(message2);
 				bsIn.Read(rs);
@@ -258,13 +269,13 @@ int main(int const argc, char const* const argv[])
 				float hour = minutes / 60.0f;
 				int hourVal = (int)hour % 12 + 1;
 				int minutesInt = (int)((hour - (int)hour) * 60);
-				int secondsInt = (int)((hour - (int)hour - minutesInt));
-				printf("%" PRINTF_64_BIT_MODIFIER "u ", time);
+				printf("%d:%d\n", hourVal, minutesInt + 20);
 				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
 				//bsIn.Read(message2);
 				ChatMessage m;// = (ChatMessage*)bsIn.GetData();
-				
 				bsIn.Read(m);
+
+				handleMessage(&m, &packet);
 				break;
 			}
 			default:
