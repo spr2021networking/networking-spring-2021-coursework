@@ -20,10 +20,6 @@
 
 	main-server.c/.cpp
 	Main source for console server application.
-
-	Modified for classwork by Scott Dagen and Benjamin Cooper
-	Purpose of the file: Demonstrate an understanding of a basic chat application
-	We both worked on message handling and timestamping
 */
 
 #include "gpro-net/gpro-net.h"
@@ -64,7 +60,6 @@ bool quitting = false;
 /// <param name="packet"></param>
 void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 {
-	//timestamping
 	float betterTime = (float)m->time;
 	float seconds = betterTime / 1000.0f;
 	float minutes = seconds / 60.0f;
@@ -105,13 +100,13 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		bool sent = false;
 		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
 		{
-			if (strncmp(it->second.c_str(), m->recipient, it->second.length()) == 0)//find the user we want to message privately
+			if (strncmp(it->second.c_str(), m->recipient, it->second.length()) == 0)
 			{
 				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
 				string logOutput = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()];
 				logOutput += " (privately to " + it->second + "): " + m->message;
 				serverLog << logOutput << std::endl;
-				outStream.Reset(); //clears out the outstream so more than one packet can be sent at once
+				outStream.Reset();
 				prepBitStream(&outStream, RakNet::GetTime());
 				strncpy(response.message, logOutput.c_str(), (int)logOutput.length());
 				response.message[logOutput.length()] = 0;
@@ -121,7 +116,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				break;
 			}
 		}
-		if (!sent)//if no message is sent privately
+		if (!sent)
 		{
 			outStream.Reset();
 			prepBitStream(&outStream, RakNet::GetTime());
@@ -134,7 +129,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	break;
 	case COMMAND: //command
 	{
-		if (strncmp(m->recipient, "userlist", 8) == 0) //get a list of users
+		if (strncmp(m->recipient, "userlist", 8) == 0)
 		{
 			output += " requested User List:";
 			map<string, string>::iterator it;
@@ -173,7 +168,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				break;
 			}
 		}
-		if (strncmp(m->recipient, "kick", 4) == 0) //kick a user
+		if (strncmp(m->recipient, "kick", 4) == 0)
 		{
 			outStream.Reset();
 			prepBitStream(&outStream, RakNet::GetTime(), ID_KICK);
@@ -189,7 +184,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				}
 			}
 		}
-		if (strncmp(m->recipient, "stop", 4) == 0)//shut the server down
+		if (strncmp(m->recipient, "stop", 4) == 0)
 		{
 			string quitMessage = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] The server is now shutting down.";
 			strncpy(response.message, quitMessage.c_str(), quitMessage.length());
@@ -215,17 +210,23 @@ int main(int const argc, char const* const argv[])
 	bool isServer;
 	RakNet::Packet* packet;
 
+	//printf("(C) or (S)erver?\n");
+	//scanf("%s", str);
+	//if ((str[0] == 'S') || (str[0] == 'S'))
+	//{
 	RakNet::SocketDescriptor sd(SERVER_PORT, 0);
 	peer->Startup(MAX_CLIENTS, &sd, 1);
 	peer->SetOccasionalPing(true);
 	isServer = true;
+	//}
 
-	serverLog.open("serverlog.txt"); //open the server log
+	serverLog.open("serverlog.txt");
 	if (serverLog.is_open())
 	{
 		printf("file exists \n");
 	}
 
+	// TODO - Add code body here
 	if (isServer)
 	{
 		printf("Starting the server.\n");
@@ -244,7 +245,11 @@ int main(int const argc, char const* const argv[])
 			RakNet::BitStream bsIn(packet->data, packet->length, false);
 			if (packet->data[0] == ID_TIMESTAMP)
 			{
+				//char vals[sizeof(RakNet::Time)];
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				//bsIn.Read(vals, sizeof(RakNet::Time));
+				//RakNet::Time time = *(RakNet::Time*)&vals;
+				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
 				bsIn.Read(time);
 				idIndex += sizeof(RakNet::MessageID) + sizeof(RakNet::Time);
 			}
@@ -285,7 +290,7 @@ int main(int const argc, char const* const argv[])
 					map <string, string>::iterator userNameToRemove;
 					userNameToRemove = IPToUserName.find(packet->systemAddress.ToString());
 					string output = "";
-					if (userNameToRemove != IPToUserName.end()) //remove the user who disconnected from the user list
+					if (userNameToRemove != IPToUserName.end())
 					{
 						output += userNameToRemove->second;
 						IPToUserName.erase(userNameToRemove);
@@ -293,7 +298,7 @@ int main(int const argc, char const* const argv[])
 					RakNet::Time t = RakNet::GetTime();
 					prepBitStream(&bsOut, t);
 
-					//timestamping
+					ChatMessage response;
 					float betterTime = (float)t;
 					float seconds = betterTime / 1000.0f;
 					float minutes = seconds / 60.0f;
@@ -302,7 +307,9 @@ int main(int const argc, char const* const argv[])
 					hourVal %= 12;
 					int minutesInt = (int)((hour - (int)hour) * 60);
 					output = "[Received at " + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + output + " has disconnected.";
-					bsOut.Write(output);
+					strncpy(response.message, output.c_str(), output.length());
+					response.message[output.length()] = 0;
+					bsOut.Write(response);
 					serverLog << output << '\n';
 
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(), true);
@@ -315,7 +322,6 @@ int main(int const argc, char const* const argv[])
 
 			case ID_USERNAME:
 			{
-				//check to see if the user exists already
 				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
 				ChatMessage m = parseMessage(packet);
 				map<string, string>::iterator it;
@@ -352,15 +358,16 @@ int main(int const argc, char const* const argv[])
 						response.messageType = 0;
 					}
 					string insert = (response.messageType == ISADMIN ? "Admin " : "");
-					string output = "Welcome, " + insert + m.sender + "! Please enter a message."; //send initial welcome message
+					string output = "Welcome, " + insert + m.sender + "! Please enter a message.";
 					strncpy(response.message, output.c_str(), output.length());
 					response.message[output.length()] = 0;
 					bsOut.Write(response);
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 					bsOut.Reset();
-					prepBitStream(&bsOut, RakNet::GetTime());
+					RakNet::Time tmpTime = RakNet::GetTime();
+					prepBitStream(&bsOut, tmpTime);
 
-					float betterTime = (float)m.time;
+					float betterTime = (float)tmpTime;
 					float seconds = betterTime / 1000.0f;
 					float minutes = seconds / 60.0f;
 					float hour = minutes / 60.0f;
@@ -369,18 +376,79 @@ int main(int const argc, char const* const argv[])
 					int minutesInt = (int)((hour - (int)hour) * 60);
 					string otherMess = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m.sender + " has joined the chat.";
 					strncpy(response.message, otherMess.c_str(), otherMess.length());
-					response.message[otherMess.length()];
+					response.message[otherMess.length()] = 0;
+					bsOut.Write(response);
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
 					serverLog << otherMess << "\n";
 
-				}				
+				}
+				
+
+
+				
 			}
 			break;
+			/*case ID_RECEIVE_MESSAGE: //This section used to be relevant but it no longer is.
+			{
+				RakNet::RakString rs;
+				RakNet::MessageID message2;
+				//RakNet::BitStream bsIn(packet->data, packet->length, false);
+				//char vals[sizeof(RakNet::Time)];
+				//bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				//bsIn.Read(vals, sizeof(RakNet::Time));
+				//RakNet::Time time = *(RakNet::Time*)&vals;
+				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
+				//bsIn.Read(time);
+				float betterTime = (float)time;
+				float seconds = betterTime / 1000.0f;
+				float minutes = seconds / 60.0f;
+				float hour = minutes / 60.0f;
+				int hourVal = (int)hour % 12 + 11;
+				hourVal %= 12;
+				int minutesInt = (int)((hour - (int)hour) * 60);
+				printf("%d:%d\n", hourVal, minutesInt + 20);
+				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
+				bsIn.Read(message2);
+				bsIn.Read(rs);
+				printf("%s\n", rs.C_String());
+				string temp = rs.C_String();
+				string newString = chopStr((char*)temp.c_str(), (int)temp.length(), ' ');
+				serverLog << temp;
+				serverLog << "\n";
+				bsOut.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
+				string output = "[";
+				output = output + std::to_string(time);
+				output = output + "] " + IPToUserName[packet->systemAddress.ToString()]; //need to make sure we don't get an invalid user!!
+				bool dm = temp != newString && strcmp(temp.c_str(), "all") != 0 && strcmp(temp.c_str(), "server") != 0;
+				if (dm)
+				{
+					output += " (privately)";
+				}
+				else
+				{
+					output += " (publicly)";
+				}
+				output += ": " + newString;
+				bsOut.Write(output.c_str());
+				if (!dm)
+				{
+					map<string, string>::iterator it;
+					for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+					{
+						peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+					}
+				}
+				else
+				{
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				}
+				break;
+			}*/
 			case ID_MESSAGE_STRUCT:
 			{
 				ChatMessage m = parseMessage(packet);
 
-				handleMessage(&m, packet);//call the handle message function
+				handleMessage(&m, packet);
 				break;
 			}
 			default:
