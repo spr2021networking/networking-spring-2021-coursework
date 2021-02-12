@@ -291,7 +291,7 @@ int main(int const argc, char const* const argv[])
 				}
 				else if (startOfSecondWord == stringBuffer.c_str()) //there's no space in the message
 				{
-					if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command
+					if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command, meaning that it's a one-word public message
 					{
 						//set message to public and load the entire string buffer into the message.
 						messageToSend.messageType = 0;
@@ -330,7 +330,7 @@ int main(int const argc, char const* const argv[])
 					else if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
 					{
 						messageToSend.messageType = 2;
-						//checking what command typ
+						//checking what command type
 						if (strncmp(secondWord.c_str(), "userlist", 8) == 0) //userlist
 						{
 							strncpy(messageToSend.recipient, "userlist", 8);
