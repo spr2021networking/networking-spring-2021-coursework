@@ -71,6 +71,7 @@ bool quitting = false;
 /// </summary>
 void quit()
 {
+	quitting = true;
 	RakNet::BitStream out;
 	prepBitStream(&out, RakNet::GetTime(), ID_CONNECTION_LOST);
 	out.Write(name);
