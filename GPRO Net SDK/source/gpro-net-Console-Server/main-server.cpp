@@ -49,6 +49,9 @@ RakNet::RakPeerInterface* peer;
 map<string, string> IPToUserName;
 ofstream serverLog;
 
+string adminName = "IAmTheAdmin";
+RakNet::SystemAddress adminAddress;
+
 /// <summary>
 /// Handle public, private, and command messages
 /// </summary>
@@ -93,6 +96,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		response.message[output.length()] = 0;
 		outStream.Write(response);
 		map<string, string>::iterator it;
+		bool sent = false;
 		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
 		{
 			if (strncmp(it->second.c_str(), m->recipient, it->second.size()) == 0)
@@ -101,8 +105,24 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				string logOutput = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()];
 				logOutput += " (privately to " + it->second + "): " + m->message;
 				serverLog << logOutput << std::endl;
+				outStream.Reset();
+				prepBitStream(&outStream, RakNet::GetTime());
+				strncpy(response.message, logOutput.c_str(), (int)logOutput.length());
+				response.message[logOutput.length()] = 0;
+				outStream.Write(response);
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, adminAddress, false);
+				sent = true;
 				break;
 			}
+		}
+		if (!sent)
+		{
+			outStream.Reset();
+			prepBitStream(&outStream, RakNet::GetTime());
+			strncpy(response.message, "[Error] user does not exist", 28);
+			response.message[28] = 0;
+			outStream.Write(response);
+			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 		}
 	}
 	break;
@@ -147,16 +167,32 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				break;
 			}
 		}
+		if (strncmp(m->recipient, "kick", 4) == 0)
+		{
+			outStream.Reset();
+			prepBitStream(&outStream, RakNet::GetTime(), ID_KICK);
+			map<string, string>::iterator it;
+			for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+			{
+				if (strncmp(it->second.c_str(), m->message, it->second.size()) == 0)
+				{
+					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+					string logOutput = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] Kicked " + IPToUserName[packet->systemAddress.ToString()];
+					serverLog << logOutput << std::endl;
+					break;
+				}
+			}
+		}
 	}
 	break;
 	}
-	if ((m->messageType & 3) != PRIVATE) //private has its own logging behavior
+	if ((m->messageType & 3) != PRIVATE && strncmp(m->recipient, "kick", 4) != 0) //private has its own logging behavior
 	{
 		serverLog << output << std::endl;
 	}
 }
 
-string adminName = "IAmTheAdmin";
+
 int main(int const argc, char const* const argv[])
 {
 	peer = RakNet::RakPeerInterface::GetInstance();
@@ -224,10 +260,10 @@ int main(int const argc, char const* const argv[])
 
 				// Use a BitStream to write a custom user message
 				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
-				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
-				bsOut.Write((RakNet::MessageID)ID_USERNAME);
-				bsOut.Write("Hello world");
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				//prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
+				//bsOut.Write((RakNet::MessageID)ID_USERNAME);
+				//bsOut.Write("Hello world");
+				//peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
 			case ID_NEW_INCOMING_CONNECTION:
@@ -277,26 +313,47 @@ int main(int const argc, char const* const argv[])
 				}
 				break;
 
-			case ID_USERNAME: //todo send this as a chat message, with the admin flag set too
+			case ID_USERNAME:
 			{
+				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
 				ChatMessage m = parseMessage(packet);
-				IPToUserName[packet->systemAddress.ToString()] = m.message;
+				map<string, string>::iterator it;
+				bool alreadyExists = false;
+				for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+				{
+					if (strncmp(m.message, it->second.c_str(), it->second.length()) == 0) //username already exists
+					{
+						alreadyExists = true;
+					}
+				}
 
 				ChatMessage response;
-				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
-				if (strncmp(adminName.c_str(), m.message, adminName.length()) == 0)
+
+				if (alreadyExists)
 				{
-					response.messageType = ISADMIN;
+					response.messageType = -1;
+					strncpy(response.message, "We're sorry, that username is already taken. Please restart the program and try again!", 87);
+					response.message[87] = 0;
 				}
 				else
 				{
-					response.messageType = 0;
+					IPToUserName[packet->systemAddress.ToString()] = m.message;
+
+					if (strncmp(adminName.c_str(), m.message, adminName.length()) == 0)
+					{
+						response.messageType = ISADMIN;
+						adminAddress = packet->systemAddress;
+					}
+					else
+					{
+						response.messageType = 0;
+					}
+					string insert = (response.messageType == ISADMIN ? "Admin " : "");
+					string output = "Welcome, " + insert + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
+					strncpy(response.message, output.c_str(), output.length());
+					response.message[output.length()] = 0;
 				}
-				string insert = (response.messageType == ISADMIN ? "Admin " : "");
-				string output = "Welcome, " + insert + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
-				strncpy(response.message, output.c_str(), output.length());
-				response.message[output.length()] = 0;
-				//bsOut.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
+				
 				bsOut.Write(response);
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}

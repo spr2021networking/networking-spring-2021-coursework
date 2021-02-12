@@ -58,14 +58,15 @@ void stringTrim(std::string& strToTrim)
 RakNet::RakPeerInterface* peer;
 RakNet::SystemAddress serverAddress;
 char name[17];
+bool quitting = false;
 
-//http://www.cplusplus.com/reference/cstdlib/atexit/
 void quit()
 {
 	RakNet::BitStream out;
 	prepBitStream(&out, RakNet::GetTime(), ID_CONNECTION_LOST);
 	out.Write(name);
 	peer->Send(&out, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+	quitting = true;
 }
 
 int main(int const argc, char const* const argv[])
@@ -100,10 +101,19 @@ int main(int const argc, char const* const argv[])
 		//parse a name
 		printf("Enter nickname (16 character max)\n");
 		std::getline(std::cin, stringBuffer);
-		printf("Removing any spaces that may exist ...\n");
+		int prevLen = (int)stringBuffer.length();
 		stringTrim(stringBuffer);
-		printf("Removing any extra characters...\n");
-		stringBuffer = stringBuffer.substr(0, min(stringBuffer.length(), 16));
+		int newLen = (int)stringBuffer.length();
+		if (prevLen != newLen)
+		{
+			printf("Removing spaces ...\n");
+		}
+		if (newLen > 16)
+		{
+			printf("Removing any extra characters...\n");
+			stringBuffer = stringBuffer.substr(0, min(stringBuffer.length(), 16));
+		}
+
 		if (stringBuffer.length() == 0)
 		{
 			printf("Username was empty, please try again. ");
@@ -113,18 +123,15 @@ int main(int const argc, char const* const argv[])
 	strcpy(name, stringBuffer.c_str());
 	name[16] = 0;
 
-	printf("%i\n", (int)sizeof(RakNet::Time));
-	printf("%i\n", (int)sizeof(char));
-
 	printf("Starting the client.\n");
 	peer->Connect(ip, SERVER_PORT, 0, 0);
 
 	bool hasNameBeenSent = false;
 
 	bool isAdmin = false;
-	while (1)
+	while (!quitting)
 	{
-		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
+		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			//this function checks if there's a timestamp stored in the packet. If there is, we advance the switch past the timestamp
 			int idIndex = 0;
@@ -189,7 +196,14 @@ int main(int const argc, char const* const argv[])
 			{
 				ChatMessage m = parseMessage(packet);
 				printf("%s\n", m.message);
-				isAdmin = (m.messageType & ISADMIN) > 0;
+				if (m.messageType == -1)
+				{
+					quit();
+				}
+				else
+				{
+					isAdmin = (m.messageType & ISADMIN) > 0;
+				}
 			}
 				break;
 
@@ -205,7 +219,10 @@ int main(int const argc, char const* const argv[])
 				printf("%s\n", m.message);
 				break;
 			}
-
+			case ID_KICK:
+				quit();
+				printf("You have been kicked\n");
+				break;
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[idIndex]);
 				break;
@@ -305,6 +322,31 @@ int main(int const argc, char const* const argv[])
 							strncpy(messageToSend.recipient, "userlist", 8);
 							messageToSend.recipient[8] = 0;
 							messageToSend.message[0] = ' ';
+						}
+						if (strncmp(secondWord.c_str(), "kick", 4) == 0)
+						{
+							if (!isAdmin)
+							{
+								printf("[Error] Only admins can kick!\n");
+								messageToSend.message[0] = 0;
+							}
+							else
+							{
+								char* startOfKickTarget = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
+								if (startOfKickTarget == secondWord.c_str()) //no kick target
+								{
+									printf("[Error] No kick target\n");
+									messageToSend.message[0] = 0;
+								}
+								else
+								{
+									std::string messageBody = startOfKickTarget;
+									strncpy(messageToSend.recipient, secondWord.c_str(), (int)secondWord.length());
+									strncpy(messageToSend.message, messageBody.c_str(), (int)messageBody.length());
+									messageToSend.message[messageBody.length()] = 0; //null terminate
+								}
+							}
+
 						}
 					}
 					else
