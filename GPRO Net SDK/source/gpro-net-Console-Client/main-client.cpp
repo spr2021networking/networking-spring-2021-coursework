@@ -229,7 +229,31 @@ int main(int const argc, char const* const argv[])
 			bsOut2.Write(timeStamp);
 			bsOut2.Write(messageID);
 			bsOut2.Write(messageRk);
-			peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+			if (messageRk.C_String()[0] == 's')
+			{
+				ChatMessage m;
+				m.isTimestamp = ID_TIMESTAMP;
+				m.time = timeStamp;
+				m.id2 = ID_PROMPT_MESSAGE;
+				m.isCommand = false;
+				m.isPublic = false;
+				m.message = messageRk;
+				RakNet::BitStream bsOut3;
+
+				//bsOut3.Write(useTimeStamp);
+				//bsOut3.Write(timeStamp);
+				//messageID = ID_PROMPT_MESSAGE;
+				//bsOut3.Write(messageID);
+				bsOut3.Write(useTimeStamp);
+				bsOut3.Write(timeStamp);
+				bsOut3.Write(m.id2);
+				bsOut3.Write(m);
+				peer->Send(&bsOut3, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+			}
+			else
+			{
+				peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+			}
 		}
 
 	}

@@ -226,8 +226,26 @@ int main(int const argc, char const* const argv[])
 				{
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				}
+				break;
 			}
-			break;
+			case ID_PROMPT_MESSAGE:
+			{
+				//RakNet::MessageID message2;
+				RakNet::BitStream bsIn(packet->data, packet->length, false);
+				//char vals[sizeof(RakNet::Time)];
+				//bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+				//bsIn.Read(vals, sizeof(RakNet::Time));
+				//RakNet::Time time = *(RakNet::Time*)&vals;
+				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
+				//bsIn.Read(time);
+				printf("%" PRINTF_64_BIT_MODIFIER "u ", time);
+				//bsIn.IgnoreBytes(sizeof(RakNet::Time) + sizeof(RakNet::MessageID));
+				//bsIn.Read(message2);
+				ChatMessage* m = (ChatMessage*)bsIn.GetData();
+				
+				//bsIn.Read(m);
+				break;
+			}
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;

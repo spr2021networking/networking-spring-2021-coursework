@@ -26,6 +26,7 @@
 #define _GPRO_NET_H_
 
 #include <stdlib.h>
+#include "RakNet/RakString.h"
 
 char* chopStr(char* in, int length, char delim)
 {
@@ -39,6 +40,20 @@ char* chopStr(char* in, int length, char delim)
 	}
 	return in;
 }
+
+#pragma pack(push, 1)
+typedef struct ChatMessage ChatMessage;
+struct ChatMessage
+{
+	RakNet::MessageID isTimestamp;
+	RakNet::Time time;
+	RakNet::MessageID id2;
+	bool isPublic;
+	bool isCommand;
+	RakNet::RakString recipient;
+	RakNet::RakString message;
+};
+#pragma pack(pop)
 
 
 #endif	// !_GPRO_NET_H_
