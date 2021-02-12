@@ -2,7 +2,7 @@ to become admin
 when username is prompted, type IAmTheAdmin.
 Commands
 command userlist (fetches a list of users)
-command stop (stops the server)
+command stop (stops the server, only usable by admin)
 quit (quits the client, no command needed in front)
 
 to send public message, just type the message you want
