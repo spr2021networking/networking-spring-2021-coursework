@@ -51,6 +51,7 @@ ofstream serverLog;
 
 string adminName = "IAmTheAdmin";
 RakNet::SystemAddress adminAddress;
+bool quitting = false;
 
 /// <summary>
 /// Handle public, private, and command messages
@@ -99,7 +100,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		bool sent = false;
 		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
 		{
-			if (strncmp(it->second.c_str(), m->recipient, it->second.size()) == 0)
+			if (strncmp(it->second.c_str(), m->recipient, it->second.length()) == 0)
 			{
 				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
 				string logOutput = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()];
@@ -174,7 +175,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			map<string, string>::iterator it;
 			for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
 			{
-				if (strncmp(it->second.c_str(), m->message, it->second.size()) == 0)
+				if (strncmp(it->second.c_str(), m->message, it->second.length()) == 0)
 				{
 					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
 					string logOutput = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] Kicked " + IPToUserName[packet->systemAddress.ToString()];
@@ -182,6 +183,16 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 					break;
 				}
 			}
+		}
+		if (strncmp(m->recipient, "stop", 4) == 0)
+		{
+			string quitMessage = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] The server is now shutting down.";
+			strncpy(response.message, quitMessage.c_str(), quitMessage.length());
+			response.message[quitMessage.length()] = 0;
+			outStream.Write(response);
+			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(), true);
+			serverLog << quitMessage << "\n";
+			quitting = true;
 		}
 	}
 	break;
@@ -223,7 +234,7 @@ int main(int const argc, char const* const argv[])
 		peer->SetMaximumIncomingConnections(MAX_CLIENTS);
 	}
 
-	while (1)
+	while (!quitting)
 	{
 		serverLog.open("serverlog.txt", std::ios_base::app);
 		for (packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive())
@@ -442,7 +453,7 @@ int main(int const argc, char const* const argv[])
 		}
 		serverLog.close();
 	}
-
+	peer->Shutdown(300);
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
 	return 0;

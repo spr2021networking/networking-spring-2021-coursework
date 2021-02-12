@@ -66,7 +66,7 @@ void quit()
 	prepBitStream(&out, RakNet::GetTime(), ID_CONNECTION_LOST);
 	out.Write(name);
 	peer->Send(&out, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-	quitting = true;
+	peer->Shutdown(300);
 }
 
 int main(int const argc, char const* const argv[])
@@ -119,7 +119,7 @@ int main(int const argc, char const* const argv[])
 			printf("Username was empty, please try again. ");
 		}
 	}
-	
+
 	strcpy(name, stringBuffer.c_str());
 	name[16] = 0;
 
@@ -181,15 +181,12 @@ int main(int const argc, char const* const argv[])
 				printf("The server is full.\n");
 				break;
 			case ID_DISCONNECTION_NOTIFICATION:
-				if (isServer) {
-					printf("A client has disconnected.\n");
-				}
-				else {
-					printf("We have been disconnected.\n");
-				}
+				printf("We have been disconnected.\n");
+				quitting = true;
 				break;
 			case ID_CONNECTION_LOST:
-					printf("Connection lost.\n");
+				printf("Connection lost.\n");
+				quitting = true;
 				break;
 
 			case ID_USERNAME:
@@ -205,14 +202,14 @@ int main(int const argc, char const* const argv[])
 					isAdmin = (m.messageType & ISADMIN) > 0;
 				}
 			}
-				break;
+			break;
 
 			case ID_RECEIVE_MESSAGE:
 			{
 				ChatMessage m = parseMessage(packet);
 				printf("%s\n", m.message);
 			}
-				break;
+			break;
 			case ID_MESSAGE_STRUCT:
 			{
 				ChatMessage m = parseMessage(packet);
@@ -346,7 +343,24 @@ int main(int const argc, char const* const argv[])
 									messageToSend.message[messageBody.length()] = 0; //null terminate
 								}
 							}
-
+						}
+						if (strncmp(secondWord.c_str(), "stop", 4) == 0)
+						{
+							if (!isAdmin)
+							{
+								printf("[Error] Only admins can close the server!\n");
+								messageToSend.message[0] = 0;
+							}
+							else
+							{
+								strncpy(messageToSend.recipient, "stop", 4);
+								messageToSend.message[4] = 0; //null terminate
+							}
+						}
+						else
+						{
+							printf("[Error] Unknown command\n");
+							messageToSend.message[0] = 0;
 						}
 					}
 					else
