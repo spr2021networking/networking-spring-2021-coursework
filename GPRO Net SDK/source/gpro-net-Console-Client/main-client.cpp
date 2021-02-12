@@ -142,7 +142,7 @@ int main(int const argc, char const* const argv[])
 	bool isAdmin = false;
 	while (!quitting)
 	{
-		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = !quitting ? peer->Receive() : nullptr)
+		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			//this function checks if there's a timestamp stored in the packet. If there is, we advance the switch past the timestamp
 			int idIndex = 0;
@@ -291,7 +291,7 @@ int main(int const argc, char const* const argv[])
 				}
 				else if (startOfSecondWord == stringBuffer.c_str()) //there's no space in the message
 				{
-					if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command
+					if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command, meaning that it's a one-word public message
 					{
 						//set message to public and load the entire string buffer into the message.
 						messageToSend.messageType = 0;
@@ -330,7 +330,7 @@ int main(int const argc, char const* const argv[])
 					else if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
 					{
 						messageToSend.messageType = 2;
-						//checking what command typ
+						//checking what command type
 						if (strncmp(secondWord.c_str(), "userlist", 8) == 0) //userlist
 						{
 							strncpy(messageToSend.recipient, "userlist", 8);
@@ -339,7 +339,12 @@ int main(int const argc, char const* const argv[])
 						}
 						else if (strncmp(secondWord.c_str(), "kick", 4) == 0) //kick (admin only)
 						{
-							if (!isAdmin)
+							if (true)
+							{
+								printf("[Error] Kicking currently does not function correctly!\n");
+								messageToSend.message[0] = 0;
+							}
+							else if (!isAdmin)
 							{
 								printf("[Error] Only admins can kick!\n");
 								messageToSend.message[0] = 0;
