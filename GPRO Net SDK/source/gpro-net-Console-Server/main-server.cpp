@@ -68,7 +68,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	hourVal %= 12;
 	int minutesInt = (int)((hour - (int)hour) * 60);
 	printf("%d:%d\n", hourVal, minutesInt + 20);
-	string output = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()]; //timestamp + user who sent this
+	string output = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m->sender; //timestamp + user who sent this
 
 	RakNet::BitStream outStream;
 	prepBitStream(&outStream, RakNet::GetTime());
@@ -103,7 +103,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			if (strncmp(it->second.c_str(), m->recipient, it->second.length()) == 0)
 			{
 				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
-				string logOutput = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()];
+				string logOutput = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()];
 				logOutput += " (privately to " + it->second + "): " + m->message;
 				serverLog << logOutput << std::endl;
 				outStream.Reset();
@@ -178,7 +178,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				if (strncmp(it->second.c_str(), m->message, it->second.length()) == 0)
 				{
 					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
-					string logOutput = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] Kicked " + IPToUserName[packet->systemAddress.ToString()];
+					string logOutput = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] Kicked " + IPToUserName[packet->systemAddress.ToString()];
 					serverLog << logOutput << std::endl;
 					break;
 				}
@@ -186,7 +186,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		}
 		if (strncmp(m->recipient, "stop", 4) == 0)
 		{
-			string quitMessage = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] The server is now shutting down.";
+			string quitMessage = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] The server is now shutting down.";
 			strncpy(response.message, quitMessage.c_str(), quitMessage.length());
 			response.message[quitMessage.length()] = 0;
 			outStream.Write(response);
@@ -305,7 +305,7 @@ int main(int const argc, char const* const argv[])
 					int hourVal = (int)hour % 12 + 11;
 					hourVal %= 12;
 					int minutesInt = (int)((hour - (int)hour) * 60);
-					output = "[Received at " + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + output + " has disconnected.";
+					output = "[Received at " + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + output + " has disconnected.";
 					bsOut.Write(output);
 					serverLog << output << '\n';
 
@@ -343,9 +343,9 @@ int main(int const argc, char const* const argv[])
 				}
 				else
 				{
-					IPToUserName[packet->systemAddress.ToString()] = m.message;
+					IPToUserName[packet->systemAddress.ToString()] = m.sender;
 
-					if (strncmp(adminName.c_str(), m.message, adminName.length()) == 0)
+					if (strncmp(adminName.c_str(), m.sender, adminName.length()) == 0)
 					{
 						response.messageType = ISADMIN;
 						adminAddress = packet->systemAddress;
@@ -355,7 +355,7 @@ int main(int const argc, char const* const argv[])
 						response.messageType = 0;
 					}
 					string insert = (response.messageType == ISADMIN ? "Admin " : "");
-					string output = "Welcome, " + insert + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
+					string output = "Welcome, " + insert + m.sender + "! Please enter a message.";
 					strncpy(response.message, output.c_str(), output.length());
 					response.message[output.length()] = 0;
 					bsOut.Write(response);
@@ -370,7 +370,7 @@ int main(int const argc, char const* const argv[])
 					int hourVal = (int)hour % 12 + 11;
 					hourVal %= 12;
 					int minutesInt = (int)((hour - (int)hour) * 60);
-					string otherMess = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()] + " has joined the chat.";
+					string otherMess = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m.sender + " has joined the chat.";
 					strncpy(response.message, otherMess.c_str(), otherMess.length());
 					response.message[otherMess.length()];
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);

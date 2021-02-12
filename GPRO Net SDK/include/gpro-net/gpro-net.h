@@ -42,6 +42,7 @@ struct ChatMessage
 	RakNet::MessageID id2;
 	int messageType; //public = 0; private = 1; command = 2
 	char recipient[17];
+	char sender[17];
 	char message[129];
 };
 #pragma pack(pop)

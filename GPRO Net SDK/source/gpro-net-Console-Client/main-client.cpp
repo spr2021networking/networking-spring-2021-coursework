@@ -123,7 +123,7 @@ int main(int const argc, char const* const argv[])
 	strcpy(name, stringBuffer.c_str());
 	name[16] = 0;
 
-	printf("Starting the client.\n");
+	printf("Starting the client. WARNING: Timestamps may be inaccurate.\n");
 	peer->Connect(ip, SERVER_PORT, 0, 0);
 
 	bool hasNameBeenSent = false;
@@ -152,7 +152,7 @@ int main(int const argc, char const* const argv[])
 			case ID_REMOTE_CONNECTION_LOST:
 				printf("Another client has lost the connection.\n");
 				break;
-			case ID_REMOTE_NEW_INCOMING_CONNECTION: //todo make this announce who joins
+			case ID_REMOTE_NEW_INCOMING_CONNECTION:
 				printf("Another client has connected.\n");
 				break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
@@ -167,8 +167,8 @@ int main(int const argc, char const* const argv[])
 					RakNet::BitStream bsOut2;
 					prepBitStream(&bsOut2, RakNet::GetTime(), ID_USERNAME);
 					ChatMessage mess;
-					strncpy(mess.message, name, stringBuffer.length());
-					mess.message[stringBuffer.length()] = 0;
+					strncpy(mess.sender, name, stringBuffer.length());
+					mess.sender[stringBuffer.length()] = 0;
 					bsOut2.Write(mess);
 					peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress = packet->systemAddress, false);
 				}
@@ -320,7 +320,7 @@ int main(int const argc, char const* const argv[])
 							messageToSend.recipient[8] = 0;
 							messageToSend.message[0] = ' ';
 						}
-						if (strncmp(secondWord.c_str(), "kick", 4) == 0)
+						else if (strncmp(secondWord.c_str(), "kick", 4) == 0)
 						{
 							if (!isAdmin)
 							{
@@ -344,7 +344,7 @@ int main(int const argc, char const* const argv[])
 								}
 							}
 						}
-						if (strncmp(secondWord.c_str(), "stop", 4) == 0)
+						else if (strncmp(secondWord.c_str(), "stop", 4) == 0)
 						{
 							if (!isAdmin)
 							{
@@ -354,7 +354,7 @@ int main(int const argc, char const* const argv[])
 							else
 							{
 								strncpy(messageToSend.recipient, "stop", 4);
-								messageToSend.message[4] = 0; //null terminate
+								messageToSend.recipient[4] = 0; //null terminate
 							}
 						}
 						else
@@ -374,9 +374,11 @@ int main(int const argc, char const* const argv[])
 				{
 					messageToSend.messageType |= ISADMIN;
 				}
-				bsOut3.Write(messageToSend);
 				if (messageToSend.message[0] != 0) //prevents empty messages
 				{
+					strncpy(messageToSend.sender, name, strnlen(name, 17));
+					messageToSend.sender[strnlen(name, 17)] = 0;
+					bsOut3.Write(messageToSend);
 					peer->Send(&bsOut3, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 				}
 			}
