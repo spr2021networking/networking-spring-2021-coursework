@@ -298,6 +298,7 @@ int main(int const argc, char const* const argv[])
 					RakNet::Time t = RakNet::GetTime();
 					prepBitStream(&bsOut, t);
 
+					ChatMessage response;
 					float betterTime = (float)t;
 					float seconds = betterTime / 1000.0f;
 					float minutes = seconds / 60.0f;
@@ -306,7 +307,9 @@ int main(int const argc, char const* const argv[])
 					hourVal %= 12;
 					int minutesInt = (int)((hour - (int)hour) * 60);
 					output = "[Received at " + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + output + " has disconnected.";
-					bsOut.Write(output);
+					strncpy(response.message, output.c_str(), output.length());
+					response.message[output.length()] = 0;
+					bsOut.Write(response);
 					serverLog << output << '\n';
 
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(), true);
@@ -361,9 +364,10 @@ int main(int const argc, char const* const argv[])
 					bsOut.Write(response);
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 					bsOut.Reset();
-					prepBitStream(&bsOut, RakNet::GetTime());
+					RakNet::Time tmpTime = RakNet::GetTime();
+					prepBitStream(&bsOut, tmpTime);
 
-					float betterTime = (float)m.time;
+					float betterTime = (float)tmpTime;
 					float seconds = betterTime / 1000.0f;
 					float minutes = seconds / 60.0f;
 					float hour = minutes / 60.0f;
@@ -372,7 +376,8 @@ int main(int const argc, char const* const argv[])
 					int minutesInt = (int)((hour - (int)hour) * 60);
 					string otherMess = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m.sender + " has joined the chat.";
 					strncpy(response.message, otherMess.c_str(), otherMess.length());
-					response.message[otherMess.length()];
+					response.message[otherMess.length()] = 0;
+					bsOut.Write(response);
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
 					serverLog << otherMess << "\n";
 

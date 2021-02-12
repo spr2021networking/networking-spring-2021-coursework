@@ -123,7 +123,7 @@ int main(int const argc, char const* const argv[])
 	strcpy(name, stringBuffer.c_str());
 	name[16] = 0;
 
-	printf("Starting the client. WARNING: Timestamps may be inaccurate.\n");
+	printf("Starting the client. WARNING: Timestamps may be extremely inaccurate. There is no obvious conversion between RakNet::GetTime() and the current system time\n");
 	peer->Connect(ip, SERVER_PORT, 0, 0);
 
 	bool hasNameBeenSent = false;
