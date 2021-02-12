@@ -154,9 +154,11 @@ int main(int const argc, char const* const argv[])
 					prepBitStream(&bsOut2, RakNet::GetTime(), ID_USERNAME);
 					ChatMessage mess;
 					strncpy(mess.message, name, stringBuffer.length());
+					mess.message[stringBuffer.length()] = 0;
 					hasNameBeenSent = true;
 					//bsOut2.Write((RakNet::MessageID)ID_USERNAME);
-					bsOut2.Write(name);
+					//bsOut2.Write(name);
+					bsOut2.Write(mess);
 					peer->Send(&bsOut2, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress = packet->systemAddress, false);
 				}
 			}
@@ -188,7 +190,7 @@ int main(int const argc, char const* const argv[])
 			{
 				ChatMessage m = parseMessage(packet);
 				printf("%s\n", m.message);
-				isAdmin = m.messageType == 3;
+				isAdmin = (m.messageType & ISADMIN) > 0;
 			}
 				break;
 
@@ -292,12 +294,15 @@ int main(int const argc, char const* const argv[])
 						messageToSend.message[messageBackup.GetLength()] = 0;
 					}
 				}
-
-
-
-
+				if (isAdmin)
+				{
+					messageToSend.messageType |= ISADMIN;
+				}
 				bsOut3.Write(messageToSend);
-				peer->Send(&bsOut3, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+				if (messageToSend.message[0] != 0) //prevents empty messages
+				{
+					peer->Send(&bsOut3, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+				}
 			}
 		}
 

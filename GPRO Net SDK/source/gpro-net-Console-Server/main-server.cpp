@@ -72,7 +72,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	response.id2 = ID_MESSAGE_STRUCT;
 	response.isTimestamp = ID_TIMESTAMP;
 	response.messageType = 0;
-	switch (m->messageType)
+	switch (m->messageType & 3) //trim off the admin flag for now
 	{
 	case PUBLIC: //public
 	{
@@ -242,19 +242,25 @@ int main(int const argc, char const* const argv[])
 
 			case ID_USERNAME: //todo send this as a chat message, with the admin flag set too
 			{
-				RakNet::RakString rs;
-				//RakNet::BitStream bsIn(packet->data, packet->length, false);
-				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-				bsIn.Read(rs);
-				printf("%s\n", rs.C_String());
-				string temp = rs.C_String();
-				printf("%s\n", packet->systemAddress.ToString());
-				IPToUserName[packet->systemAddress.ToString()] = temp;
-				serverLog << temp;
-				serverLog << "\n";
-				temp = "Welcome, " + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
-				bsOut.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
-				bsOut.Write(temp.c_str());
+				ChatMessage m = parseMessage(packet);
+				IPToUserName[packet->systemAddress.ToString()] = m.message;
+
+				ChatMessage response;
+				prepBitStream(&bsOut, RakNet::GetTime());
+				if (strncmp(adminName.c_str(), m.message, adminName.length()) == 0)
+				{
+					response.messageType = ISADMIN;
+				}
+				else
+				{
+					response.messageType = 0;
+				}
+				string insert = (response.messageType == ISADMIN ? "Admin " : "");
+				string output =  "Welcome, " + insert + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
+				strncpy(response.message, output.c_str(), output.length());
+				response.message[output.length()] = 0;
+				//bsOut.Write((RakNet::MessageID)ID_RECEIVE_MESSAGE);
+				bsOut.Write(response);
 				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
