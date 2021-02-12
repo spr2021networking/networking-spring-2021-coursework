@@ -197,7 +197,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	}
 	break;
 	}
-	if ((m->messageType & 3) != PRIVATE && strncmp(m->recipient, "kick", 4) != 0) //private has its own logging behavior
+	if ((m->messageType & 3) != PRIVATE && strncmp(m->recipient, "kick", 4) != 0 && strncmp(m->recipient, "stop", 4) != 0) //private has its own logging behavior
 	{
 		serverLog << output << std::endl;
 	}
