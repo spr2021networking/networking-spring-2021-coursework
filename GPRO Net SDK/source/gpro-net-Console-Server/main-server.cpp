@@ -257,13 +257,6 @@ int main(int const argc, char const* const argv[])
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 			{
 				printf("Our connection request has been accepted.\n");
-
-				// Use a BitStream to write a custom user message
-				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
-				//prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
-				//bsOut.Write((RakNet::MessageID)ID_USERNAME);
-				//bsOut.Write("Hello world");
-				//peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			}
 			break;
 			case ID_NEW_INCOMING_CONNECTION:
@@ -334,6 +327,8 @@ int main(int const argc, char const* const argv[])
 					response.messageType = -1;
 					strncpy(response.message, "We're sorry, that username is already taken. Please restart the program and try again!", 87);
 					response.message[87] = 0;
+					bsOut.Write(response);
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				}
 				else
 				{
@@ -352,10 +347,29 @@ int main(int const argc, char const* const argv[])
 					string output = "Welcome, " + insert + IPToUserName[packet->systemAddress.ToString()] + "! Please enter a message.";
 					strncpy(response.message, output.c_str(), output.length());
 					response.message[output.length()] = 0;
+					bsOut.Write(response);
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+					bsOut.Reset();
+					prepBitStream(&bsOut, RakNet::GetTime());
+
+					float betterTime = (float)m.time;
+					float seconds = betterTime / 1000.0f;
+					float minutes = seconds / 60.0f;
+					float hour = minutes / 60.0f;
+					int hourVal = (int)hour % 12 + 11;
+					hourVal %= 12;
+					int minutesInt = (int)((hour - (int)hour) * 60);
+					string otherMess = "[" + std::to_string(hourVal) + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()] + " has joined the chat.";
+					strncpy(response.message, otherMess.c_str(), otherMess.length());
+					response.message[otherMess.length()];
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
+					serverLog << otherMess << "\n";
+
 				}
 				
-				bsOut.Write(response);
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
+
+				
 			}
 			break;
 			/*case ID_RECEIVE_MESSAGE: //This section used to be relevant but it no longer is.
