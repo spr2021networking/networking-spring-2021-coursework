@@ -41,7 +41,7 @@
 
 
 using namespace std;
-#define MAX_CLIENTS 10
+#define MAX_CLIENTS 5
 #define SERVER_PORT 7777
 
 enum GameMessages
@@ -104,6 +104,21 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	}
 	break;
 	case 2: //command
+	{
+		output += " (userlist): ";
+		map<string, string>::iterator it;
+		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+		{
+			output += it->second.c_str();
+			output += "\n";
+			
+		}
+		if (true)
+		{
+			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			break;
+		}
+	}
 		break;
 	}
 	serverLog << output << std::endl;
