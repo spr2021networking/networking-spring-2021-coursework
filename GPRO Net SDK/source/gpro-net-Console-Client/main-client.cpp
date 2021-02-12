@@ -142,7 +142,7 @@ int main(int const argc, char const* const argv[])
 	bool isAdmin = false;
 	while (!quitting)
 	{
-		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
+		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = !quitting ? peer->Receive() : nullptr)
 		{
 			//this function checks if there's a timestamp stored in the packet. If there is, we advance the switch past the timestamp
 			int idIndex = 0;
