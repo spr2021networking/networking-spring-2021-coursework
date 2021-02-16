@@ -23,6 +23,16 @@ void checkerLoop(gpro_checkers* chk)
 		y = min(7, y + 1);
 		dirty = true;
 	}
+	if (GetKeyState(VK_LEFT) >> 15 != 0)
+	{
+		x = max(0, x - 1);
+		dirty = true;
+	}
+	if (GetKeyState(VK_RIGHT) >> 15 != 0)
+	{
+		x = min(7, x + 1);
+		dirty = true;
+	}
 
 }
 
