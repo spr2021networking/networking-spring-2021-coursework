@@ -42,6 +42,9 @@
 #include "RakNet/RakNetTypes.h"  // MessageID
 #include "RakNet/GetTime.h"
 #include "Windows.h"
+#include "gpro-net/gpro-net-common/gpro-net-gamestate.h"
+
+#include "gpro-net-Console-Client/checkers.h"
 
 #define MAX_CLIENTS 10
 #define SERVER_PORT 7777
@@ -78,9 +81,15 @@ void quit()
 	peer->Send(&out, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 	peer->Shutdown(300);
 }
+gpro_checkers chk;
 
 int main(int const argc, char const* const argv[])
 {
+	bool playingCheckers = true;
+	while (playingCheckers)
+	{
+		checkerLoop(&chk);
+	}
 	peer = RakNet::RakPeerInterface::GetInstance();
 	RakNet::Packet* packet;
 	RakNet::SocketDescriptor sd;
