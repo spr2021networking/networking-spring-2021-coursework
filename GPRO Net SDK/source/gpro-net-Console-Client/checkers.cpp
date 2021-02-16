@@ -6,7 +6,8 @@ void checkerLoop(gpro_checkers* chk)
 {
 	if (dirty)
 	{
-		drawCheckers(chk);
+		drawBoard();
+		drawPieces(chk);
 		drawHighlight(x, y);
 		gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
 		dirty = false;
@@ -36,7 +37,7 @@ void checkerLoop(gpro_checkers* chk)
 
 }
 
-void drawCheckers(gpro_checkers* chk)
+void drawBoard()
 {
 	gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
 	gpro_consoleClear();
@@ -47,20 +48,31 @@ void drawCheckers(gpro_checkers* chk)
 			if (i % 2 == 0)
 			{
 				gpro_consoleSetColor(gpro_consoleColor_grey_d, gpro_consoleColor_grey_d);
-				printf("xx");
+				printf("  ");
 				gpro_consoleSetColor(gpro_consoleColor_red, gpro_consoleColor_red);
-				printf("xx");
+				printf("  ");
 			}
 			else
 			{
 				gpro_consoleSetColor(gpro_consoleColor_red, gpro_consoleColor_red);
-				printf("xx");
+				printf("  ");
 				gpro_consoleSetColor(gpro_consoleColor_grey_d, gpro_consoleColor_grey_d);
-				printf("xx");
+				printf("  ");
 			}
 		}
 		printf("\n");
 	}
+}
+
+void drawPieces(gpro_checkers* chk)
+{
+	gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_grey_d);
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			//render pieces
+		}
 }
 
 void drawHighlight(int x, int y)

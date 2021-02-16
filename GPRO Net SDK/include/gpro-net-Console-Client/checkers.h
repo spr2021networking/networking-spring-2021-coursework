@@ -7,6 +7,7 @@
 #include <Windows.h>
 
 void checkerLoop(gpro_checkers* chk);
-void drawCheckers(gpro_checkers* chk);
+void drawBoard();
+void drawPieces(gpro_checkers* chk);
 void drawHighlight(int x, int y);
 #endif
