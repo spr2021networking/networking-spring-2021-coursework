@@ -6,9 +6,10 @@
 #include <stdio.h>
 #include <Windows.h>
 
-void battleshipLoop(gpro_battleship* blt);
+void battleshipLoop(gpro_battleship* shipBrd, gpro_battleship* atkBrd);
 void drawShipBoard();
 void drawAttackBoard();
-//void drawPieces(gpro_checkers* chk);
-void drawShips(int x, int y);
+void placeShips(int x, int y, gpro_battleship* shipBrd);
+void drawSelectedTile(int x, int y);
+void fireShot(int x, int y);
 #endif

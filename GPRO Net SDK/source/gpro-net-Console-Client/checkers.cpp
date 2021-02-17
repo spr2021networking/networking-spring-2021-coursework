@@ -73,6 +73,7 @@ void drawPieces(gpro_checkers* chk)
 		{
 			//render pieces
 		}
+	}
 }
 
 void drawHighlight(int x, int y)

@@ -45,6 +45,7 @@
 #include "gpro-net/gpro-net-common/gpro-net-gamestate.h"
 
 #include "gpro-net-Console-Client/checkers.h"
+#include "gpro-net-Console-Client/battleship.h"
 
 #define MAX_CLIENTS 10
 #define SERVER_PORT 7777
@@ -82,14 +83,22 @@ void quit()
 	peer->Shutdown(300);
 }
 gpro_checkers chk;
+gpro_battleship shipBrd;
+gpro_battleship atkBrd;
 
 int main(int const argc, char const* const argv[])
 {
-	bool playingCheckers = true;
+	bool playingCheckers = false;
 	while (playingCheckers)
 	{
 		checkerLoop(&chk);
 	}
+	bool playingBattleship = true;
+	while (playingBattleship)
+	{
+		battleshipLoop(&shipBrd, &atkBrd);
+	}
+
 	peer = RakNet::RakPeerInterface::GetInstance();
 	RakNet::Packet* packet;
 	RakNet::SocketDescriptor sd;
