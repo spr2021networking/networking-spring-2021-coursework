@@ -9,5 +9,5 @@
 void checkerLoop(gpro_checkers* chk);
 void drawBoard();
 void drawPieces(gpro_checkers* chk);
-void drawHighlight(int x, int y);
+void drawHighlight(gpro_checkers* chk, int x, int y);
 #endif

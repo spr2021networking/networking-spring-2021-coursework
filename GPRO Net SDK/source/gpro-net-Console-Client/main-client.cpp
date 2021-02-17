@@ -86,6 +86,7 @@ gpro_checkers chk;
 int main(int const argc, char const* const argv[])
 {
 	bool playingCheckers = true;
+	gpro_checkers_reset(chk);
 	while (playingCheckers)
 	{
 		checkerLoop(&chk);
