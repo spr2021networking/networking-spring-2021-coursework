@@ -103,6 +103,17 @@ void drawPieces(gpro_checkers* chk)
 	}
 }
 
+typedef struct Action Action;
+struct Action
+{
+	char playerIndex;
+	char startX, startY;
+	char endX, endY;
+	char piecesCaptured;
+	char capturedCoords[24]; //length is 2*pieces captured
+};
+
+
 void drawHighlight(gpro_checkers* chk, int x, int y)
 {
 	gpro_consoleSetCursor(2 * (x), (y));
