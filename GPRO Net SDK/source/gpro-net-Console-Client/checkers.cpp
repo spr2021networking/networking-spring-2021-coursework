@@ -246,16 +246,16 @@ void handleSelection(gpro_checkers* chk)
 				if (isSelectedKing)	//checking for king jumps to exist. If you CAN jump, you MUST jump.
 				{
 					//checking the squares diagonally down from the player to see if they have tiles
-					char diagDownLeft = *(chk)[selectionY + 1][(selectionX / 2) - 1];
+					char diagDownLeft = (*chk)[selectionY + 1][(selectionX / 2) - 1];
 					jumpExists |= ((diagDownLeft & 3) == 1);
-					char diagDownRight = *(chk)[selectionY + 1][(selectionX / 2)];
+					char diagDownRight = (*chk)[selectionY + 1][(selectionX / 2)];
 					jumpExists |= ((diagDownRight & 3) == 1);
 				}
 				if (selectionY > 0)
 				{
-					char diagUpLeft = *(chk)[selectionY - 1][(selectionX / 2) - 1];
+					char diagUpLeft = (*chk)[selectionY - 1][(selectionX / 2) - 1];
 					jumpExists |= ((diagUpLeft & 3) == 1);
-					char diagUpRight = *(chk)[selectionY - 1][(selectionX / 2)];
+					char diagUpRight = (*chk)[selectionY - 1][(selectionX / 2)];
 					jumpExists |= ((diagUpRight & 3) == 1);
 				}
 
@@ -325,16 +325,16 @@ void handleSelection(gpro_checkers* chk)
 				if (isSelectedKing)	//checking for king jumps to exist. If you CAN jump, you MUST jump.
 				{
 					//checking the squares diagonally down from the player to see if they have tiles
-					char diagDownLeft = *(chk)[selectionY + 1][(selectionX / 2)];
+					char diagDownLeft = (*chk)[selectionY + 1][(selectionX / 2)];
 					jumpExists |= ((diagDownLeft & 3) == 1);
-					char diagDownRight = *(chk)[selectionY + 1][(selectionX / 2) + 1];
+					char diagDownRight = (*chk)[selectionY + 1][(selectionX / 2) + 1];
 					jumpExists |= ((diagDownRight & 3) == 1);
 				}
 				if (selectionY < 7)
 				{
-					char diagUpLeft = *(chk)[selectionY - 1][(selectionX / 2)];
+					char diagUpLeft = (*chk)[selectionY - 1][(selectionX / 2)];
 					jumpExists |= ((diagUpLeft & 3) == 1);
-					char diagUpRight = *(chk)[selectionY - 1][(selectionX / 2) + 1];
+					char diagUpRight = (*chk)[selectionY - 1][(selectionX / 2) + 1];
 					jumpExists |= ((diagUpRight & 3) == 1);
 				}
 
