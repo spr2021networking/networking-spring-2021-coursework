@@ -19,10 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\source\gpro-net-Console-Client\battleship.cpp" />
     <ClCompile Include="..\..\..\source\gpro-net-Console-Client\checkers.cpp" />
     <ClCompile Include="..\..\..\source\gpro-net-Console-Client\main-client.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\include\gpro-net-Console-Client\battleship.h" />
     <ClInclude Include="..\..\..\include\gpro-net-Console-Client\checkers.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
