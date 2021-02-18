@@ -2,7 +2,7 @@
 
 bool shipsPlaced = false;
 bool battleShipDirty = true;
-int bShipX = 2; int bShipY = 2;
+int bShipX = 4; int bShipY = 4;
 void battleshipLoop(gpro_battleship* shipBrd, gpro_battleship* atkBrd)
 {
 	if (battleShipDirty)
@@ -12,7 +12,7 @@ void battleshipLoop(gpro_battleship* shipBrd, gpro_battleship* atkBrd)
 		drawAttackBoard();
 		drawSelectedTile(bShipX, bShipY);
 		gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
-		placeShips(bShipX,bShipY, shipBrd)
+		placeShips(bShipX, bShipY, shipBrd);
 		battleShipDirty = false;
 	}
 	short keyState = GetKeyState(VK_UP);
@@ -99,8 +99,18 @@ void placeShips(int x, int y, gpro_battleship* shipBrd)
 	for(int i = 0; i < 5, i++)
 	{
 		*(shipBrd)[x][y] += 3 << 4;
-		* 
-		*(board)[bShipX][bSHipY] += 3;
+		char tile = (*shipBrd)[y][x];
+		char player = tile & 3;
+		gpro_consoleColor color = (player == 1) ? gpro_consoleColor_white : gpro_consoleColor_blue;
+		if (tile != 0)
+		{
+			gpro_consoleSetColor(color, gpro_consoleColor_grey_d);
+			printf("S");
+		}
+		else
+		{
+			printf("  ");
+		}
 		* place an S on the ship board accordingly
 	}
 	repeat for each of the remaining ships, 4,3,3,2
@@ -112,12 +122,14 @@ void drawSelectedTile(int x, int y)
 	gpro_consoleSetCursor(2 * (x), (y));
 	gpro_consoleSetColor(gpro_consoleColor_red_d, gpro_consoleColor_red_d);
 	printf("xx");
+
 }
 
 void fireShot(int x, int y)
 {
 	/*
 	* get the current selected tile, and then compare the tile to the other player's Ship board
+	* send a message to the server to the other player with the coordinates, return true or false, update accordingly
 	* if hit
 	* *(board)[bShipX][bSHipY] += 3 << 4;
 	* else do nothing
