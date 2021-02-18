@@ -12,4 +12,5 @@ void drawAttackBoard();
 void placeShips(int x, int y, gpro_battleship* shipBrd);
 void drawSelectedTile(int x, int y);
 void fireShot(int x, int y);
+void keyState();
 #endif
