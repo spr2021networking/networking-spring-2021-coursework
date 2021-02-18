@@ -10,4 +10,6 @@ void checkerLoop(gpro_checkers* chk);
 void drawBoard();
 void drawPieces(gpro_checkers* chk);
 void drawHighlight(gpro_checkers* chk, int x, int y);
+void drawSelection(gpro_checkers* chk);
+void handleSelection(gpro_checkers* chk);
 #endif
