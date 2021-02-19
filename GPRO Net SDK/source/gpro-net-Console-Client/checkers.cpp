@@ -9,7 +9,7 @@ int maxTime = 200000;
 int selectionX = -1, selectionY = -1;
 int moveToX = -1, moveToY = -1;
 
-int currentPlayer = 2;
+int currentPlayer = 1;
 
 bool hasJumped; //used once a jump has occurred to prevent normal movement
 
@@ -237,6 +237,165 @@ void handleSelection(gpro_checkers* chk)
 			//if true, compare with those
 			//else, check for standard movements (and king movements).
 			//compare with those
+			bool jumpExists = false;
+			if (selectionY % 2 == 0) //0, 2, 4, or 6
+			{
+				if (selectionY < 7)	//checking for king jumps to exist. If you CAN jump, you MUST jump.
+				{
+					//checking the squares diagonally down from the player to see if they have tiles
+					char diagDownLeft = (*chk)[selectionY + 1][(selectionX / 2) - 1];
+					jumpExists |= ((diagDownLeft & 3) == 1);
+					char diagDownRight = (*chk)[selectionY + 1][(selectionX / 2)];
+					jumpExists |= ((diagDownRight & 3) == 1);
+				}
+				if (isSelectedKing && selectionY > 1)
+				{
+					char diagUpLeft = (*chk)[selectionY - 1][(selectionX / 2) - 1];
+					jumpExists |= ((diagUpLeft & 3) == 1);
+					char diagUpRight = (*chk)[selectionY - 1][(selectionX / 2)];
+					jumpExists |= ((diagUpRight & 3) == 1);
+				}
+
+				if (jumpExists)
+				{
+					/*
+					 * at this point we are looking at exactly two y coordinates.
+					 * It can only be an error if we're looking down without being a king, which we already escaped.
+					 */
+					bool xError = abs(selectionX - highlightX) != 2;
+					if (xError)
+					{
+						return;
+					}
+
+					//move piece and remove captured
+					char tmp = selectedTile;
+					(*chk)[selectionY][selectionX / 2] = 0;
+					(*chk)[highlightY][highlightX / 2] = tmp;
+
+					int yAvg = (selectionY + highlightY) / 2;
+					if (highlightX > selectionX) //moving to the right
+					{
+						(*chk)[yAvg][highlightX / 2] = 0;
+						return;
+					}
+					else //moving to the left
+					{
+						(*chk)[yAvg][selectionX / 2] = 0;
+					}
+
+					hasJumped = true;
+
+					selectionX = highlightX;
+					selectionY = highlightY;
+
+
+					jumpExists = false;
+
+					//rescan jumps, then possibly end turn
+					if (!jumpExists)
+					{
+						//currentPlayer = 3 - currentPlayer;
+						selectionX = -1;
+						selectionY = -1;
+					}
+
+				}
+				else if (!hasJumped) //can't scan here if you've already jumped
+				{
+					bool xError = abs(highlightX - selectionX) != 1;
+					bool yError = abs(selectionY - highlightY) > 1; //we already block jumps of > 2, now we block > 1
+					if (xError || yError)
+					{
+						return;
+					}
+					char tmp = selectedTile;
+					(*chk)[selectionY][selectionX / 2] = 0;
+					(*chk)[highlightY][highlightX / 2] = tmp;
+
+					//currentPlayer = 3 - currentPlayer;
+					return;
+				}
+			}
+			else //1, 3, 5, 7
+			{
+				if (selectionY > 0)	//checking for king jumps to exist. If you CAN jump, you MUST jump.
+				{
+					//checking the squares diagonally down from the player to see if they have tiles
+					char diagDownLeft = (*chk)[selectionY + 1][(selectionX / 2)];
+					jumpExists |= ((diagDownLeft & 3) == 1);
+					char diagDownRight = (*chk)[selectionY + 1][(selectionX / 2) + 1];
+					jumpExists |= ((diagDownRight & 3) == 1);
+				}
+				if (isSelectedKing && selectionY > 1)
+				{
+					char diagUpLeft = (*chk)[selectionY - 1][(selectionX / 2)];
+					jumpExists |= ((diagUpLeft & 3) == 1);
+					char diagUpRight = (*chk)[selectionY - 1][(selectionX / 2) + 1];
+					jumpExists |= ((diagUpRight & 3) == 1);
+				}
+
+				if (jumpExists)
+				{
+					/*
+					 * at this point we are looking at exactly two y coordinates.
+					 * It can only be an error if we're looking down without being a king, which we already escaped.
+					 */
+					bool xError = abs(selectionX - highlightX) != 2;
+					if (xError)
+					{
+						return;
+					}
+
+					//move piece and remove captured
+					char tmp = selectedTile;
+					(*chk)[selectionY][selectionX / 2] = 0;
+					(*chk)[highlightY][highlightX / 2] = tmp;
+
+					int yAvg = (selectionY + highlightY) / 2;
+					if (highlightX > selectionX) //moving to the right
+					{
+						(*chk)[yAvg][(highlightX / 2) + 1] = 0;
+						return;
+					}
+					else //moving to the left
+					{
+						(*chk)[yAvg][highlightX / 2] = 0;
+					}
+
+					hasJumped = true;
+
+					selectionX = highlightX;
+					selectionY = highlightY;
+
+
+					jumpExists = false;
+
+					//rescan jumps, then possibly end turn
+					if (!jumpExists)
+					{
+						//currentPlayer = 3 - currentPlayer;
+						selectionX = -1;
+						selectionY = -1;
+					}
+
+				}
+				else if (!hasJumped)
+				{
+					bool xError = abs(highlightX - selectionX) != 1;
+					bool yError = abs(selectionY - highlightY) > 1; //we already block jumps of > 2, now we block > 1
+					if (xError || yError)
+					{
+						return;
+					}
+					char tmp = selectedTile;
+					(*chk)[selectionY][selectionX / 2] = 0;
+					(*chk)[highlightY][highlightX / 2] = tmp;
+
+					//currentPlayer = 3 - currentPlayer;
+					return;
+				}
+			}
 		}
 		else if (currentPlayer == 2) //we're player 2
 		{
