@@ -9,7 +9,7 @@ int maxTime = 200000;
 int selectionX = -1, selectionY = -1;
 int moveToX = -1, moveToY = -1;
 
-int currentPlayer = 1;
+int currentPlayer = 2;
 
 bool hasJumped; //used once a jump has occurred to prevent normal movement
 
@@ -189,26 +189,29 @@ bool hasJump(gpro_checkers* chk)
 			if (selectionX / 2 > 0)
 			{
 				char diagDownLeft = (*chk)[selectionY + 1][(selectionX / 2) - 1 + xOffset];
-				jumpExists |= ((diagDownLeft & 3) == 1);
+				char diagDownLeft2 = (*chk)[selectionY + 2][(selectionX / 2) - 1];
+				jumpExists |= ((diagDownLeft & 3) == 1 && diagDownLeft2 == 0);
 			}
 			if (selectionX / 2 < 3)
 			{
 				char diagDownRight = (*chk)[selectionY + 1][(selectionX / 2) + xOffset];
-				jumpExists |= ((diagDownRight & 3) == 1);
+				char diagDownRight2 = (*chk)[selectionY + 2][(selectionX / 2) + 1];
+				jumpExists |= ((diagDownRight & 3) == 1 && diagDownRight2 == 0);
 			}
 		}
-		//this is pretty complex, but it's checking to make sure that selectionY is not 0 IF selectionY is even, and that selectionY is not 7 IF selectionY is odd
-		if (selectionY != (7 * (selectionY % 2 == 1)))
+		if (selectionY > 1)
 		{
 			if (selectionX / 2 > 0)
 			{
 				char diagUpLeft = (*chk)[selectionY - 1][(selectionX / 2) - 1 + xOffset];
-				jumpExists |= ((diagUpLeft & 3) == 1);
+				char diagUpLeft2 = (*chk)[selectionY - 2][(selectionX / 2) - 1];
+				jumpExists |= ((diagUpLeft & 3) == 1 && diagUpLeft2 == 0);
 			}
 			if (selectionX / 2 < 3)
 			{
 				char diagUpRight = (*chk)[selectionY - 1][(selectionX / 2) + xOffset];
-				jumpExists |= ((diagUpRight & 3) == 1);
+				char diagUpRight2 = (*chk)[selectionY - 2][(selectionX / 2) + 1];
+				jumpExists |= ((diagUpRight & 3) == 1 && diagUpRight2 == 0);
 			}
 		}
 		return jumpExists;
@@ -226,7 +229,7 @@ void handleSelection(gpro_checkers* chk)
 	char highlightTile = (*chk)[highlightY][highlightX / 2]; // divide by two because board x is between [0,4) and selection is between [0,8)
 	char highlightPlayer = highlightTile & 3;
 
-	if (selectionX == highlightX && selectionY == highlightY) //we clicked the same spot twice, so we deselect
+	if (selectionX == highlightX && selectionY == highlightY && !hasJumped) //we clicked the same spot twice, so we deselect
 	{
 		selectionX = -1;
 		selectionY = -1;
@@ -236,7 +239,7 @@ void handleSelection(gpro_checkers* chk)
 	{
 		return;
 	}
-	else if (highlightPlayer == currentPlayer) //this player belongs to us but isn't the one we selected
+	else if (highlightPlayer == currentPlayer && !hasJumped) //this player belongs to us but isn't the one we selected
 	{
 		selectionX = highlightX;
 		selectionY = highlightY;
@@ -340,7 +343,7 @@ void handleSelection(gpro_checkers* chk)
 					//rescan jumps, then possibly end turn
 					if (!jumpExists)
 					{
-						//currentPlayer = 3 - currentPlayer;
+						currentPlayer = 3 - currentPlayer;
 						selectionX = -1;
 						selectionY = -1;
 					}
@@ -358,7 +361,7 @@ void handleSelection(gpro_checkers* chk)
 					(*chk)[selectionY][selectionX / 2] = 0;
 					(*chk)[highlightY][highlightX / 2] = tmp;
 
-					//currentPlayer = 3 - currentPlayer;
+					currentPlayer = 3 - currentPlayer;
 					return;
 				}
 			}
@@ -472,6 +475,16 @@ void handleSelection(gpro_checkers* chk)
 				}
 				hasJumped = true;
 
+				if (selectionY == 0 && !isSelectedKing) //we're getting kinged
+				{
+					(*chk)[highlightY][highlightX / 2] = currentPlayer + 4; //set king
+					currentPlayer = 3 - currentPlayer;
+					selectionX = -1;
+					selectionY = -1;
+					hasJumped = false;
+					return;
+				}
+
 				selectionX = highlightX;
 				selectionY = highlightY;
 
@@ -496,6 +509,16 @@ void handleSelection(gpro_checkers* chk)
 				char tmp = selectedTile;
 				(*chk)[selectionY][selectionX / 2] = 0;
 				(*chk)[highlightY][highlightX / 2] = tmp;
+
+				if (selectionY == 0 && !isSelectedKing) //we're getting kinged
+				{
+					(*chk)[highlightY][highlightX / 2] = currentPlayer + 4; //set king
+					currentPlayer = 3 - currentPlayer;
+					selectionX = -1;
+					selectionY = -1;
+					hasJumped = false;
+					return;
+				}
 
 				selectionX = -1;
 				selectionY = -1;
