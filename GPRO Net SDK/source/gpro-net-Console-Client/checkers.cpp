@@ -309,19 +309,37 @@ void handleSelection(gpro_checkers* chk)
 				return;
 			}
 
+			int yAvg = (selectionY + highlightY) / 2; //the space between ours
+
+			if (highlightX > selectionX) //moving to the right
+			{
+				if ((*chk)[yAvg][selectionX / 2 + xOffset] != (3 - currentPlayer)) //ensure that we're actually jumping a piece
+				{
+					return;
+				}
+				else
+				{
+					(*chk)[yAvg][selectionX / 2 + xOffset] = 0;
+				}
+				 
+			}
+			else //moving to the left
+			{
+				if ((*chk)[yAvg][selectionX / 2 - 1 + xOffset] != (3 - currentPlayer))
+				{
+					return;
+				}
+				else
+				{
+					(*chk)[yAvg][selectionX / 2 - 1 + xOffset] = 0;
+				}
+			}
+
 			//move piece and delete its old spot
 			(*chk)[selectionY][selectionX / 2] = 0; //set old position to 0
 			(*chk)[highlightY][highlightX / 2] = selectedTile; //set new position to the tile
 
-			int yAvg = (selectionY + highlightY) / 2; //the space between ours
-			if (highlightX > selectionX) //moving to the right
-			{
-				(*chk)[yAvg][selectionX / 2 + xOffset] = 0;
-			}
-			else //moving to the left
-			{
-				(*chk)[yAvg][selectionX / 2 - 1 + xOffset] = 0;
-			}
+
 			hasJumped = true;
 
 			if (tryKing(chk))
