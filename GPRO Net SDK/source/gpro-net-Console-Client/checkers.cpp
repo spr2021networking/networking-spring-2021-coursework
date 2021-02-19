@@ -181,74 +181,56 @@ bool hasJump(gpro_checkers* chk)
 	bool isSelectedKing = (selectedTile & 4) != 0;
 	bool jumpExists = false;
 	int xOffset = selectionY % 2 == 1; //this is needed for shifting around when checking diagonals to handle the lack of alignment between rows
-	if (currentPlayer == 1)
+
+	bool canCheckUp = selectionY > 1 && (currentPlayer == 2 || isSelectedKing); //height check plus a player-specific king check
+	bool canCheckDown = selectionY < 6 && (currentPlayer == 1 || isSelectedKing); //height check plus a player-specific king check
+
+	int otherPlayer = 3 - currentPlayer;
+	if (canCheckDown)
 	{
-		if (selectionY < 6)
+		if (selectionX / 2 > 0)
 		{
-			if (selectionX / 2 > 0)
-			{
-				char diagDownLeft = (*chk)[selectionY + 1][(selectionX / 2) - 1 + xOffset];
-				char diagDownLeft2 = (*chk)[selectionY + 2][(selectionX / 2) - 1];
-				jumpExists |= ((diagDownLeft & 3) == 2 && diagDownLeft2 == 0);
-			}
-			if (selectionX / 2 < 3)
-			{
-				char diagDownRight = (*chk)[selectionY + 1][(selectionX / 2) + xOffset];
-				char diagDownRight2 = (*chk)[selectionY + 2][(selectionX / 2) + 1];
-				jumpExists |= ((diagDownRight & 3) == 2 && diagDownRight2 == 0);
-			}
+			char diagDownLeft = (*chk)[selectionY + 1][(selectionX / 2) - 1 + xOffset];
+			char diagDownLeft2 = (*chk)[selectionY + 2][(selectionX / 2) - 1];
+			jumpExists |= ((diagDownLeft & 3) == otherPlayer && diagDownLeft2 == 0);
 		}
-		if (isSelectedKing && selectionY > 1)
+		if (selectionX / 2 < 3)
 		{
-			if (selectionX / 2 > 0)
-			{
-				char diagUpLeft = (*chk)[selectionY - 1][(selectionX / 2) - 1 + xOffset];
-				char diagUpLeft2 = (*chk)[selectionY - 2][(selectionX / 2) - 1];
-				jumpExists |= ((diagUpLeft & 3) == 2 && diagUpLeft2 == 0);
-			}
-			if (selectionX / 2 < 3)
-			{
-				char diagUpRight = (*chk)[selectionY - 1][(selectionX / 2) + xOffset];
-				char diagUpRight2 = (*chk)[selectionY - 2][(selectionX / 2) + 1];
-				jumpExists |= ((diagUpRight & 3) == 2 && diagUpRight2 == 0);
-			}
+			char diagDownRight = (*chk)[selectionY + 1][(selectionX / 2) + xOffset];
+			char diagDownRight2 = (*chk)[selectionY + 2][(selectionX / 2) + 1];
+			jumpExists |= ((diagDownRight & 3) == otherPlayer && diagDownRight2 == 0);
 		}
-		return jumpExists;
 	}
-	if (currentPlayer == 2)
+	if (canCheckUp)
 	{
-		
-		if (isSelectedKing && selectionY < 6)
+		if (selectionX / 2 > 0)
 		{
-			if (selectionX / 2 > 0)
-			{
-				char diagDownLeft = (*chk)[selectionY + 1][(selectionX / 2) - 1 + xOffset];
-				char diagDownLeft2 = (*chk)[selectionY + 2][(selectionX / 2) - 1];
-				jumpExists |= ((diagDownLeft & 3) == 1 && diagDownLeft2 == 0);
-			}
-			if (selectionX / 2 < 3)
-			{
-				char diagDownRight = (*chk)[selectionY + 1][(selectionX / 2) + xOffset];
-				char diagDownRight2 = (*chk)[selectionY + 2][(selectionX / 2) + 1];
-				jumpExists |= ((diagDownRight & 3) == 1 && diagDownRight2 == 0);
-			}
+			char diagUpLeft = (*chk)[selectionY - 1][(selectionX / 2) - 1 + xOffset];
+			char diagUpLeft2 = (*chk)[selectionY - 2][(selectionX / 2) - 1];
+			jumpExists |= ((diagUpLeft & 3) == otherPlayer && diagUpLeft2 == 0);
 		}
-		if (selectionY > 1)
+		if (selectionX / 2 < 3)
 		{
-			if (selectionX / 2 > 0)
-			{
-				char diagUpLeft = (*chk)[selectionY - 1][(selectionX / 2) - 1 + xOffset];
-				char diagUpLeft2 = (*chk)[selectionY - 2][(selectionX / 2) - 1];
-				jumpExists |= ((diagUpLeft & 3) == 1 && diagUpLeft2 == 0);
-			}
-			if (selectionX / 2 < 3)
-			{
-				char diagUpRight = (*chk)[selectionY - 1][(selectionX / 2) + xOffset];
-				char diagUpRight2 = (*chk)[selectionY - 2][(selectionX / 2) + 1];
-				jumpExists |= ((diagUpRight & 3) == 1 && diagUpRight2 == 0);
-			}
+			char diagUpRight = (*chk)[selectionY - 1][(selectionX / 2) + xOffset];
+			char diagUpRight2 = (*chk)[selectionY - 2][(selectionX / 2) + 1];
+			jumpExists |= ((diagUpRight & 3) == otherPlayer && diagUpRight2 == 0);
 		}
-		return jumpExists;
+	}
+	return jumpExists;
+}
+
+bool tryKing(gpro_checkers* chk)
+{
+	int kingIndex = currentPlayer == 1 ? 7 : 0;
+	bool isSelectedKing = ((*chk)[selectionY][selectionX / 2] & 4) != 0;
+	if (highlightY == kingIndex && !isSelectedKing) //we're getting kinged
+	{
+		(*chk)[highlightY][highlightX / 2] = currentPlayer + 4; //set king
+		currentPlayer = 3 - currentPlayer;
+		selectionX = -1;
+		selectionY = -1;
+		hasJumped = false;
+		return true;
 	}
 	return false;
 }
@@ -313,168 +295,73 @@ void handleSelection(gpro_checkers* chk)
 		if (!isSelectedKing && invalidPawnSelection)
 			return;
 
-		if (currentPlayer == 1) //we're player 1
+
+		bool jumpExists = hasJump(chk);
+		if (jumpExists)
 		{
-			bool jumpExists = hasJump(chk);
-			if (jumpExists)
+			/*
+			 at this point we are looking at exactly two y coordinates.
+			 It can only be an error if we're looking down without being a king, which we already escaped.
+			 */
+			bool xError = abs(selectionX - highlightX) != 2;
+			if (xError)
 			{
-				/*
-				 at this point we are looking at exactly two y coordinates.
-				 It can only be an error if we're looking down without being a king, which we already escaped.
-				 */
-				bool xError = abs(selectionX - highlightX) != 2;
-				if (xError)
-				{
-					return;
-				}
-
-				//move piece and delete its old spot
-				(*chk)[selectionY][selectionX / 2] = 0; //set old position to 0
-				(*chk)[highlightY][highlightX / 2] = selectedTile; //set new position to the tile
-
-				int yAvg = (selectionY + highlightY) / 2; //the space between ours
-				if (highlightX > selectionX) //moving to the right
-				{
-					(*chk)[yAvg][selectionX / 2 + xOffset] = 0;
-				}
-				else //moving to the left
-				{
-					(*chk)[yAvg][selectionX / 2 - 1 + xOffset] = 0;
-				}
-				hasJumped = true;
-
-				if (highlightY == 7 && !isSelectedKing) //we're getting kinged
-				{
-					(*chk)[highlightY][highlightX / 2] = currentPlayer + 4; //set king
-					currentPlayer = 3 - currentPlayer;
-					selectionX = -1;
-					selectionY = -1;
-					hasJumped = false;
-					return;
-				}
-
-				selectionX = highlightX;
-				selectionY = highlightY;
-
-				jumpExists = hasJump(chk);
-				if (!jumpExists)
-				{
-					currentPlayer = 3 - currentPlayer;
-					selectionX = -1;
-					selectionY = -1;
-					hasJumped = false;
-				}
 				return;
 			}
-			else if (!hasJumped)
+
+			//move piece and delete its old spot
+			(*chk)[selectionY][selectionX / 2] = 0; //set old position to 0
+			(*chk)[highlightY][highlightX / 2] = selectedTile; //set new position to the tile
+
+			int yAvg = (selectionY + highlightY) / 2; //the space between ours
+			if (highlightX > selectionX) //moving to the right
 			{
-				bool xError = abs(highlightX - selectionX) != 1;
-				bool yError = abs(selectionY - highlightY) != 1;
-				if (xError || yError)
-				{
-					return;
-				}
-				char tmp = selectedTile;
-				(*chk)[selectionY][selectionX / 2] = 0;
-				(*chk)[highlightY][highlightX / 2] = tmp;
+				(*chk)[yAvg][selectionX / 2 + xOffset] = 0;
+			}
+			else //moving to the left
+			{
+				(*chk)[yAvg][selectionX / 2 - 1 + xOffset] = 0;
+			}
+			hasJumped = true;
 
-				if (highlightY == 7 && !isSelectedKing) //we're getting kinged
-				{
-					(*chk)[highlightY][highlightX / 2] = currentPlayer + 4; //set king
-					currentPlayer = 3 - currentPlayer;
-					selectionX = -1;
-					selectionY = -1;
-					hasJumped = false;
-					return;
-				}
+			if (tryKing(chk))
+			{
+				return;
+			}
 
+			selectionX = highlightX;
+			selectionY = highlightY;
+
+			jumpExists = hasJump(chk);
+			if (!jumpExists)
+			{
+				currentPlayer = 3 - currentPlayer;
 				selectionX = -1;
 				selectionY = -1;
-				currentPlayer = 3 - currentPlayer;
-				return;
+				hasJumped = false;
 			}
 		}
-		else if (currentPlayer == 2) //we're player 2
+		else if (!hasJumped)
 		{
-			bool jumpExists = hasJump(chk);
-			if (jumpExists)
+			bool xError = abs(highlightX - selectionX) != 1;
+			bool yError = abs(selectionY - highlightY) != 1;
+			if (xError || yError)
 			{
-				/*
-				 at this point we are looking at exactly two y coordinates.
-				 It can only be an error if we're looking down without being a king, which we already escaped.
-				 */
-				bool xError = abs(selectionX - highlightX) != 2;
-				if (xError)
-				{
-					return;
-				}
-
-				//move piece and delete its old spot
-				(*chk)[selectionY][selectionX / 2] = 0; //set old position to 0
-				(*chk)[highlightY][highlightX / 2] = selectedTile; //set new position to the tile
-
-				int yAvg = (selectionY + highlightY) / 2; //the space between ours
-				if (highlightX > selectionX) //moving to the right
-				{
-					(*chk)[yAvg][selectionX / 2 + xOffset] = 0;
-				}
-				else //moving to the left
-				{
-					(*chk)[yAvg][selectionX / 2 - 1 + xOffset] = 0;
-				}
-				hasJumped = true;
-
-				if (highlightY == 0 && !isSelectedKing) //we're getting kinged
-				{
-					(*chk)[highlightY][highlightX / 2] = currentPlayer + 4; //set king
-					currentPlayer = 3 - currentPlayer;
-					selectionX = -1;
-					selectionY = -1;
-					hasJumped = false;
-					return;
-				}
-
-				selectionX = highlightX;
-				selectionY = highlightY;
-
-				jumpExists = hasJump(chk);
-				if (!jumpExists)
-				{
-					currentPlayer = 3 - currentPlayer;
-					selectionX = -1;
-					selectionY = -1;
-					hasJumped = false;
-				}
 				return;
 			}
-			else if (!hasJumped)
+			char tmp = selectedTile;
+			(*chk)[selectionY][selectionX / 2] = 0;
+			(*chk)[highlightY][highlightX / 2] = tmp;
+
+			if (tryKing(chk))
 			{
-				bool xError = abs(highlightX - selectionX) != 1;
-				bool yError = abs(selectionY - highlightY) != 1;
-				if (xError || yError)
-				{
-					return;
-				}
-				char tmp = selectedTile;
-				(*chk)[selectionY][selectionX / 2] = 0;
-				(*chk)[highlightY][highlightX / 2] = tmp;
-
-				if (highlightY == 0 && !isSelectedKing) //we're getting kinged
-				{
-					(*chk)[highlightY][highlightX / 2] = currentPlayer + 4; //set king
-					currentPlayer = 3 - currentPlayer;
-					selectionX = -1;
-					selectionY = -1;
-					hasJumped = false;
-					return;
-				}
-
-				selectionX = -1;
-				selectionY = -1;
-				currentPlayer = 3 - currentPlayer;
 				return;
 			}
+
+			selectionX = -1;
+			selectionY = -1;
+			currentPlayer = 3 - currentPlayer;
 		}
-		return;
 	}
+	return;
 }
