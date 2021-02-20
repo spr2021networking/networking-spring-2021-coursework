@@ -13,6 +13,7 @@ int currentPlayer = 2;
 
 bool hasJumped; //used once a jump has occurred to prevent normal movement
 
+Action act;
 bool checkWin(gpro_checkers* chk)
 {
 	bool hasP1 = false, hasP2 = false;
@@ -79,7 +80,7 @@ void checkerLoop(gpro_checkers* chk)
 		}
 		if (GetKeyState(VK_RETURN) >> 15 != 0)
 		{
-			handleSelection(chk);
+			handleSelection(chk, &act);
 			dirty = true;
 			timer = maxTime;
 			//check if we're selecting or moving
@@ -143,17 +144,6 @@ void drawPieces(gpro_checkers* chk)
 		}
 	}
 }
-
-typedef struct Action Action;
-struct Action
-{
-	char playerIndex;
-	char startX, startY;
-	char endX, endY;
-	bool hasCaptured = false;
-	char capturedCoords[2];
-};
-
 
 void drawHighlight(gpro_checkers* chk, int x, int y)
 {
@@ -259,8 +249,9 @@ bool tryKing(gpro_checkers* chk)
 	return false;
 }
 
-void handleSelection(gpro_checkers* chk)
+void handleSelection(gpro_checkers* chk, Action* action)
 {
+	action->playerIndex = 0;
 	if (highlightX % 2 != highlightY % 2) //this isn't a valid click as we're on a red square
 	{
 		return;
@@ -356,6 +347,11 @@ void handleSelection(gpro_checkers* chk)
 				else
 				{
 					(*chk)[yAvg][selectionX / 2 - 1 + xOffset] = 0;
+
+					action->playerIndex = currentPlayer;
+					action->hasCaptured = true;
+					action->capturedX = selectionX / 2 - 1 + xOffset;
+					action->capturedY = yAvg;
 				}
 			}
 
@@ -363,6 +359,11 @@ void handleSelection(gpro_checkers* chk)
 			(*chk)[selectionY][selectionX / 2] = 0; //set old position to 0
 			(*chk)[highlightY][highlightX / 2] = selectedTile; //set new position to the tile
 
+			action->startX = selectionX / 2;
+			action->startY = selectionY;
+
+			action->endX = highlightX / 2;
+			action->endY = highlightY;
 
 			hasJumped = true;
 
@@ -395,6 +396,17 @@ void handleSelection(gpro_checkers* chk)
 			(*chk)[selectionY][selectionX / 2] = 0;
 			(*chk)[highlightY][highlightX / 2] = tmp;
 
+			action->playerIndex = currentPlayer;
+			action->hasCaptured = false;
+
+			action->startX = selectionX / 2;
+			action->startY = selectionY;
+
+			action->endX = highlightX / 2;
+			action->endY = highlightY;
+
+			//the selection and current player are updated in this function,
+			//so we can (and must) return early
 			if (tryKing(chk))
 			{
 				return;

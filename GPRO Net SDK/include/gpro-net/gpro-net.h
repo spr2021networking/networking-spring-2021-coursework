@@ -84,4 +84,16 @@ enum MessageFlag
 /// <param name="mType"></param>
 void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::MessageID mType = ID_MESSAGE_STRUCT);
 
+#pragma pack(push, 1)
+typedef struct Action Action;
+struct Action
+{
+	char playerIndex;
+	char startX, startY;
+	char endX, endY;
+	bool hasCaptured = false;
+	char capturedX, capturedY;
+};
+#pragma pack(pop)
+
 #endif	// !_GPRO_NET_H_
