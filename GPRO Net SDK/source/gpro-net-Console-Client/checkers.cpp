@@ -13,6 +13,24 @@ int currentPlayer = 2;
 
 bool hasJumped; //used once a jump has occurred to prevent normal movement
 
+bool checkWin(gpro_checkers* chk)
+{
+	bool hasP1 = false, hasP2 = false;
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; i < 4; j++)
+		{
+			if (hasP1 && hasP2)
+			{
+				return false;
+			}
+			hasP1 |= ((*chk)[i][j] & 3) == 1;
+			hasP2 |= ((*chk)[i][j] & 3) == 2;
+		}
+	}
+	return true;
+}
+
 void checkerLoop(gpro_checkers* chk)
 {
 	timer--;
@@ -22,6 +40,12 @@ void checkerLoop(gpro_checkers* chk)
 		drawPieces(chk);
 		drawSelection(chk);
 		drawHighlight(chk, highlightX, highlightY);
+		if (checkWin(chk))
+		{
+			return;
+		}
+
+
 		gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
 		dirty = false;
 	}
