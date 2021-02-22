@@ -65,7 +65,9 @@ enum GameMessages
 	ID_USERNAME = ID_USER_PACKET_ENUM + 1,
 	ID_RECEIVE_MESSAGE,
 	ID_MESSAGE_STRUCT,
-	ID_KICK
+	ID_KICK,
+	ID_GAMEMESSAGE,
+	ID_GAMEMESSAGE_STRUCT
 };
 
 enum MessageFlag
@@ -95,5 +97,5 @@ struct Action
 	char capturedX, capturedY;
 };
 #pragma pack(pop)
-
+Action parseAction(RakNet::Packet* packet);
 #endif	// !_GPRO_NET_H_

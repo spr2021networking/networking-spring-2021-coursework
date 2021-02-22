@@ -65,3 +65,18 @@ void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::Message
 	stream->Write(time);
 	stream->Write(mType);
 }
+
+Action parseAction(RakNet::Packet* packet)
+{
+	RakNet::BitStream bsIn(packet->data, packet->length, false);
+	RakNet::MessageID mID;
+	RakNet::Time time;
+	Action gAction;
+
+	bsIn.Read(mID);
+	bsIn.Read(time);
+	bsIn.Read(mID);
+
+	bsIn.Read(gAction);
+	return gAction;
+}

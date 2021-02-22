@@ -57,6 +57,36 @@ string adminName = "IAmTheAdmin";
 RakNet::SystemAddress adminAddress;
 bool quitting = false;
 
+void handleGameMessage(Action* gAction, RakNet::Packet* packet)
+{
+	if (gAction->playerIndex == 1) //we need to send the relavent information to player 2
+	{
+		//update the piece position with endX & endY
+		if (gAction->hasCaptured)
+		{
+			//send a message that tells player 2 where player 1's piece moved to and what piece(s) were captured
+		}
+		else if(!gAction->hasCaptured)
+		{
+			//send a message that tells player 2 where player 1's piece moved to
+		}
+		
+	}
+	else //we send the relavent information to player 1
+	{
+		//update the piece position with endX & endY
+		if (gAction->hasCaptured)
+		{
+			//send a message that tells player 1 where player 2's piece moved to and what piece(s) were captured
+		}
+		else if(!gAction->hasCaptured)
+		{
+			//send a message that tells player 1 where player 2's piece moved to
+		}
+	}
+}
+
+
 /// <summary>
 /// Handle public, private, and command messages
 /// </summary>
@@ -315,7 +345,7 @@ int main(int const argc, char const* const argv[])
 				}
 				break;
 
-			case ID_USERNAME:
+			case ID_USERNAME: //reuse and/or rebuild this to work with prompting a user to join the lobby and if they want to be a player or spectator
 			{
 				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
 				ChatMessage m = parseMessage(packet);
@@ -381,6 +411,12 @@ int main(int const argc, char const* const argv[])
 			}
 			break;
 			
+			case ID_GAMEMESSAGE:
+			{
+				prepBitStream(&bsOut, RakNet::GetTime(), ID_GAMEMESSAGE);
+				break;
+			}
+
 			case ID_MESSAGE_STRUCT:
 			{
 				ChatMessage m = parseMessage(packet);
@@ -388,6 +424,14 @@ int main(int const argc, char const* const argv[])
 				handleMessage(&m, packet); //message handling, done in the handleMessage function above main
 				break;
 			}
+			case ID_GAMEMESSAGE_STRUCT:
+			{
+				Action gAction = parseAction(packet);
+
+				handleGameMessage(&gAction, packet);
+				break;
+			}
+
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
@@ -395,6 +439,9 @@ int main(int const argc, char const* const argv[])
 		}
 		serverLog.close();
 	}
+
+
+
 	peer->Shutdown(300);
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
