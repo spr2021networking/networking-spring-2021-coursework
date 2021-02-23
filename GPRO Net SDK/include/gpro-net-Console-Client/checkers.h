@@ -7,10 +7,34 @@
 #include <stdio.h>
 #include <Windows.h>
 
-void checkerLoop(gpro_checkers* chk);
-void drawBoard();
-void drawPieces(gpro_checkers* chk);
-void drawHighlight(gpro_checkers* chk, int x, int y);
-void drawSelection(gpro_checkers* chk);
-void handleSelection(gpro_checkers* chk, Action* action);
+typedef struct CheckersInstance CheckersInstance;
+
+struct CheckersInstance
+{
+	Action action;
+	gpro_checkers chk;
+	bool dirty = true;
+	int highlightX = 4; int highlightY = 4;
+	int timer = 0;
+	int maxTime = 200000;
+
+	int selectionX = -1, selectionY = -1;
+	int moveToX = -1, moveToY = -1;
+
+	int currentPlayer = 2;
+
+	bool hasJumped = false; //used once a jump has occurred to prevent normal movement
+
+	CheckersInstance();
+
+	void checkerLoop(int* outWinner);
+	void drawBoard();
+	void drawPieces();
+	void drawHighlight();
+	void drawSelection();
+	void handleSelection();
+	bool checkWin(int* outWinner);
+	bool hasJump();
+	bool tryKing();
+};
 #endif

@@ -68,6 +68,7 @@ RakNet::RakPeerInterface* peer;
 RakNet::SystemAddress serverAddress;
 char name[17];
 bool quitting = false;
+CheckersInstance checkers;
 
 /// <summary>
 /// Closes our connection to the server after 300 ms, sending a notification that we're leaving first.
@@ -81,15 +82,14 @@ void quit()
 	peer->Send(&out, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 	peer->Shutdown(300);
 }
-gpro_checkers chk;
 
 int main(int const argc, char const* const argv[])
 {
 	bool playingCheckers = true;
-	gpro_checkers_reset(chk);
+	int* out = new int();
 	while (playingCheckers)
 	{
-		checkerLoop(&chk);
+		checkers.checkerLoop(out);
 	}
 	peer = RakNet::RakPeerInterface::GetInstance();
 	RakNet::Packet* packet;
@@ -248,7 +248,7 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
-
+		//checkerLoop(&chk);
 		//check for user input! Iterate through keys and see if we're using any of them, if so let us type
 		bool hasInput = false;
 		for (int i = VK_SPACE; i <= 'Z'; i++)
