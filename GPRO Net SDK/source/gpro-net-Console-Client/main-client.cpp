@@ -301,7 +301,7 @@ int main(int const argc, char const* const argv[])
 			case ID_GAMEMESSAGE_STRUCT:
 			{
 				Action act = Action::parseAction(packet);
-				//checkers.
+				checkers.processAction(&act);
 				break;
 			}
 			case ID_KICK:
