@@ -21,6 +21,11 @@ ChatMessage ChatMessage::parseMessage(RakNet::Packet* packet)
 	return m;
 }
 
+bool ChatMessage::hasMessage()
+{
+	return message[0] != 0;
+}
+
 bool ChatMessage::setText(ChatMessageField field, const char* text, int length)
 {
 	if (field < 0 || field > 2 || length < 0)

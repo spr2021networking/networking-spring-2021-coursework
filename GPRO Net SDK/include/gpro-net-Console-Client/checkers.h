@@ -28,11 +28,16 @@ struct CheckersInstance
 	CheckersInstance();
 
 	void checkerLoop(int* outWinner);
+
+	void drawCheckers();
 	void drawBoard();
 	void drawPieces();
 	void drawHighlight();
 	void drawSelection();
+
 	void handleSelection();
+	void checkInput();
+
 	bool checkWin(int* outWinner);
 	bool hasJump();
 	bool tryKing();

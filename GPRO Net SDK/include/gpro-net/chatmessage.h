@@ -37,5 +37,7 @@ struct ChatMessage
 	bool setText(ChatMessageField field, std::string text);
 	static ChatMessage parseMessage(RakNet::Packet* packet);
 
+	bool hasMessage();
+
 };
 #pragma pack(pop)

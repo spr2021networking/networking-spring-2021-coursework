@@ -65,6 +65,7 @@ struct Action
 	char playerIndex;
 	char startX, startY;
 	char endX, endY;
+
 	bool hasCaptured = false;
 	char capturedX, capturedY;
 

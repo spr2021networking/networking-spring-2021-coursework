@@ -53,10 +53,7 @@ void CheckersInstance::checkerLoop(int* outWinner)
 	timer--;
 	if (dirty)
 	{
-		drawBoard();
-		drawPieces();
-		drawSelection();
-		drawHighlight();
+		drawCheckers();
 		if (checkWin(outWinner))
 		{
 			return;
@@ -65,6 +62,11 @@ void CheckersInstance::checkerLoop(int* outWinner)
 		gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
 		dirty = false;
 	}
+	checkInput();
+}
+
+void CheckersInstance::checkInput()
+{
 	short keyState = GetKeyState(VK_UP);
 	//printf("%i\n", keyState >> 15);
 	if (timer <= 0)
@@ -100,6 +102,14 @@ void CheckersInstance::checkerLoop(int* outWinner)
 			timer = maxTime;
 		}
 	}
+}
+
+void CheckersInstance::drawCheckers()
+{
+	drawBoard();
+	drawPieces();
+	drawSelection();
+	drawHighlight();
 }
 
 /// <summary>

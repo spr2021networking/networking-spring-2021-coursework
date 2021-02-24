@@ -209,6 +209,8 @@ int main(int const argc, char const* const argv[])
 
 	while (!quitting)
 	{
+		//render the checkerboard before we do anything. Also shouldn't display if we are in a lobby, that'll be handled later. TODO
+		checkers.drawBoard();
 		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			//this function checks if there's a timestamp stored in the packet. If there is, we advance the switch past the timestamp
@@ -296,6 +298,12 @@ int main(int const argc, char const* const argv[])
 				printf("%s\n", m.message);
 				break;
 			}
+			case ID_GAMEMESSAGE_STRUCT:
+			{
+				Action act = Action::parseAction(packet);
+				//checkers.
+				break;
+			}
 			case ID_KICK:
 				quit();
 				printf("You have been kicked\n");
@@ -310,6 +318,23 @@ int main(int const argc, char const* const argv[])
 		bool hasInput = false;
 		for (int i = VK_SPACE; i <= 'Z'; i++)
 		{
+			if (i == VK_LEFT)
+			{
+				continue;
+			}
+			if (i == VK_RIGHT)
+			{
+				continue;
+			}
+			if (i == VK_UP)
+			{
+				continue;
+			}
+			if (i == VK_DOWN)
+			{
+				continue;
+			}
+
 			short ks = GetKeyState(i) >> 8;
 			if (ks != 0)
 			{
@@ -319,10 +344,21 @@ int main(int const argc, char const* const argv[])
 		}
 		if (!hasInput)
 		{
-			checkers.checkerLoop(&out);
+			checkers.checkInput();
 			if (checkers.action.playerIndex != 0) //we need to store our local player somehow!
 			{
-
+				int winner = -1;
+				if (checkers.checkWin(&winner))
+				{
+					//send notification that the game was won, then close after x seconds
+				}
+				else
+				{
+					RakNet::BitStream actionStream;
+					prepBitStream(&actionStream, RakNet::GetTime(), (RakNet::MessageID)ID_GAMEMESSAGE_STRUCT);
+					actionStream.Write(checkers.action);
+					peer->Send(&actionStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+				}
 			}
 		}
 		if (hasInput)
@@ -338,91 +374,74 @@ int main(int const argc, char const* const argv[])
 			useTimeStamp = ID_TIMESTAMP;
 			timeStamp = RakNet::GetTime();
 
-			if (false) //this was how we used to send messages, it's not in use anymore.
+			//prepare the bitstream and the ChatMessage
+			RakNet::BitStream bsOut;
+			prepBitStream(&bsOut, timeStamp);
+			ChatMessage messageToSend;
+			messageToSend.isTimestamp = ID_TIMESTAMP;
+			messageToSend.time = timeStamp;
+			messageToSend.id2 = ID_MESSAGE_STRUCT;
+
+			char* startOfSecondWord = chopStr((char*)stringBuffer.c_str(), (int)stringBuffer.length(), ' ');
+
+			if (strncmp(stringBuffer.c_str(), "quit", 4) == 0 && stringBuffer.length() == 4)
 			{
-				RakNet::BitStream bsOut;
-				bsOut.Write(useTimeStamp);
-				bsOut.Write(timeStamp);
-				bsOut.Write(messageID);
-				bsOut.Write(messageBackup);
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+				quit();
+				break;
 			}
-			else
+			else if (startOfSecondWord == stringBuffer.c_str()) //there's no space in the message
 			{
-				//prepare the bitstream and the ChatMessage
-				RakNet::BitStream bsOut;
-				prepBitStream(&bsOut, timeStamp);
-				ChatMessage messageToSend;
-				messageToSend.isTimestamp = ID_TIMESTAMP;
-				messageToSend.time = timeStamp;
-				messageToSend.id2 = ID_MESSAGE_STRUCT;
-
-				char* startOfSecondWord = chopStr((char*)stringBuffer.c_str(), (int)stringBuffer.length(), ' ');
-
-				if (strncmp(stringBuffer.c_str(), "quit", 4) == 0 && stringBuffer.length() == 4)
+				if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command, meaning that it's a one-word public message
 				{
-					quit();
-					break;
-				}
-				else if (startOfSecondWord == stringBuffer.c_str()) //there's no space in the message
-				{
-					if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command, meaning that it's a one-word public message
-					{
-						//set message to public and load the entire string buffer into the message.
-						messageToSend.messageFlag = 0;
-						strncpy(messageToSend.message, stringBuffer.c_str(), (int)stringBuffer.length());
-						messageToSend.message[stringBuffer.length()] = 0;
-					}
-					else
-					{
-						printf("[Error] Cannot send empty command\n");
-						messageToSend.message[0] = 0;
-					}
+					//set message to public and load the entire string buffer into the message.
+					messageToSend.messageFlag = PUBLIC;
+					messageToSend.setText(MESSAGE, stringBuffer);
 				}
 				else
 				{
-					std::string secondWord = startOfSecondWord;
-					if (strncmp(stringBuffer.c_str(), "private", 7) == 0) //stringBuffer contains only the first word at this point
-					{
-						messageToSend.messageFlag = PRIVATE;
-						char* startOfMessageBody = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
-						if (startOfMessageBody == secondWord.c_str()) //there's no actual message body
-						{
-							messageToSend.messageFlag = PUBLIC; //reset to public
-
-							strncpy(messageToSend.message, secondWord.c_str(), (int)secondWord.length());
-							messageToSend.message[secondWord.length()] = 0; //null terminate
-						}
-						else
-						{
-							//copy message recipient and body into ChatMessage from input
-							std::string messageBody = startOfMessageBody;
-							strncpy(messageToSend.recipient, secondWord.c_str(), (int)secondWord.length());
-							strncpy(messageToSend.message, messageBody.c_str(), (int)messageBody.length());
-							messageToSend.message[messageBody.length()] = 0; //null terminate
-						}
-					}
-					else if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
-					{
-						tryCreateCommand(&messageToSend, secondWord, isAdmin);
-					}
-					else //defaulting to a public message because the first word wasn't recognized as anything
-					{
-						messageToSend.messageFlag = PUBLIC;
-						strncpy(messageToSend.message, messageBackup.C_String(), (int)messageBackup.GetLength());
-						messageToSend.message[messageBackup.GetLength()] = 0;
-					}
+					printf("[Error] Cannot send empty command\n");
+					messageToSend.setText(MESSAGE, "");
 				}
-				if (isAdmin)
+			}
+			else
+			{
+				std::string secondWord = startOfSecondWord;
+				if (strncmp(stringBuffer.c_str(), "private", 7) == 0) //stringBuffer contains only the first word at this point
 				{
-					messageToSend.messageFlag |= ISADMIN;
+					messageToSend.messageFlag = PRIVATE;
+					char* startOfMessageBody = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
+					if (startOfMessageBody == secondWord.c_str()) //there's no actual message body
+					{
+						messageToSend.messageFlag = PUBLIC; //reset to public
+						messageToSend.setText(MESSAGE, secondWord);
+					}
+					else
+					{
+						//copy message recipient and body into ChatMessage from input
+						std::string messageBody = startOfMessageBody;
+						messageToSend.setText(RECIPIENT, secondWord);
+						messageToSend.setText(MESSAGE, messageBody);
+					}
 				}
-				if (messageToSend.message[0] != 0) //prevents empty messages or invalid messages.
+				else if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
 				{
-					messageToSend.setText(SENDER, name, (int)strnlen(name, 16));
-					bsOut.Write(messageToSend);
-					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+					tryCreateCommand(&messageToSend, secondWord, isAdmin);
 				}
+				else //defaulting to a public message because the first word wasn't recognized as anything
+				{
+					messageToSend.messageFlag = PUBLIC;
+					messageToSend.setText(MESSAGE, messageBackup.C_String(), (int)messageBackup.GetLength());
+				}
+			}
+			if (isAdmin)
+			{
+				messageToSend.messageFlag |= ISADMIN;
+			}
+			if (messageToSend.hasMessage()) //prevents empty messages or invalid messages.
+			{
+				messageToSend.setText(SENDER, name, (int)strnlen(name, 16));
+				bsOut.Write(messageToSend);
+				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 			}
 		}
 
