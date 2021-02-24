@@ -36,29 +36,9 @@
 #include "RakNet/RakNetTypes.h"
 #include "RakNet/BitStream.h"
 #include "RakNet/MessageIdentifiers.h"
+#include "chatmessage.h"
 
 char* chopStr(char* in, int length, char delim);
-
-#pragma pack(push, 1)
-typedef struct ChatMessage ChatMessage;
-struct ChatMessage
-{
-	RakNet::MessageID isTimestamp; //currently unused, but indicates that this has ID_TIMESTAMP
-	RakNet::Time time; //the time this was sent
-	RakNet::MessageID id2; //the actual message type
-	int messageType; //see MessageFlag
-	char recipient[17]; //16 bytes of input + null terminator
-	char sender[17]; //16 bytes of input + null terminator
-	char message[129]; //128 bytes of input + null terminator
-};
-#pragma pack(pop)
-
-/// <summary>
-/// Extract a ChatMessage from packet data, assuming it was formatted properly (using prepBitStream)
-/// </summary>
-/// <param name="packet"></param>
-/// <returns></returns>
-ChatMessage parseMessage(RakNet::Packet* packet);
 
 enum GameMessages
 {
@@ -68,14 +48,6 @@ enum GameMessages
 	ID_KICK,
 	ID_GAMEMESSAGE,
 	ID_GAMEMESSAGE_STRUCT
-};
-
-enum MessageFlag
-{
-	PUBLIC = 0,
-	PRIVATE,
-	COMMAND,
-	ISADMIN = 4 // set to 4 as a flag. 4 technically means "public admin", 5 = "private admin", 6 = "command admin"
 };
 
 /// <summary>
@@ -95,7 +67,9 @@ struct Action
 	char endX, endY;
 	bool hasCaptured = false;
 	char capturedX, capturedY;
+
+	static Action parseAction(RakNet::Packet* packet);
 };
 #pragma pack(pop)
-Action parseAction(RakNet::Packet* packet);
+
 #endif	// !_GPRO_NET_H_

@@ -83,13 +83,69 @@ void quit()
 	peer->Shutdown(300);
 }
 
+void tryCreateCommand(ChatMessage* messageToSend, std::string args, bool isAdmin)
+{
+	messageToSend->messageFlag = COMMAND;
+	//checking what command type
+	if (strncmp(args.c_str(), "userlist", 8) == 0) //userlist
+	{
+		messageToSend->setText(RECIPIENT, "userlist");
+		messageToSend->setText(MESSAGE, " ");
+	}
+	else if (strncmp(args.c_str(), "kick", 4) == 0) //kick (admin only, nonfunctional)
+	{
+		if (true)
+		{
+			printf("[Error] Kicking currently does not function correctly!\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else if (!isAdmin)
+		{
+			printf("[Error] Only admins can kick!\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			char* startOfKickTarget = chopStr((char*)args.c_str(), (int)args.length(), ' ');
+			if (startOfKickTarget == args.c_str()) //no kick target
+			{
+				printf("[Error] No kick target\n");
+				messageToSend->setText(MESSAGE, "");
+			}
+			else
+			{
+				std::string messageBody = startOfKickTarget;
+				messageToSend->setText(RECIPIENT, "kick");
+				messageToSend->setText(MESSAGE, messageBody);
+			}
+		}
+	}
+	else if (strncmp(args.c_str(), "stop", 4) == 0) //stop server
+	{
+		if (!isAdmin)
+		{
+			printf("[Error] Only admins can close the server!\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			messageToSend->setText(RECIPIENT, "stop");
+		}
+	}
+	else
+	{
+		printf("[Error] Unknown command\n");
+		messageToSend->setText(MESSAGE, "");
+	}
+}
+
 int main(int const argc, char const* const argv[])
 {
 	bool playingCheckers = true;
-	int* out = new int();
+	int out = 0;
 	while (playingCheckers)
 	{
-		checkers.checkerLoop(out);
+		checkers.checkerLoop(&out);
 	}
 	peer = RakNet::RakPeerInterface::GetInstance();
 	RakNet::Packet* packet;
@@ -150,6 +206,7 @@ int main(int const argc, char const* const argv[])
 	bool hasNameBeenSent = false;
 
 	bool isAdmin = false;
+
 	while (!quitting)
 	{
 		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
@@ -212,30 +269,30 @@ int main(int const argc, char const* const argv[])
 
 			case ID_USERNAME:
 			{
-				//if messageType is -1, the user already exists and we quit.
-				ChatMessage m = parseMessage(packet);
+				//if messageFlag is -1, the user already exists and we quit.
+				ChatMessage m = ChatMessage::parseMessage(packet);
 				printf("%s\n", m.message);
-				if (m.messageType == -1)
+				if (m.messageFlag == -1)
 				{
 					peer->Shutdown(300); //quit() requires a username, so we do this instead
 				}
 				else
 				{
-					isAdmin = (m.messageType & ISADMIN) > 0;
+					isAdmin = (m.messageFlag & ISADMIN) > 0;
 				}
 			}
 			break;
 
 			case ID_RECEIVE_MESSAGE: //legacy, currently unused.
 			{
-				ChatMessage m = parseMessage(packet);
+				ChatMessage m = ChatMessage::parseMessage(packet);
 				printf("%s\n", m.message);
 			}
 			break;
 			case ID_MESSAGE_STRUCT:
 			{
 				//parse message and output relevant data
-				ChatMessage m = parseMessage(packet);
+				ChatMessage m = ChatMessage::parseMessage(packet);
 				printf("%s\n", m.message);
 				break;
 			}
@@ -258,6 +315,14 @@ int main(int const argc, char const* const argv[])
 			{
 				hasInput = true;
 				break;
+			}
+		}
+		if (!hasInput)
+		{
+			checkers.checkerLoop(&out);
+			if (checkers.action.playerIndex != 0) //we need to store our local player somehow!
+			{
+
 			}
 		}
 		if (hasInput)
@@ -304,7 +369,7 @@ int main(int const argc, char const* const argv[])
 					if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command, meaning that it's a one-word public message
 					{
 						//set message to public and load the entire string buffer into the message.
-						messageToSend.messageType = 0;
+						messageToSend.messageFlag = 0;
 						strncpy(messageToSend.message, stringBuffer.c_str(), (int)stringBuffer.length());
 						messageToSend.message[stringBuffer.length()] = 0;
 					}
@@ -319,11 +384,11 @@ int main(int const argc, char const* const argv[])
 					std::string secondWord = startOfSecondWord;
 					if (strncmp(stringBuffer.c_str(), "private", 7) == 0) //stringBuffer contains only the first word at this point
 					{
-						messageToSend.messageType = 1;
+						messageToSend.messageFlag = PRIVATE;
 						char* startOfMessageBody = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
 						if (startOfMessageBody == secondWord.c_str()) //there's no actual message body
 						{
-							messageToSend.messageType = 0; //reset to public
+							messageToSend.messageFlag = PUBLIC; //reset to public
 
 							strncpy(messageToSend.message, secondWord.c_str(), (int)secondWord.length());
 							messageToSend.message[secondWord.length()] = 0; //null terminate
@@ -339,77 +404,22 @@ int main(int const argc, char const* const argv[])
 					}
 					else if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
 					{
-						messageToSend.messageType = 2;
-						//checking what command type
-						if (strncmp(secondWord.c_str(), "userlist", 8) == 0) //userlist
-						{
-							strncpy(messageToSend.recipient, "userlist", 8);
-							messageToSend.recipient[8] = 0;
-							messageToSend.message[0] = ' ';
-						}
-						else if (strncmp(secondWord.c_str(), "kick", 4) == 0) //kick (admin only)
-						{
-							if (true)
-							{
-								printf("[Error] Kicking currently does not function correctly!\n");
-								messageToSend.message[0] = 0;
-							}
-							else if (!isAdmin)
-							{
-								printf("[Error] Only admins can kick!\n");
-								messageToSend.message[0] = 0;
-							}
-							else
-							{
-								char* startOfKickTarget = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
-								if (startOfKickTarget == secondWord.c_str()) //no kick target
-								{
-									printf("[Error] No kick target\n");
-									messageToSend.message[0] = 0;
-								}
-								else
-								{
-									std::string messageBody = startOfKickTarget;
-									strncpy(messageToSend.recipient, secondWord.c_str(), (int)secondWord.length());
-									strncpy(messageToSend.message, messageBody.c_str(), (int)messageBody.length()); //copy kick target 
-									messageToSend.message[messageBody.length()] = 0; //null terminate
-								}
-							}
-						}
-						else if (strncmp(secondWord.c_str(), "stop", 4) == 0) //stop server
-						{
-							if (!isAdmin)
-							{
-								printf("[Error] Only admins can close the server!\n");
-								messageToSend.message[0] = 0;
-							}
-							else
-							{
-								strncpy(messageToSend.recipient, "stop", 4);
-								messageToSend.recipient[4] = 0; //null terminate
-							}
-						}
-						else
-						{
-							printf("[Error] Unknown command\n");
-							messageToSend.message[0] = 0;
-						}
+						tryCreateCommand(&messageToSend, secondWord, isAdmin);
 					}
 					else //defaulting to a public message because the first word wasn't recognized as anything
 					{
-						messageToSend.messageType = 0;
+						messageToSend.messageFlag = PUBLIC;
 						strncpy(messageToSend.message, messageBackup.C_String(), (int)messageBackup.GetLength());
 						messageToSend.message[messageBackup.GetLength()] = 0;
 					}
 				}
 				if (isAdmin)
 				{
-					messageToSend.messageType |= ISADMIN;
+					messageToSend.messageFlag |= ISADMIN;
 				}
 				if (messageToSend.message[0] != 0) //prevents empty messages or invalid messages.
 				{
-					strncpy(messageToSend.sender, name, strnlen(name, 16));
-					messageToSend.sender[strnlen(name, 16)] = 0; //this warning is irrelevant, we are always writing less data than this
+					messageToSend.setText(SENDER, name, (int)strnlen(name, 16));
 					bsOut.Write(messageToSend);
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 				}

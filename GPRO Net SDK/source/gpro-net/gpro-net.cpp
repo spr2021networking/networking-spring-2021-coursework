@@ -43,22 +43,6 @@ char* chopStr(char* in, int length, char delim)
 	return in;
 }
 
-ChatMessage parseMessage(RakNet::Packet* packet)
-{
-	RakNet::BitStream bsIn(packet->data, packet->length, false);
-	RakNet::MessageID mID;
-	RakNet::Time time;
-	ChatMessage m;
-
-	//skip the bytes that need to be sent before this message is sent
-	bsIn.Read(mID);
-	bsIn.Read(time);
-	bsIn.Read(mID);
-
-	bsIn.Read(m);
-	return m;
-}
-
 void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::MessageID mType)
 {
 	stream->Write((RakNet::MessageID)ID_TIMESTAMP);
@@ -66,7 +50,7 @@ void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::Message
 	stream->Write(mType);
 }
 
-Action parseAction(RakNet::Packet* packet)
+Action Action::parseAction(RakNet::Packet* packet)
 {
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
 	RakNet::MessageID mID;

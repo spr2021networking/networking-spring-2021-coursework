@@ -24,12 +24,18 @@
     <ClInclude Include="..\..\..\include\gpro-net\gpro-net-common\gpro-net-gamestate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\gpro-net\chatmessage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\gpro-net\gpro-net.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\gpro-net\gpro-net-common\gpro-net-console_win.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\gpro-net\chatmessage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
