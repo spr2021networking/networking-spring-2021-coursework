@@ -278,6 +278,16 @@ bool CheckersInstance::tryKing()
 	return false;
 }
 
+void CheckersInstance::processAction(Action* action)
+{
+	chk[action->endX][action->endY] = chk[action->startX][action->startY];
+	chk[action->startX][action->startY] = 0;
+	if (action->hasCaptured)
+	{
+		chk[action->capturedX][action->capturedY] = 0;
+	}
+}
+
 void CheckersInstance::handleSelection()
 {
 	action.playerIndex = 0;

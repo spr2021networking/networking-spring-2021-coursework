@@ -36,5 +36,7 @@ struct CheckersInstance
 	bool checkWin(int* outWinner);
 	bool hasJump();
 	bool tryKing();
+	void processAction(Action* action);
+	
 };
 #endif
