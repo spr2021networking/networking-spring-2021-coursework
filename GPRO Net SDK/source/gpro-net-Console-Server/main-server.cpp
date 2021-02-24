@@ -109,8 +109,8 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	ChatMessage response;
 	response.id2 = ID_MESSAGE_STRUCT;
 	response.isTimestamp = ID_TIMESTAMP;
-	response.messageType = 0;
-	switch (m->messageType & 3) //trim off the admin flag for now
+	response.messageFlag = 0;
+	switch (m->messageFlag & 3) //trim off the admin flag for now
 	{
 	case PUBLIC: //public
 	{
@@ -172,7 +172,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				output += "\n";
 				string tmp;
 
-				if ((m->messageType & ISADMIN) > 0) //if admin, add IP. This now makes it possible for a string to be too long to send
+				if ((m->messageFlag & ISADMIN) > 0) //if admin, add IP. This now makes it possible for a string to be too long to send
 				{
 					tmp += it->first + " ";
 				}
@@ -231,7 +231,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	}
 	break;
 	}
-	if ((m->messageType & 3) != PRIVATE && strncmp(m->recipient, "kick", 4) != 0 && strncmp(m->recipient, "stop", 4) != 0) //private has its own logging behavior
+	if ((m->messageFlag & 3) != PRIVATE && strncmp(m->recipient, "kick", 4) != 0 && strncmp(m->recipient, "stop", 4) != 0) //private has its own logging behavior
 	{
 		serverLog << output << std::endl;
 	}
@@ -348,7 +348,7 @@ int main(int const argc, char const* const argv[])
 			case ID_USERNAME: //reuse and/or rebuild this to work with prompting a user to join the lobby and if they want to be a player or spectator
 			{
 				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
-				ChatMessage m = parseMessage(packet);
+				ChatMessage m = ChatMessage::parseMessage(packet);
 				map<string, string>::iterator it;
 				bool alreadyExists = false;
 				for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
@@ -363,7 +363,7 @@ int main(int const argc, char const* const argv[])
 
 				if (alreadyExists)
 				{
-					response.messageType = -1;
+					response.messageFlag = -1;
 					strncpy(response.message, "We're sorry, that username is already taken. Please restart the program and try again!", 87);//reprompt the user for a username
 					response.message[87] = 0;
 					bsOut.Write(response);
@@ -375,14 +375,14 @@ int main(int const argc, char const* const argv[])
 
 					if (strncmp(adminName.c_str(), m.sender, adminName.length()) == 0)
 					{
-						response.messageType = ISADMIN;
+						response.messageFlag = ISADMIN;
 						adminAddress = packet->systemAddress;
 					}
 					else
 					{
-						response.messageType = 0;
+						response.messageFlag = 0;
 					}
-					string insert = (response.messageType == ISADMIN ? "Admin " : "");
+					string insert = (response.messageFlag == ISADMIN ? "Admin " : "");
 					string output = "Welcome, " + insert + m.sender + "! Please enter a message."; //initial welcome message
 					strncpy(response.message, output.c_str(), output.length());
 					response.message[output.length()] = 0;
@@ -419,14 +419,14 @@ int main(int const argc, char const* const argv[])
 
 			case ID_MESSAGE_STRUCT:
 			{
-				ChatMessage m = parseMessage(packet);
+				ChatMessage m = ChatMessage::parseMessage(packet);
 
 				handleMessage(&m, packet); //message handling, done in the handleMessage function above main
 				break;
 			}
 			case ID_GAMEMESSAGE_STRUCT:
 			{
-				Action gAction = parseAction(packet);
+				Action gAction = Action::parseAction(packet);
 
 				handleGameMessage(&gAction, packet);
 				break;
