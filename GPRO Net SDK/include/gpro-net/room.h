@@ -11,6 +11,7 @@ struct Player
 
 struct CheckerRoom
 {
+	std::string name;
 	Player player1;
 	Player player2;
 

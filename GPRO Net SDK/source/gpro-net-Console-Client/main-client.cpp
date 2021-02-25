@@ -142,11 +142,11 @@ void tryCreateCommand(ChatMessage* messageToSend, std::string args, bool isAdmin
 int main(int const argc, char const* const argv[])
 {
 	bool playingCheckers = true;
-	int out = 0;
-	while (playingCheckers)
-	{
-		checkers.checkerLoop(&out);
-	}
+	//int out = 0;
+	//while (playingCheckers)
+	//{
+	//	checkers.checkerLoop(&out);
+	//}
 	peer = RakNet::RakPeerInterface::GetInstance();
 	RakNet::Packet* packet;
 	RakNet::SocketDescriptor sd;

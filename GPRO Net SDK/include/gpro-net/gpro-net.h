@@ -44,10 +44,11 @@ enum GameMessages
 {
 	ID_USERNAME = ID_USER_PACKET_ENUM + 1,
 	ID_RECEIVE_MESSAGE,
-	ID_MESSAGE_STRUCT,
+	ID_MESSAGE_STRUCT, //can carry chat messages or commands, including telling the server to let the player into a room
 	ID_KICK,
 	ID_GAMEMESSAGE,
-	ID_GAMEMESSAGE_STRUCT
+	ID_GAMEMESSAGE_STRUCT,
+	ID_JOIN_ROOM //goes from server to client, passes in a room name and a player index (0 for spectator, 1 or 2 for player)
 };
 
 /// <summary>
@@ -62,6 +63,7 @@ void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::Message
 typedef struct Action Action;
 struct Action
 {
+	std::string checkerRoomKey;
 	char playerIndex;
 	char startX, startY;
 	char endX, endY;

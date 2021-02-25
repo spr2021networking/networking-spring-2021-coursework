@@ -11,6 +11,8 @@ typedef struct CheckersInstance CheckersInstance;
 
 struct CheckersInstance
 {
+	//whether we're player 1 or 2, or a spectator
+	int playerNum = 0;
 	Action action;
 	gpro_checkers chk;
 	bool dirty = true;
@@ -42,6 +44,9 @@ struct CheckersInstance
 	bool hasJump();
 	bool tryKing();
 	void processAction(Action* action);
+
+	void setRoom(std::string key) { action.checkerRoomKey = key; }
+	void reset();
 	
 };
 #endif

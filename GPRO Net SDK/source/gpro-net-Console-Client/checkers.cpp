@@ -298,6 +298,12 @@ void CheckersInstance::processAction(Action* action)
 	}
 }
 
+void CheckersInstance::reset()
+{
+	gpro_checkers_reset(chk);
+	action.checkerRoomKey = "";
+}
+
 void CheckersInstance::handleSelection()
 {
 	action.playerIndex = 0;
