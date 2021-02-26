@@ -37,6 +37,7 @@
 #include "RakNet/BitStream.h"
 #include "RakNet/MessageIdentifiers.h"
 #include "chatmessage.h"
+#include "room.h"
 
 char* chopStr(char* in, int length, char delim);
 

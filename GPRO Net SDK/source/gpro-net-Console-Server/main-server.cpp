@@ -51,6 +51,7 @@ using namespace std;
 
 RakNet::RakPeerInterface* peer;
 map<string, string> IPToUserName;
+map<string, CheckerRoom> roomKeyToRoom;
 ofstream serverLog;
 
 string adminName = "IAmTheAdmin";
@@ -163,6 +164,35 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	break;
 	case COMMAND: //command
 	{
+		if (strncmp(m->recipient, "createroom", 10) == 0)
+		{
+			roomKeyToRoom[m->message] = CheckerRoom();
+			roomKeyToRoom[m->message].name = m->message;
+		}
+		if (strncmp(m->recipient, "joinroom", 8) == 0)
+		{
+			map<string, CheckerRoom>::iterator it;
+			for (it = roomKeyToRoom.begin(); it != roomKeyToRoom.end(); it++)
+			{
+				if (strncmp(it->first.c_str(), m->message, it->first.length()) == 0)
+				{
+					prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
+					break;
+				}
+			}
+		}
+		if (strncmp(m->recipient, "spectate", 8) == 0)
+		{
+			map<string, CheckerRoom>::iterator it;
+			for (it = roomKeyToRoom.begin(); it != roomKeyToRoom.end(); it++)
+			{
+				if (strncmp(it->first.c_str(), m->message, it->first.length()) == 0)
+				{
+					prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
+					break;
+				}
+			}
+		}
 		if (strncmp(m->recipient, "userlist", 8) == 0) //get a list of users
 		{
 			output += " requested User List:";
