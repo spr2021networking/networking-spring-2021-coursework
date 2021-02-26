@@ -172,6 +172,8 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			r.setName(roomKeyToRoom[m->message].name);
 			r.playerIndex = 2;
 			prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
+			outStream.Write(r);
+			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 		}
 		if (strncmp(m->recipient, "joinroom", 8) == 0)
 		{
@@ -184,6 +186,8 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			if (it != roomKeyToRoom.end())
 			{
 				prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
+				outStream.Write(r);
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				break;
 			}
 		}
@@ -198,6 +202,8 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			if (it != roomKeyToRoom.end())
 			{
 				prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
+				outStream.Write(r);
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				break;
 			}
 		}
