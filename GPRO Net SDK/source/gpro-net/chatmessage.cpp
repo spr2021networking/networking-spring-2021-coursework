@@ -60,9 +60,9 @@ bool ChatMessage::setText(ChatMessageField field, const char* text, int length)
 	case RECIPIENT:
 		if (length > 0)
 		{
-			strncpy(sender, text, length);
+			strncpy(recipient, text, length);
 		}
-		sender[length] = 0;
+		recipient[length] = 0;
 		break;
 	}
 

@@ -132,6 +132,51 @@ void tryCreateCommand(ChatMessage* messageToSend, std::string args, bool isAdmin
 			messageToSend->setText(RECIPIENT, "stop");
 		}
 	}
+	else if (strncmp(args.c_str(), "createroom", 10) == 0) //create room
+	{
+		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
+		if (startOfRoomName == args.c_str())
+		{
+			printf("[Error] No room stated\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			std::string messageBody = startOfRoomName;
+			messageToSend->setText(RECIPIENT, "createroom");
+			messageToSend->setText(MESSAGE, messageBody);
+		}
+	}
+	else if (strncmp(args.c_str(), "joinroom", 8) == 0)
+	{
+		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
+		if (startOfRoomName == args.c_str())
+		{
+			printf("[Error] No room stated\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			std::string messageBody = startOfRoomName;
+			messageToSend->setText(RECIPIENT, "joinroom");
+			messageToSend->setText(MESSAGE, messageBody);
+		}
+	}
+	else if (strncmp(args.c_str(), "spectate", 8) == 0) //spectate room
+	{
+		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
+		if (startOfRoomName == args.c_str())
+		{
+			printf("[Error] No room stated\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			std::string messageBody = startOfRoomName;
+			messageToSend->setText(RECIPIENT, "spectate");
+			messageToSend->setText(MESSAGE, messageBody);
+		}
+	}
 	else
 	{
 		printf("[Error] Unknown command\n");
@@ -141,6 +186,7 @@ void tryCreateCommand(ChatMessage* messageToSend, std::string args, bool isAdmin
 
 int main(int const argc, char const* const argv[])
 {
+	checkers.reset();
 	bool playingCheckers = true;
 	//int out = 0;
 	//while (playingCheckers)
@@ -162,12 +208,12 @@ int main(int const argc, char const* const argv[])
 	bool isServer = false;
 
 	//retrieve IP and name
-	printf("Enter server IP or hit enter for 172.16.2.51\n");
+	printf("Enter server IP or hit enter for 172.16.2.56\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.51\0";
+		stringBuffer = "172.16.2.56\0";
 	}
 
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
@@ -210,7 +256,11 @@ int main(int const argc, char const* const argv[])
 	while (!quitting)
 	{
 		//render the checkerboard before we do anything. Also shouldn't display if we are in a lobby, that'll be handled later. TODO
-		checkers.drawBoard();
+		if (checkers.action.checkerRoomKey[0] != 0)
+		{
+			checkers.drawBoard();
+		}
+
 		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
 			//this function checks if there's a timestamp stored in the packet. If there is, we advance the switch past the timestamp
@@ -306,7 +356,8 @@ int main(int const argc, char const* const argv[])
 			}
 			case ID_JOIN_ROOM:
 			{
-
+				RoomJoinInfo r = RoomJoinInfo::parseMessage(packet);
+				break;
 			}
 			case ID_KICK:
 				quit();
