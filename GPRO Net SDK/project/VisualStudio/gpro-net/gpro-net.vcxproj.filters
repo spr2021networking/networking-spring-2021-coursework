@@ -41,5 +41,8 @@
     <ClCompile Include="..\..\..\source\gpro-net\chatmessage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\gpro-net\room.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

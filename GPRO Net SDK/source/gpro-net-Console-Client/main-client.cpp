@@ -304,6 +304,10 @@ int main(int const argc, char const* const argv[])
 				checkers.processAction(&act);
 				break;
 			}
+			case ID_JOIN_ROOM:
+			{
+
+			}
 			case ID_KICK:
 				quit();
 				printf("You have been kicked\n");
