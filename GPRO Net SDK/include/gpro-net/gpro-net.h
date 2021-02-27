@@ -72,6 +72,8 @@ struct Action
 	bool hasCaptured = false;
 	char capturedX, capturedY;
 
+	bool endTurn = false;
+
 	static Action parseAction(RakNet::Packet* packet);
 	bool setName(std::string name);
 	bool setName(const char* name, int length);

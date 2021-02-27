@@ -309,6 +309,7 @@ void CheckersInstance::reset()
 void CheckersInstance::handleSelection()
 {
 	action.playerIndex = 0;
+	action.endTurn = true;
 	if (highlightX % 2 != highlightY % 2) //this isn't a valid click as we're on a red square
 	{
 		return;
@@ -439,6 +440,10 @@ void CheckersInstance::handleSelection()
 				selectionX = -1;
 				selectionY = -1;
 				hasJumped = false;
+			}
+			else
+			{
+				action.endTurn = false;
 			}
 		}
 		else if (!hasJumped)
