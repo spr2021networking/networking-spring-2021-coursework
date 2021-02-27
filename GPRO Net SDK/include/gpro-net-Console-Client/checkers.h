@@ -45,7 +45,6 @@ struct CheckersInstance
 	bool tryKing();
 	void processAction(Action* action);
 
-	void setRoom(std::string key);
 	void reset();
 	
 };
