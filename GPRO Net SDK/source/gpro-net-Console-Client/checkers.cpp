@@ -292,7 +292,7 @@ bool CheckersInstance::tryKing()
 
 void CheckersInstance::processAction(Action* action)
 {
-	if (action->playerIndex != currentPlayer)
+	if (action->playerIndex != playerNum)
 	{
 		chk[action->endX][action->endY] = chk[action->startX][action->startY];
 		chk[action->startX][action->startY] = 0;
