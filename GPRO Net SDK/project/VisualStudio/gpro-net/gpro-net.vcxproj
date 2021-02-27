@@ -180,12 +180,14 @@
     <ClInclude Include="..\..\..\include\gpro-net\gpro-net-common\gpro-net-gamestate.h" />
     <ClInclude Include="..\..\..\include\gpro-net\gpro-net.h" />
     <ClInclude Include="..\..\..\include\gpro-net\room.h" />
+    <ClInclude Include="..\..\..\include\gpro-net\textbox.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\gpro-net\chatmessage.cpp" />
     <ClCompile Include="..\..\..\source\gpro-net\gpro-net-common\gpro-net-console_win.c" />
     <ClCompile Include="..\..\..\source\gpro-net\gpro-net.cpp" />
     <ClCompile Include="..\..\..\source\gpro-net\room.cpp" />
+    <ClCompile Include="..\..\..\source\gpro-net\textbox.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
