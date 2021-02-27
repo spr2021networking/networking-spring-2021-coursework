@@ -62,7 +62,7 @@ void handleGameMessage(Action* gAction, RakNet::Packet* packet)
 {
 	RakNet::BitStream outStream;
 	prepBitStream(&outStream, RakNet::GetTime(), ID_GAMEMESSAGE_STRUCT);
-	outStream.Write(gAction);
+	outStream.Write(*gAction);
 	if (gAction->playerIndex == 1) //we need to send the relavent information to player 2
 	{
 		map<string, CheckerRoom>::iterator it;
@@ -205,8 +205,11 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		}
 		if (strncmp(m->recipient, "joinroom", 8) == 0)
 		{
+			outStream.Reset();
 			RoomJoinInfo r;
 			roomKeyToRoom[m->message].name = m->message;
+			roomKeyToRoom[m->message].player1.address = packet->systemAddress.ToString();
+			roomKeyToRoom[m->message].player1.name = IPToUserName[packet->systemAddress.ToString()];
 			r.setName(roomKeyToRoom[m->message].name);
 			r.playerIndex = 1;
 			map<string, CheckerRoom>::iterator it;
