@@ -294,11 +294,11 @@ void CheckersInstance::processAction(Action* action)
 {
 	if (action->playerIndex != playerNum)
 	{
-		chk[action->endX][action->endY] = chk[action->startX][action->startY];
-		chk[action->startX][action->startY] = 0;
+		chk[action->endY][action->endX] = chk[action->startY][action->startX];
+		chk[action->startY][action->startX] = 0;
 		if (action->hasCaptured)
 		{
-			chk[action->capturedX][action->capturedY] = 0;
+			chk[action->capturedY][action->capturedX] = 0;
 		}
 		if (action->endTurn)
 		{
