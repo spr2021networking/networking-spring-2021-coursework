@@ -1,4 +1,4 @@
-#include "..\..\include\gpro-net\room.h"
+#include "gpro-net\room.h"
 
 bool RoomJoinInfo::setName(std::string name)
 {

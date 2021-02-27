@@ -38,6 +38,7 @@
 #include "RakNet/MessageIdentifiers.h"
 #include "chatmessage.h"
 #include "room.h"
+#include "textbox.h"
 
 char* chopStr(char* in, int length, char delim);
 
