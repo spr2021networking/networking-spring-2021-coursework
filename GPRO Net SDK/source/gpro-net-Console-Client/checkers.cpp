@@ -305,6 +305,7 @@ void CheckersInstance::processAction(Action* action)
 			currentPlayer = playerNum;
 		}
 	}
+	drawCheckers();
 	
 }
 
