@@ -18,7 +18,7 @@ struct CheckersInstance
 	bool dirty = true;
 	int highlightX = 4; int highlightY = 4;
 	int timer = 0;
-	int maxTime = 200000;
+	int maxTime = 5000;
 
 	int selectionX = -1, selectionY = -1;
 	int moveToX = -1, moveToY = -1;
@@ -45,7 +45,7 @@ struct CheckersInstance
 	bool tryKing();
 	void processAction(Action* action);
 
-	void setRoom(std::string key) { action.checkerRoomKey = key; }
+	void setRoom(std::string key);
 	void reset();
 	
 };

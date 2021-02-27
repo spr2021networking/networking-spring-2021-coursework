@@ -64,7 +64,7 @@ void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::Message
 typedef struct Action Action;
 struct Action
 {
-	std::string checkerRoomKey;
+	char checkerRoomKey[17];
 	char playerIndex;
 	char startX, startY;
 	char endX, endY;
@@ -73,6 +73,8 @@ struct Action
 	char capturedX, capturedY;
 
 	static Action parseAction(RakNet::Packet* packet);
+	bool setName(std::string name);
+	bool setName(const char* name, int length);
 };
 #pragma pack(pop)
 

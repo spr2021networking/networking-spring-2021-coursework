@@ -208,12 +208,12 @@ int main(int const argc, char const* const argv[])
 	bool isServer = false;
 
 	//retrieve IP and name
-	printf("Enter server IP or hit enter for 172.16.2.56\n");
+	printf("Enter server IP or hit enter for 172.16.2.186\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.56\0";
+		stringBuffer = "172.16.2.186\0";
 	}
 
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
@@ -256,9 +256,9 @@ int main(int const argc, char const* const argv[])
 	while (!quitting)
 	{
 		//render the checkerboard before we do anything. Also shouldn't display if we are in a lobby, that'll be handled later. TODO
-		if (checkers.action.checkerRoomKey[0] != 0)
+		if (checkers.action.checkerRoomKey[0] != 0 && checkers.dirty)
 		{
-			checkers.drawBoard();
+			checkers.drawCheckers();
 		}
 
 		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
@@ -345,6 +345,10 @@ int main(int const argc, char const* const argv[])
 			{
 				//parse message and output relevant data
 				ChatMessage m = ChatMessage::parseMessage(packet);
+				if (checkers.action.checkerRoomKey[0] != 0)
+				{
+					gpro_consoleSetCursor(0, 8);
+				}
 				printf("%s\n", m.message);
 				break;
 			}
@@ -357,6 +361,8 @@ int main(int const argc, char const* const argv[])
 			case ID_JOIN_ROOM:
 			{
 				RoomJoinInfo r = RoomJoinInfo::parseMessage(packet);
+				checkers.playerNum = r.playerIndex;
+				checkers.action.setName(r.roomID, (int)strnlen(r.roomID, 16));
 				break;
 			}
 			case ID_KICK:
@@ -413,11 +419,16 @@ int main(int const argc, char const* const argv[])
 					prepBitStream(&actionStream, RakNet::GetTime(), (RakNet::MessageID)ID_GAMEMESSAGE_STRUCT);
 					actionStream.Write(checkers.action);
 					peer->Send(&actionStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+					checkers.action.playerIndex = 0;
 				}
 			}
 		}
 		if (hasInput)
 		{
+			if (checkers.action.checkerRoomKey[0] != 0)
+			{
+				gpro_consoleSetCursor(0, 8);
+			}
 			std::getline(std::cin, stringBuffer);
 			strncpy(message, stringBuffer.c_str(), 128);
 			message[128] = 0;

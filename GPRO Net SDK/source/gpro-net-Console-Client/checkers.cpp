@@ -67,7 +67,7 @@ void CheckersInstance::checkerLoop(int* outWinner)
 
 void CheckersInstance::checkInput()
 {
-	short keyState = GetKeyState(VK_UP);
+	timer--;
 	//printf("%i\n", keyState >> 15);
 	if (timer <= 0)
 	{
@@ -110,6 +110,8 @@ void CheckersInstance::drawCheckers()
 	drawPieces();
 	drawSelection();
 	drawHighlight();
+	gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
+	dirty = false;
 }
 
 /// <summary>
@@ -301,7 +303,7 @@ void CheckersInstance::processAction(Action* action)
 void CheckersInstance::reset()
 {
 	gpro_checkers_reset(chk);
-	action.checkerRoomKey = "";
+	action.setName("");
 }
 
 void CheckersInstance::handleSelection()

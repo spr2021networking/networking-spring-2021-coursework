@@ -60,8 +60,22 @@ bool quitting = false;
 
 void handleGameMessage(Action* gAction, RakNet::Packet* packet)
 {
+	RakNet::BitStream outStream;
+	prepBitStream(&outStream, RakNet::GetTime(), ID_GAMEMESSAGE_STRUCT);
+	outStream.Write(gAction);
 	if (gAction->playerIndex == 1) //we need to send the relavent information to player 2
 	{
+		map<string, CheckerRoom>::iterator it;
+		it = roomKeyToRoom.find(gAction->checkerRoomKey);
+		if (it != roomKeyToRoom.end())
+		{
+			CheckerRoom* ch = &(it->second);
+			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(ch->player2.address.c_str()), false);
+			for (int i = 0; i < (int)ch->spectators.size(); i++)
+			{
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(ch->spectators[i].address.c_str()), false);
+			}
+		}
 		//update the piece position with endX & endY
 		if (gAction->hasCaptured)
 		{
@@ -75,6 +89,17 @@ void handleGameMessage(Action* gAction, RakNet::Packet* packet)
 	}
 	else //we send the relavent information to player 1
 	{
+		map<string, CheckerRoom>::iterator it;
+		it = roomKeyToRoom.find(gAction->checkerRoomKey);
+		if (it != roomKeyToRoom.end())
+		{
+			CheckerRoom* ch = &(it->second);
+			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(ch->player1.address.c_str()), false);
+			for (int i = 0; i < (int)ch->spectators.size(); i++)
+			{
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(ch->spectators[i].address.c_str()), false);
+			}
+		}
 		//update the piece position with endX & endY
 		if (gAction->hasCaptured)
 		{
@@ -166,9 +191,12 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	{
 		if (strncmp(m->recipient, "createroom", 10) == 0)
 		{
+			outStream.Reset();
 			RoomJoinInfo r;
 			roomKeyToRoom[m->message] = CheckerRoom();
 			roomKeyToRoom[m->message].name = m->message;
+			roomKeyToRoom[m->message].player2.address = packet->systemAddress.ToString();
+			roomKeyToRoom[m->message].player2.name = IPToUserName[packet->systemAddress.ToString()];
 			r.setName(roomKeyToRoom[m->message].name);
 			r.playerIndex = 2;
 			prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
@@ -471,7 +499,7 @@ int main(int const argc, char const* const argv[])
 			case ID_GAMEMESSAGE_STRUCT:
 			{
 				Action gAction = Action::parseAction(packet);
-
+				int i = 0;
 				handleGameMessage(&gAction, packet);
 				break;
 			}

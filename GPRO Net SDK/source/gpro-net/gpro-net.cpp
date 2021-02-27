@@ -64,3 +64,19 @@ Action Action::parseAction(RakNet::Packet* packet)
 	bsIn.Read(gAction);
 	return gAction;
 }
+
+bool Action::setName(std::string name)
+{
+	return setName(name.c_str(), (int)name.length());
+}
+
+bool Action::setName(const char* name, int length)
+{
+	if (length < 0 || length > 16)
+	{
+		return false;
+	}
+	strncpy(checkerRoomKey, name, length);
+	checkerRoomKey[length] = 0;
+	return true;
+}
