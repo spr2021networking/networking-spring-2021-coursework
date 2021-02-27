@@ -403,7 +403,7 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
-		if (!hasInput)
+		if (!hasInput && checkers.playerNum == checkers.currentPlayer)
 		{
 			checkers.checkInput();
 			if (checkers.action.playerIndex != 0) //we need to store our local player somehow!

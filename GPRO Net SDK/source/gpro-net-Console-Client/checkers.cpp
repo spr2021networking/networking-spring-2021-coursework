@@ -292,12 +292,20 @@ bool CheckersInstance::tryKing()
 
 void CheckersInstance::processAction(Action* action)
 {
-	chk[action->endX][action->endY] = chk[action->startX][action->startY];
-	chk[action->startX][action->startY] = 0;
-	if (action->hasCaptured)
+	if (action->playerIndex != currentPlayer)
 	{
-		chk[action->capturedX][action->capturedY] = 0;
+		chk[action->endX][action->endY] = chk[action->startX][action->startY];
+		chk[action->startX][action->startY] = 0;
+		if (action->hasCaptured)
+		{
+			chk[action->capturedX][action->capturedY] = 0;
+		}
+		if (action->endTurn)
+		{
+			currentPlayer = playerNum;
+		}
 	}
+	
 }
 
 void CheckersInstance::reset()
