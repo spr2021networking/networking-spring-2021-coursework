@@ -317,8 +317,8 @@ void CheckersInstance::reset()
 
 void CheckersInstance::handleSelection()
 {
-	action.playerIndex = 0;
-	action.endTurn = true;
+	action.reset();
+
 	if (highlightX % 2 != highlightY % 2) //this isn't a valid click as we're on a red square
 	{
 		return;
@@ -377,7 +377,7 @@ void CheckersInstance::handleSelection()
 		if (!isSelectedKing && invalidPawnSelection)
 			return;
 
-
+		//check if the requirements for a jump are present
 		bool jumpExists = hasJump();
 		if (jumpExists)
 		{
@@ -397,11 +397,17 @@ void CheckersInstance::handleSelection()
 			{
 				if (chk[yAvg][selectionX / 2 + xOffset] != (3 - currentPlayer)) //ensure that we're actually jumping a piece
 				{
-					return;
+					return; //if we're not jumping, we return, and no actions are taken
 				}
 				else
 				{
-					chk[yAvg][selectionX / 2 + xOffset] = 0;
+					chk[yAvg][selectionX / 2 + xOffset] = 0; //piece is captured
+
+					//configure a jump action
+					action.playerIndex = currentPlayer;
+					action.hasCaptured = true;
+					action.capturedX = selectionX / 2 - 1 + xOffset;
+					action.capturedY = yAvg;
 				}
 				 
 			}
@@ -415,6 +421,7 @@ void CheckersInstance::handleSelection()
 				{
 					chk[yAvg][selectionX / 2 - 1 + xOffset] = 0;
 
+					//configure a jump action
 					action.playerIndex = currentPlayer;
 					action.hasCaptured = true;
 					action.capturedX = selectionX / 2 - 1 + xOffset;
@@ -449,6 +456,7 @@ void CheckersInstance::handleSelection()
 				selectionX = -1;
 				selectionY = -1;
 				hasJumped = false;
+				action.endTurn = true;
 			}
 			else
 			{
@@ -469,6 +477,7 @@ void CheckersInstance::handleSelection()
 
 			action.playerIndex = currentPlayer;
 			action.hasCaptured = false;
+			action.endTurn = true;
 
 			action.startX = selectionX / 2;
 			action.startY = selectionY;

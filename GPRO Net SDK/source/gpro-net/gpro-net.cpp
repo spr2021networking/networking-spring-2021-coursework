@@ -80,3 +80,14 @@ bool Action::setName(const char* name, int length)
 	checkerRoomKey[length] = 0;
 	return true;
 }
+
+void Action::reset(bool resetName)
+{
+	if (resetName)
+	{
+		setName("");
+	}
+	playerIndex = 0;
+	startX = startY = endX = endY = capturedX = capturedY = -1;
+	hasCaptured = endTurn = false;
+}
