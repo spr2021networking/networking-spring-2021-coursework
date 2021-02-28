@@ -356,6 +356,7 @@ int main(int const argc, char const* const argv[])
 			{
 				Action act = Action::parseAction(packet);
 				checkers.processAction(&act);
+				//check win state, send message to all spectators and players if there's a winner
 				break;
 			}
 			case ID_JOIN_ROOM:
