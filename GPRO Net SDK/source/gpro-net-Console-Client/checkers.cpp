@@ -108,7 +108,7 @@ void CheckersInstance::drawCheckers()
 {
 	drawBoard();
 	drawPieces();
-	if (currentPlayer == playerNum)
+	if (currentPlayer == playerNum && playerNum != 0)
 	{
 		drawSelection();
 		drawHighlight();
@@ -305,7 +305,7 @@ void CheckersInstance::processAction(Action* action)
 		}
 		if (action->endTurn)
 		{
-			currentPlayer = playerNum;
+			currentPlayer = 3 - currentPlayer;
 		}
 		if (action->becomeKing)
 		{
@@ -324,6 +324,11 @@ void CheckersInstance::reset()
 
 void CheckersInstance::handleSelection()
 {
+	if (playerNum == 0) //spectators can't move
+	{
+		return;
+	}
+
 	action.reset();
 
 	if (highlightX % 2 != highlightY % 2) //this isn't a valid click as we're on a red square

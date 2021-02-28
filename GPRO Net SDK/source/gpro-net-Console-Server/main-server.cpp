@@ -224,10 +224,17 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		}
 		if (strncmp(m->recipient, "spectate", 8) == 0)
 		{
+			outStream.Reset();
 			RoomJoinInfo r;
 			roomKeyToRoom[m->message].name = m->message;
 			r.setName(roomKeyToRoom[m->message].name);
 			r.playerIndex = 0;
+
+			Player player;
+			player.name = IPToUserName[packet->systemAddress.ToString()];
+			player.address = packet->systemAddress.ToString();
+			roomKeyToRoom[m->message].spectators.push_back(player);
+
 			map<string, CheckerRoom>::iterator it;
 			it = roomKeyToRoom.find(m->message);
 			if (it != roomKeyToRoom.end())
