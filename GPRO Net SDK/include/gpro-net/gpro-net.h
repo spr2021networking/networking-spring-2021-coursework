@@ -73,6 +73,7 @@ struct Action
 	char capturedX, capturedY;
 
 	bool endTurn = false;
+	bool becomeKing = false;
 
 	static Action parseAction(RakNet::Packet* packet);
 	bool setName(std::string name);

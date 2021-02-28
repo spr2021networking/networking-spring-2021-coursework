@@ -89,5 +89,5 @@ void Action::reset(bool resetName)
 	}
 	playerIndex = 0;
 	startX = startY = endX = endY = capturedX = capturedY = -1;
-	hasCaptured = endTurn = false;
+	hasCaptured = endTurn = becomeKing = false;
 }

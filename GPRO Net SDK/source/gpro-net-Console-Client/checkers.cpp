@@ -304,8 +304,12 @@ void CheckersInstance::processAction(Action* action)
 		{
 			currentPlayer = playerNum;
 		}
+		if (action->becomeKing)
+		{
+			chk[action->endY][action->endX] = action->playerIndex + 4; //set the king flag
+		}
 	}
-	drawCheckers();
+	dirty = true;
 	
 }
 
@@ -406,7 +410,7 @@ void CheckersInstance::handleSelection()
 					//configure a jump action
 					action.playerIndex = currentPlayer;
 					action.hasCaptured = true;
-					action.capturedX = selectionX / 2 - 1 + xOffset;
+					action.capturedX = selectionX / 2 + xOffset;
 					action.capturedY = yAvg;
 				}
 				 
@@ -443,6 +447,7 @@ void CheckersInstance::handleSelection()
 
 			if (tryKing())
 			{
+				action.becomeKing = true;
 				return;
 			}
 
@@ -489,6 +494,7 @@ void CheckersInstance::handleSelection()
 			//so we can (and must) return early
 			if (tryKing())
 			{
+				action.becomeKing = true;
 				return;
 			}
 
