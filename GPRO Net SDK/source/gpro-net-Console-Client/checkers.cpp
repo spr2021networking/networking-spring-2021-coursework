@@ -108,8 +108,11 @@ void CheckersInstance::drawCheckers()
 {
 	drawBoard();
 	drawPieces();
-	drawSelection();
-	drawHighlight();
+	if (currentPlayer == playerNum)
+	{
+		drawSelection();
+		drawHighlight();
+	}
 	gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
 	dirty = false;
 }
