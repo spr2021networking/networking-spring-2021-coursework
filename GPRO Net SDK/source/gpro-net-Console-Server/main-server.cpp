@@ -191,59 +191,15 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	{
 		if (strncmp(m->recipient, "createroom", 10) == 0)
 		{
-			outStream.Reset();
-			RoomJoinInfo r;
-			roomKeyToRoom[m->message] = CheckerRoom();
-			roomKeyToRoom[m->message].name = m->message;
-			roomKeyToRoom[m->message].player2.address = packet->systemAddress.ToString();
-			roomKeyToRoom[m->message].player2.name = IPToUserName[packet->systemAddress.ToString()];
-			r.setName(roomKeyToRoom[m->message].name);
-			r.playerIndex = 2;
-			prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
-			outStream.Write(r);
-			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			CheckerRoom::createAndJoinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
 		}
 		if (strncmp(m->recipient, "joinroom", 8) == 0)
 		{
-			outStream.Reset();
-			RoomJoinInfo r;
-			roomKeyToRoom[m->message].name = m->message;
-			roomKeyToRoom[m->message].player1.address = packet->systemAddress.ToString();
-			roomKeyToRoom[m->message].player1.name = IPToUserName[packet->systemAddress.ToString()];
-			r.setName(roomKeyToRoom[m->message].name);
-			r.playerIndex = 1;
-			map<string, CheckerRoom>::iterator it;
-			it = roomKeyToRoom.find(m->message);
-			if (it != roomKeyToRoom.end())
-			{
-				prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
-				outStream.Write(r);
-				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				break;
-			}
+			CheckerRoom::joinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message, 1);
 		}
 		if (strncmp(m->recipient, "spectate", 8) == 0)
 		{
-			outStream.Reset();
-			RoomJoinInfo r;
-			roomKeyToRoom[m->message].name = m->message;
-			r.setName(roomKeyToRoom[m->message].name);
-			r.playerIndex = 0;
-
-			Player player;
-			player.name = IPToUserName[packet->systemAddress.ToString()];
-			player.address = packet->systemAddress.ToString();
-			roomKeyToRoom[m->message].spectators.push_back(player);
-
-			map<string, CheckerRoom>::iterator it;
-			it = roomKeyToRoom.find(m->message);
-			if (it != roomKeyToRoom.end())
-			{
-				prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
-				outStream.Write(r);
-				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				break;
-			}
+			CheckerRoom::spectateRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
 		}
 		if (strncmp(m->recipient, "userlist", 8) == 0) //get a list of users
 		{

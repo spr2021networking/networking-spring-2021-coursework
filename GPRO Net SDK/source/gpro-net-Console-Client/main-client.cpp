@@ -361,7 +361,7 @@ int main(int const argc, char const* const argv[])
 			}
 			case ID_JOIN_ROOM:
 			{
-				RoomJoinInfo r = RoomJoinInfo::parseMessage(packet);
+				RoomJoinInfo r = RoomJoinInfo::parseRoomInfo(packet);
 				checkers.playerNum = r.playerIndex;
 				checkers.action.setName(r.roomID, (int)strnlen(r.roomID, 16));
 				break;
