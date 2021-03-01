@@ -208,12 +208,12 @@ int main(int const argc, char const* const argv[])
 	bool isServer = false;
 
 	//retrieve IP and name
-	printf("Enter server IP or hit enter for 172.16.2.186\n");
+	printf("Enter server IP or hit enter for 172.16.2.60\n");
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.186\0";
+		stringBuffer = "172.16.2.60\0";
 	}
 
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
@@ -356,6 +356,7 @@ int main(int const argc, char const* const argv[])
 			{
 				Action act = Action::parseAction(packet);
 				checkers.processAction(&act);
+				//check win state, send message to all spectators and players if there's a winner
 				break;
 			}
 			case ID_JOIN_ROOM:
@@ -403,7 +404,7 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
-		if (!hasInput)
+		if (!hasInput && checkers.playerNum == checkers.currentPlayer)
 		{
 			checkers.checkInput();
 			if (checkers.action.playerIndex != 0) //we need to store our local player somehow!

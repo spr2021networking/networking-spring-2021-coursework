@@ -108,8 +108,11 @@ void CheckersInstance::drawCheckers()
 {
 	drawBoard();
 	drawPieces();
-	drawSelection();
-	drawHighlight();
+	if (currentPlayer == playerNum && playerNum != 0)
+	{
+		drawSelection();
+		drawHighlight();
+	}
 	gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
 	dirty = false;
 }
@@ -292,12 +295,25 @@ bool CheckersInstance::tryKing()
 
 void CheckersInstance::processAction(Action* action)
 {
-	chk[action->endX][action->endY] = chk[action->startX][action->startY];
-	chk[action->startX][action->startY] = 0;
-	if (action->hasCaptured)
+	if (action->playerIndex != playerNum)
 	{
-		chk[action->capturedX][action->capturedY] = 0;
+		chk[action->endY][action->endX] = chk[action->startY][action->startX];
+		chk[action->startY][action->startX] = 0;
+		if (action->hasCaptured)
+		{
+			chk[action->capturedY][action->capturedX] = 0;
+		}
+		if (action->endTurn)
+		{
+			currentPlayer = 3 - currentPlayer;
+		}
+		if (action->becomeKing)
+		{
+			chk[action->endY][action->endX] = action->playerIndex + 4; //set the king flag
+		}
 	}
+	dirty = true;
+	
 }
 
 void CheckersInstance::reset()
@@ -308,8 +324,13 @@ void CheckersInstance::reset()
 
 void CheckersInstance::handleSelection()
 {
-	action.playerIndex = 0;
-	action.endTurn = true;
+	if (playerNum == 0) //spectators can't move
+	{
+		return;
+	}
+
+	action.reset();
+
 	if (highlightX % 2 != highlightY % 2) //this isn't a valid click as we're on a red square
 	{
 		return;
@@ -368,7 +389,7 @@ void CheckersInstance::handleSelection()
 		if (!isSelectedKing && invalidPawnSelection)
 			return;
 
-
+		//check if the requirements for a jump are present
 		bool jumpExists = hasJump();
 		if (jumpExists)
 		{
@@ -388,11 +409,17 @@ void CheckersInstance::handleSelection()
 			{
 				if (chk[yAvg][selectionX / 2 + xOffset] != (3 - currentPlayer)) //ensure that we're actually jumping a piece
 				{
-					return;
+					return; //if we're not jumping, we return, and no actions are taken
 				}
 				else
 				{
-					chk[yAvg][selectionX / 2 + xOffset] = 0;
+					chk[yAvg][selectionX / 2 + xOffset] = 0; //piece is captured
+
+					//configure a jump action
+					action.playerIndex = currentPlayer;
+					action.hasCaptured = true;
+					action.capturedX = selectionX / 2 + xOffset;
+					action.capturedY = yAvg;
 				}
 				 
 			}
@@ -406,6 +433,7 @@ void CheckersInstance::handleSelection()
 				{
 					chk[yAvg][selectionX / 2 - 1 + xOffset] = 0;
 
+					//configure a jump action
 					action.playerIndex = currentPlayer;
 					action.hasCaptured = true;
 					action.capturedX = selectionX / 2 - 1 + xOffset;
@@ -427,6 +455,7 @@ void CheckersInstance::handleSelection()
 
 			if (tryKing())
 			{
+				action.becomeKing = true;
 				return;
 			}
 
@@ -440,6 +469,7 @@ void CheckersInstance::handleSelection()
 				selectionX = -1;
 				selectionY = -1;
 				hasJumped = false;
+				action.endTurn = true;
 			}
 			else
 			{
@@ -460,6 +490,7 @@ void CheckersInstance::handleSelection()
 
 			action.playerIndex = currentPlayer;
 			action.hasCaptured = false;
+			action.endTurn = true;
 
 			action.startX = selectionX / 2;
 			action.startY = selectionY;
@@ -471,6 +502,7 @@ void CheckersInstance::handleSelection()
 			//so we can (and must) return early
 			if (tryKing())
 			{
+				action.becomeKing = true;
 				return;
 			}
 

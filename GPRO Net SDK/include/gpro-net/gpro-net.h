@@ -74,10 +74,12 @@ struct Action
 	char capturedX, capturedY;
 
 	bool endTurn = false;
+	bool becomeKing = false;
 
 	static Action parseAction(RakNet::Packet* packet);
 	bool setName(std::string name);
 	bool setName(const char* name, int length);
+	void reset(bool resetName = false);
 };
 #pragma pack(pop)
 
