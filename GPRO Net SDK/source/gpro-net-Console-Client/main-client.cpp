@@ -158,22 +158,22 @@ int main(int const argc, char const* const argv[])
 	while (!quitting)
 	{
 		int textY = 0;
-		//render the checkerboard before we do anything. Also shouldn't display if we are in a lobby, that'll be handled later. TODO
+
 		if (checkers.action.checkerRoomKey[0] != 0)
 		{
-			textBox.draw(0, 8);
 			textY = 8;
 			textBox.setLineCount(5);
 			if (checkers.dirty)
 			{
-				checkers.drawCheckers();
+				checkers.drawCheckers(); //this clears the board, so we want to draw afterwards
+				textBox.dirty = true; //force a redraw
 			}
 		}
 		else
 		{
-			textBox.draw(0, 0);
 			textBox.setLineCount(20);
 		}
+		textBox.draw(0, textY);
 
 
 		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
