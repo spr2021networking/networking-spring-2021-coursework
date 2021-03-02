@@ -52,6 +52,7 @@ using namespace std;
 RakNet::RakPeerInterface* peer;
 map<string, string> IPToUserName;
 map<string, CheckerRoom> roomKeyToRoom;
+map<string, bool> IPtoInLobby;
 ofstream serverLog;
 
 string adminName = "IAmTheAdmin";
@@ -145,8 +146,15 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		strncpy(response.message, output.c_str(), output.length());
 		response.message[output.length()] = 0;
 		outStream.Write(response);
-		map<string, string>::iterator it;
-		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(), true);
+		map<string, bool>::iterator it;
+		it = IPtoInLobby.find(packet->systemAddress.ToString());
+		for (it = IPtoInLobby.begin(); it != IPtoInLobby.end(); it++) //check to see if we send the message to a user, as long as they aren't in a game, they get the message
+		{
+			if (IPtoInLobby[packet->systemAddress.ToString()] == true)
+			{
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+			}
+		}
 	}
 	break;
 	case PRIVATE: //private
@@ -189,16 +197,34 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	break;
 	case COMMAND: //command
 	{
-		if (strncmp(m->recipient, "createroom", 10) == 0)
+		if (strncmp(m->recipient, "createroom", 10) == 0) //create a checker room
 		{
+			map<string, bool>::iterator it;
+			it = IPtoInLobby.find(packet->systemAddress.ToString());
+			if (it != IPtoInLobby.end())
+			{
+				IPtoInLobby[packet->systemAddress.ToString()] = false; //remove the player from the lobby so they don't get public messages
+			}
 			CheckerRoom::createAndJoinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
 		}
-		if (strncmp(m->recipient, "joinroom", 8) == 0)
+		if (strncmp(m->recipient, "joinroom", 8) == 0) //join a checker room
 		{
+			map<string, bool>::iterator it;
+			it = IPtoInLobby.find(packet->systemAddress.ToString());
+			if (it != IPtoInLobby.end())
+			{
+				IPtoInLobby[packet->systemAddress.ToString()] = false; //remove the player from the lobby so they don't get public messages
+			}
 			CheckerRoom::joinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message, 1);
 		}
-		if (strncmp(m->recipient, "spectate", 8) == 0)
+		if (strncmp(m->recipient, "spectate", 8) == 0)//spectate a checker room
 		{
+			map<string, bool>::iterator it;
+			it = IPtoInLobby.find(packet->systemAddress.ToString());
+			if (it != IPtoInLobby.end())
+			{
+				IPtoInLobby[packet->systemAddress.ToString()] = false; //remove the player from the lobby so they don't get public messages
+			}
 			CheckerRoom::spectateRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
 		}
 		if (strncmp(m->recipient, "userlist", 8) == 0) //get a list of users
@@ -410,6 +436,7 @@ int main(int const argc, char const* const argv[])
 				else
 				{
 					IPToUserName[packet->systemAddress.ToString()] = m.sender; //add the user to the username list
+					IPtoInLobby[packet->systemAddress.ToString()] = true; //set the user to be in the lobby so they get public messages
 
 					if (strncmp(adminName.c_str(), m.sender, adminName.length()) == 0)
 					{
