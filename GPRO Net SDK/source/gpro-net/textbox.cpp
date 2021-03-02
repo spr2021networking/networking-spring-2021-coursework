@@ -60,3 +60,9 @@ void TextBox::blankLine(short yCoord)
 	dirty = true;
 	draw(0, yCoord);
 }
+
+void TextBox::clear()
+{
+	messages.erase(messages.begin(), messages.end());
+	dirty = true;
+}

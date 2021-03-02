@@ -16,6 +16,7 @@ struct TextBox
 	int getInputY(int startY);
 	void setLineCount(int lines);
 	void blankLine(short yCoord);
+	void clear();
 
 	bool dirty;
 };

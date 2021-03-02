@@ -279,6 +279,7 @@ int main(int const argc, char const* const argv[])
 				RoomJoinInfo r = RoomJoinInfo::parseRoomInfo(packet);
 				checkers.playerNum = r.playerIndex;
 				checkers.action.setName(r.roomID, (int)strnlen(r.roomID, 16));
+				textBox.clear();
 				break;
 			}
 			case ID_KICK:
@@ -346,8 +347,9 @@ int main(int const argc, char const* const argv[])
 				gpro_consoleSetCursor(0, textBox.getInputY(textY));
 			}
 			std::getline(std::cin, stringBuffer);
-			textBox.blankLine((short)textY);
+			gpro_consoleClear();
 			checkers.dirty = true; //force a board redraw if a board is present! blankLine clears things.
+			textBox.dirty = true;
 			strncpy(message, stringBuffer.c_str(), 128);
 			message[128] = 0;
 			RakNet::RakString messageBackup("%s", message);
