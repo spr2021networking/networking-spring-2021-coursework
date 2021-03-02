@@ -1,4 +1,5 @@
 #include "gpro-net/chatmessage.h"
+#include "gpro-net/gpro-net.h"
 
 /// <summary>
 /// Extract a ChatMessage from packet data, assuming it was formatted properly (using prepBitStream)
@@ -72,4 +73,107 @@ bool ChatMessage::setText(ChatMessageField field, const char* text, int length)
 bool ChatMessage::setText(ChatMessageField field, std::string text)
 {
 	return setText(field, text.c_str(), (int)text.length());
+}
+
+void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args, bool isAdmin)
+{
+	messageToSend->messageFlag = COMMAND;
+	//checking what command type
+	if (strncmp(args.c_str(), "userlist", 8) == 0) //userlist
+	{
+		messageToSend->setText(RECIPIENT, "userlist");
+		messageToSend->setText(MESSAGE, " ");
+	}
+	else if (strncmp(args.c_str(), "kick", 4) == 0) //kick (admin only, nonfunctional)
+	{
+		if (true)
+		{
+			printf("[Error] Kicking currently does not function correctly!\n");
+			messageToSend->setText(MESSAGE, "");
+			return;
+		}
+		/*
+		else if (!isAdmin)
+		{
+			printf("[Error] Only admins can kick!\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			char* startOfKickTarget = chopStr((char*)args.c_str(), (int)args.length(), ' ');
+			if (startOfKickTarget == args.c_str()) //no kick target
+			{
+				printf("[Error] No kick target\n");
+				messageToSend->setText(MESSAGE, "");
+			}
+			else
+			{
+				std::string messageBody = startOfKickTarget;
+				messageToSend->setText(RECIPIENT, "kick");
+				messageToSend->setText(MESSAGE, messageBody);
+			}
+		}*/
+	}
+	else if (strncmp(args.c_str(), "stop", 4) == 0) //stop server
+	{
+		if (!isAdmin)
+		{
+			printf("[Error] Only admins can close the server!\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			messageToSend->setText(RECIPIENT, "stop");
+		}
+	}
+	else if (strncmp(args.c_str(), "createroom", 10) == 0) //create room
+	{
+		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
+		if (startOfRoomName == args.c_str())
+		{
+			printf("[Error] No room stated\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			std::string messageBody = startOfRoomName;
+			messageToSend->setText(RECIPIENT, "createroom");
+			messageToSend->setText(MESSAGE, messageBody);
+		}
+	}
+	else if (strncmp(args.c_str(), "joinroom", 8) == 0)
+	{
+		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
+		if (startOfRoomName == args.c_str())
+		{
+			printf("[Error] No room stated\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			std::string messageBody = startOfRoomName;
+			messageToSend->setText(RECIPIENT, "joinroom");
+			messageToSend->setText(MESSAGE, messageBody);
+		}
+	}
+	else if (strncmp(args.c_str(), "spectate", 8) == 0) //spectate room
+	{
+		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
+		if (startOfRoomName == args.c_str())
+		{
+			printf("[Error] No room stated\n");
+			messageToSend->setText(MESSAGE, "");
+		}
+		else
+		{
+			std::string messageBody = startOfRoomName;
+			messageToSend->setText(RECIPIENT, "spectate");
+			messageToSend->setText(MESSAGE, messageBody);
+		}
+	}
+	else
+	{
+		printf("[Error] Unknown command\n");
+		messageToSend->setText(MESSAGE, "");
+	}
 }

@@ -49,17 +49,9 @@ void CheckerRoom::createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStor
 	{
 		CheckerRoom room;
 		room.name = roomName;
-		room.player2.address = packet->systemAddress.ToString();
-		room.player2.name = (*nameLookup)[room.player2.address];
 		(*roomStorage)[roomName] = room;
 
-		RoomJoinInfo joinInfo;
-		joinInfo.setName(roomName);
-		joinInfo.playerIndex = 2;
-
-		prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
-		outStream.Write(joinInfo);
-		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+		joinRoom(roomStorage, nameLookup, peer, packet, roomName, 2);
 	}
 	else
 	{

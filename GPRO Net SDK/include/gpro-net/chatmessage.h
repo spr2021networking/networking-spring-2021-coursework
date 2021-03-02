@@ -36,6 +36,7 @@ struct ChatMessage
 	bool setText(ChatMessageField field, const char* text, int length);
 	bool setText(ChatMessageField field, std::string text);
 	static ChatMessage parseMessage(RakNet::Packet* packet);
+	static void tryCreateCommand(ChatMessage* messageToSend, std::string args, bool isAdmin = false);
 
 	bool hasMessage();
 

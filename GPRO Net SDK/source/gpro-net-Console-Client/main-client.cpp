@@ -69,6 +69,7 @@ RakNet::SystemAddress serverAddress;
 char name[17];
 bool quitting = false;
 CheckersInstance checkers;
+TextBox textBox;
 
 /// <summary>
 /// Closes our connection to the server after 300 ms, sending a notification that we're leaving first.
@@ -81,107 +82,6 @@ void quit()
 	out.Write(name);
 	peer->Send(&out, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 	peer->Shutdown(300);
-}
-
-void tryCreateCommand(ChatMessage* messageToSend, std::string args, bool isAdmin)
-{
-	messageToSend->messageFlag = COMMAND;
-	//checking what command type
-	if (strncmp(args.c_str(), "userlist", 8) == 0) //userlist
-	{
-		messageToSend->setText(RECIPIENT, "userlist");
-		messageToSend->setText(MESSAGE, " ");
-	}
-	else if (strncmp(args.c_str(), "kick", 4) == 0) //kick (admin only, nonfunctional)
-	{
-		if (true)
-		{
-			printf("[Error] Kicking currently does not function correctly!\n");
-			messageToSend->setText(MESSAGE, "");
-		}
-		else if (!isAdmin)
-		{
-			printf("[Error] Only admins can kick!\n");
-			messageToSend->setText(MESSAGE, "");
-		}
-		else
-		{
-			char* startOfKickTarget = chopStr((char*)args.c_str(), (int)args.length(), ' ');
-			if (startOfKickTarget == args.c_str()) //no kick target
-			{
-				printf("[Error] No kick target\n");
-				messageToSend->setText(MESSAGE, "");
-			}
-			else
-			{
-				std::string messageBody = startOfKickTarget;
-				messageToSend->setText(RECIPIENT, "kick");
-				messageToSend->setText(MESSAGE, messageBody);
-			}
-		}
-	}
-	else if (strncmp(args.c_str(), "stop", 4) == 0) //stop server
-	{
-		if (!isAdmin)
-		{
-			printf("[Error] Only admins can close the server!\n");
-			messageToSend->setText(MESSAGE, "");
-		}
-		else
-		{
-			messageToSend->setText(RECIPIENT, "stop");
-		}
-	}
-	else if (strncmp(args.c_str(), "createroom", 10) == 0) //create room
-	{
-		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
-		if (startOfRoomName == args.c_str())
-		{
-			printf("[Error] No room stated\n");
-			messageToSend->setText(MESSAGE, "");
-		}
-		else
-		{
-			std::string messageBody = startOfRoomName;
-			messageToSend->setText(RECIPIENT, "createroom");
-			messageToSend->setText(MESSAGE, messageBody);
-		}
-	}
-	else if (strncmp(args.c_str(), "joinroom", 8) == 0)
-	{
-		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
-		if (startOfRoomName == args.c_str())
-		{
-			printf("[Error] No room stated\n");
-			messageToSend->setText(MESSAGE, "");
-		}
-		else
-		{
-			std::string messageBody = startOfRoomName;
-			messageToSend->setText(RECIPIENT, "joinroom");
-			messageToSend->setText(MESSAGE, messageBody);
-		}
-	}
-	else if (strncmp(args.c_str(), "spectate", 8) == 0) //spectate room
-	{
-		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
-		if (startOfRoomName == args.c_str())
-		{
-			printf("[Error] No room stated\n");
-			messageToSend->setText(MESSAGE, "");
-		}
-		else
-		{
-			std::string messageBody = startOfRoomName;
-			messageToSend->setText(RECIPIENT, "spectate");
-			messageToSend->setText(MESSAGE, messageBody);
-		}
-	}
-	else
-	{
-		printf("[Error] Unknown command\n");
-		messageToSend->setText(MESSAGE, "");
-	}
 }
 
 int main(int const argc, char const* const argv[])
@@ -208,45 +108,47 @@ int main(int const argc, char const* const argv[])
 	bool isServer = false;
 
 	//retrieve IP and name
-	printf("Enter server IP or hit enter for 172.16.2.60\n");
+	textBox.addMessage("Enter server IP or hit enter for 172.16.2.60");
+	textBox.draw(0, 0);
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
 		stringBuffer = "172.16.2.60\0";
 	}
-
+	textBox.addMessage(stringBuffer);
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
 	ip[stringBuffer.length()] = 0;
 	stringBuffer = "";
 	while (stringBuffer.length() == 0)
 	{
 		//parse a name
-		printf("Enter nickname (16 character max)\n");
+		textBox.addMessage("Enter nickname (16 character max)");
+		textBox.draw(0, 0);
 		std::getline(std::cin, stringBuffer);
 		int prevLen = (int)stringBuffer.length();
 		stringTrim(stringBuffer);
 		int newLen = (int)stringBuffer.length();
 		if (prevLen != newLen)
 		{
-			printf("Removing spaces ...\n");
+			textBox.addMessage("Removing spaces ...");
 		}
 		if (newLen > 16)
 		{
-			printf("Removing any extra characters...\n");
+			textBox.addMessage("Removing any extra characters...");
 			stringBuffer = stringBuffer.substr(0, min(stringBuffer.length(), 16));
 		}
-
+		textBox.draw(0, 0);
 		if (stringBuffer.length() == 0)
 		{
-			printf("Username was empty, please try again. ");
+			textBox.addMessage("Username was empty, please try again. ");
 		}
 	}
 
 	strcpy(name, stringBuffer.c_str());
 	name[16] = 0;
-
-	printf("Starting the client. WARNING: Timestamps may be extremely inaccurate. There is no obvious conversion between RakNet::GetTime() and the current system time\n");
+	textBox.addMessage(stringBuffer);
+	textBox.draw(0, 0);
 	peer->Connect(ip, SERVER_PORT, 0, 0);
 
 	bool hasNameBeenSent = false;
@@ -255,11 +157,24 @@ int main(int const argc, char const* const argv[])
 
 	while (!quitting)
 	{
+		int textY = 0;
 		//render the checkerboard before we do anything. Also shouldn't display if we are in a lobby, that'll be handled later. TODO
-		if (checkers.action.checkerRoomKey[0] != 0 && checkers.dirty)
+		if (checkers.action.checkerRoomKey[0] != 0)
 		{
-			checkers.drawCheckers();
+			textBox.draw(0, 8);
+			textY = 8;
+			textBox.setLineCount(5);
+			if (checkers.dirty)
+			{
+				checkers.drawCheckers();
+			}
 		}
+		else
+		{
+			textBox.draw(0, 0);
+			textBox.setLineCount(20);
+		}
+
 
 		for (packet = peer->Receive(); packet && !quitting; peer->DeallocatePacket(packet), packet = peer->Receive())
 		{
@@ -277,17 +192,17 @@ int main(int const argc, char const* const argv[])
 			switch (packet->data[idIndex])
 			{
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-				printf("Another client has disconnected.\n");
+				textBox.addMessage("Another client has disconnected.");
 				break;
 			case ID_REMOTE_CONNECTION_LOST:
-				printf("Another client has lost the connection.\n");
+				textBox.addMessage("Another client has lost the connection.");
 				break;
 			case ID_REMOTE_NEW_INCOMING_CONNECTION:
-				printf("Another client has connected.\n");
+				textBox.addMessage("Another client has lost the connection.");
 				break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 			{
-				printf("Our connection request has been accepted.\n");
+				textBox.addMessage("Our connection request has been accepted.");
 
 				RakNet::BitStream bsOut;
 				if (!hasNameBeenSent) //we send our username to the server here, and we receive an ID_USERNAME message back that sets our admin status
@@ -305,17 +220,17 @@ int main(int const argc, char const* const argv[])
 			}
 			break;
 			case ID_NEW_INCOMING_CONNECTION:
-				printf("A connection is incoming.\n");
+				textBox.addMessage("A connection is incoming.");
 				break;
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
-				printf("The server is full.\n");
+				textBox.addMessage("The server is full.");
 				break;
 			case ID_DISCONNECTION_NOTIFICATION:
-				printf("We have been disconnected.\n");
+				textBox.addMessage("We have been disconnected.");
 				quitting = true;
 				break;
 			case ID_CONNECTION_LOST:
-				printf("Connection lost.\n");
+				textBox.addMessage("Connection lost.");
 				quitting = true;
 				break;
 
@@ -323,7 +238,7 @@ int main(int const argc, char const* const argv[])
 			{
 				//if messageFlag is -1, the user already exists and we quit.
 				ChatMessage m = ChatMessage::parseMessage(packet);
-				printf("%s\n", m.message);
+				textBox.addMessage(m.message);
 				if (m.messageFlag == -1)
 				{
 					peer->Shutdown(300); //quit() requires a username, so we do this instead
@@ -338,7 +253,7 @@ int main(int const argc, char const* const argv[])
 			case ID_RECEIVE_MESSAGE: //legacy, currently unused.
 			{
 				ChatMessage m = ChatMessage::parseMessage(packet);
-				printf("%s\n", m.message);
+				textBox.addMessage(m.message);
 			}
 			break;
 			case ID_MESSAGE_STRUCT:
@@ -349,7 +264,7 @@ int main(int const argc, char const* const argv[])
 				{
 					gpro_consoleSetCursor(0, 8);
 				}
-				printf("%s\n", m.message);
+				textBox.addMessage(m.message);
 				break;
 			}
 			case ID_GAMEMESSAGE_STRUCT:
@@ -368,10 +283,10 @@ int main(int const argc, char const* const argv[])
 			}
 			case ID_KICK:
 				quit();
-				printf("You have been kicked\n");
+				textBox.addMessage("You have been kicked");
 				break;
 			default:
-				printf("Message with identifier %i has arrived.\n", packet->data[idIndex]);
+				textBox.addMessage("Message with identifier " + std::to_string(packet->data[idIndex]) + " has arrived.");
 				break;
 			}
 		}
@@ -428,79 +343,69 @@ int main(int const argc, char const* const argv[])
 		{
 			if (checkers.action.checkerRoomKey[0] != 0)
 			{
-				gpro_consoleSetCursor(0, 8);
+				gpro_consoleSetCursor(0, textBox.getInputY(textY));
 			}
 			std::getline(std::cin, stringBuffer);
+			textBox.blankLine((short)textY);
+			checkers.dirty = true; //force a board redraw if a board is present! blankLine clears things.
 			strncpy(message, stringBuffer.c_str(), 128);
 			message[128] = 0;
 			RakNet::RakString messageBackup("%s", message);
 
-			RakNet::Time timeStamp;
-			RakNet::MessageID useTimeStamp;
-			RakNet::MessageID messageID = ID_RECEIVE_MESSAGE;
-			useTimeStamp = ID_TIMESTAMP;
-			timeStamp = RakNet::GetTime();
+			RakNet::Time timeStamp = RakNet::GetTime();
 
-			//prepare the bitstream and the ChatMessage
-			RakNet::BitStream bsOut;
-			prepBitStream(&bsOut, timeStamp);
+			//create the message to send
 			ChatMessage messageToSend;
 			messageToSend.isTimestamp = ID_TIMESTAMP;
 			messageToSend.time = timeStamp;
 			messageToSend.id2 = ID_MESSAGE_STRUCT;
 
+			//prepare the bitstream and the ChatMessage
+			RakNet::BitStream bsOut;
+			prepBitStream(&bsOut, timeStamp);
+
+
 			char* startOfSecondWord = chopStr((char*)stringBuffer.c_str(), (int)stringBuffer.length(), ' ');
 
-			if (strncmp(stringBuffer.c_str(), "quit", 4) == 0 && stringBuffer.length() == 4)
+			std::string secondWord = startOfSecondWord;
+			if (strncmp(stringBuffer.c_str(), "private", 7) == 0) //stringBuffer contains only the first word at this point
 			{
-				quit();
-				break;
-			}
-			else if (startOfSecondWord == stringBuffer.c_str()) //there's no space in the message
-			{
-				if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command, meaning that it's a one-word public message
+
+				char* startOfMessageBody = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
+				if (startOfMessageBody == secondWord.c_str()) //there's no actual message body, we're just sending the words "private" and another word
 				{
-					//set message to public and load the entire string buffer into the message.
-					messageToSend.messageFlag = PUBLIC;
-					messageToSend.setText(MESSAGE, stringBuffer);
+					messageToSend.messageFlag = PUBLIC; //reset to public
+					messageToSend.setText(MESSAGE, secondWord);
 				}
 				else
 				{
-					printf("[Error] Cannot send empty command\n");
-					messageToSend.setText(MESSAGE, "");
-				}
-			}
-			else
-			{
-				std::string secondWord = startOfSecondWord;
-				if (strncmp(stringBuffer.c_str(), "private", 7) == 0) //stringBuffer contains only the first word at this point
-				{
+					std::string messageBody = startOfMessageBody;
+
+					//copy message recipient and body into ChatMessage from input
 					messageToSend.messageFlag = PRIVATE;
-					char* startOfMessageBody = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
-					if (startOfMessageBody == secondWord.c_str()) //there's no actual message body
-					{
-						messageToSend.messageFlag = PUBLIC; //reset to public
-						messageToSend.setText(MESSAGE, secondWord);
-					}
-					else
-					{
-						//copy message recipient and body into ChatMessage from input
-						std::string messageBody = startOfMessageBody;
-						messageToSend.setText(RECIPIENT, secondWord);
-						messageToSend.setText(MESSAGE, messageBody);
-					}
-				}
-				else if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
-				{
-					tryCreateCommand(&messageToSend, secondWord, isAdmin);
-				}
-				else //defaulting to a public message because the first word wasn't recognized as anything
-				{
-					messageToSend.messageFlag = PUBLIC;
-					messageToSend.setText(MESSAGE, messageBackup.C_String(), (int)messageBackup.GetLength());
+					messageToSend.setText(RECIPIENT, secondWord);
+					messageToSend.setText(MESSAGE, messageBody);
 				}
 			}
-			if (isAdmin)
+			else if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
+			{
+				if (strncmp(secondWord.c_str(), "quit", 4) == 0) //special handling for quit
+				{
+					quit();
+					break;
+				}
+				else
+				{
+					ChatMessage::tryCreateCommand(&messageToSend, secondWord, isAdmin);
+				}
+			}
+			else //defaulting to a public message because the first word wasn't recognized as anything
+			{
+				messageToSend.messageFlag = PUBLIC;
+				messageToSend.setText(MESSAGE, messageBackup.C_String(), (int)messageBackup.GetLength());
+			}
+
+			if (isAdmin) //add admin flag if needed
 			{
 				messageToSend.messageFlag |= ISADMIN;
 			}

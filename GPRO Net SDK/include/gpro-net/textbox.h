@@ -6,7 +6,7 @@
 #include "gpro-net-common/gpro-net-console.h"
 struct TextBox
 {
-	TextBox(int lines);
+	TextBox(int lines = 20);
 	int numLines;
 	std::vector<std::string> messages;
 	void addMessage(std::string message);
@@ -14,4 +14,8 @@ struct TextBox
 	void setColor(gpro_consoleColor text, gpro_consoleColor bg);
 
 	int getInputY(int startY);
+	void setLineCount(int lines);
+	void blankLine(short yCoord);
+
+	bool dirty;
 };
