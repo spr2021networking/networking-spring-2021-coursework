@@ -272,6 +272,10 @@ int main(int const argc, char const* const argv[])
 			{
 				Action act = Action::parseAction(packet);
 				checkers.processAction(&act);
+				if (act.winner != 0)
+				{
+					//display winner
+				}
 				//check win state, send message to all spectators and players if there's a winner
 				break;
 			}
@@ -321,7 +325,7 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
-		if (!hasInput && checkers.playerNum == checkers.currentPlayer)
+		if (!hasInput && checkers.playerNum == checkers.currentPlayer && checkers.action.readyToPlay)
 		{
 			checkers.checkInput();
 			if (checkers.action.playerIndex != 0) //we need to store our local player somehow!

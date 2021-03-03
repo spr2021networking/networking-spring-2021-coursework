@@ -233,6 +233,19 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 					IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
 
 					sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, true);
+
+					if (roomKeyToRoom[m->message].readyToPlay())
+					{
+						Action action;
+						action.reset();
+						action.readyToPlay = true;
+
+						outStream.Reset();
+
+						prepBitStream(&outStream, RakNet::GetTime(), ID_GAMEMESSAGE_STRUCT);
+						outStream.Write(action);
+						sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, false);
+					}
 				}
 			}
 		}
@@ -464,7 +477,7 @@ int main(int const argc, char const* const argv[])
 				else
 				{
 					IPToUserName[packet->systemAddress.ToString()] = m.sender; //add the user to the username list
-					IPToRoom[packet->systemAddress.ToString()] = true; //set the user to be in the lobby so they get public messages
+					IPToRoom[packet->systemAddress.ToString()] = "lobby"; //set the user to be in the lobby so they get public messages
 
 					if (strncmp(adminName.c_str(), m.sender, adminName.length()) == 0)
 					{

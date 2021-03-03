@@ -78,6 +78,8 @@ struct Action
 
 	int winner = 0;
 
+	bool readyToPlay = false;
+
 	static Action parseAction(RakNet::Packet* packet);
 	bool setName(std::string name);
 	bool setName(const char* name, int length);

@@ -211,3 +211,8 @@ bool CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, 
 		return false;
 	}
 }
+
+bool CheckerRoom::readyToPlay()
+{
+	return player2.name.length() > 0 && player1.name.length() > 0;
+}

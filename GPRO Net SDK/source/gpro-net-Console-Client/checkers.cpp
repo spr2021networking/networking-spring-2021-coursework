@@ -108,7 +108,7 @@ void CheckersInstance::drawCheckers()
 {
 	drawBoard();
 	drawPieces();
-	if (currentPlayer == playerNum && playerNum != 0)
+	if (currentPlayer == playerNum && playerNum != 0 && action.readyToPlay)
 	{
 		drawSelection();
 		drawHighlight();
@@ -313,6 +313,7 @@ void CheckersInstance::processAction(Action* action)
 		}
 	}
 	dirty = true;
+	this->action.readyToPlay = action->readyToPlay;
 	
 }
 
