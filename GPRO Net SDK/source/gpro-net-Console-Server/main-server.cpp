@@ -163,15 +163,27 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			map<string, string>::iterator it;
 			it = IPToRoom.find(packet->systemAddress.ToString());
 			if (it != IPToRoom.end())
-			{
+			{	
 				CheckerRoom* messageRoom = &roomKeyToRoom[it->second];
 				std::vector<Player>::iterator spcit;
-				for (spcit = messageRoom->spectators.begin(); spcit != messageRoom->spectators.end(); spcit++)
+				std::string addressLengthHolder = packet->systemAddress.ToString();
+				if (strncmp(addressLengthHolder.c_str(),messageRoom->player1.address.c_str(),addressLengthHolder.length())!=0 && strncmp(addressLengthHolder.c_str(), messageRoom->player2.address.c_str(), addressLengthHolder.length()) != 0)
 				{
-					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(spcit->address.c_str()), false);
+					for (spcit = messageRoom->spectators.begin(); spcit != messageRoom->spectators.end(); spcit++)
+					{
+						peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(spcit->address.c_str()), false);
+					}
 				}
-				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player1.address.c_str()), false);
-				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player2.address.c_str()), false);
+				else
+				{
+					for (spcit = messageRoom->spectators.begin(); spcit != messageRoom->spectators.end(); spcit++)
+					{
+						peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(spcit->address.c_str()), false);
+					}
+					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player1.address.c_str()), false);
+					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player2.address.c_str()), false);
+				}
+				
 			}
 
 		}
@@ -227,6 +239,23 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
 				CheckerRoom::createAndJoinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
 				//alert other people
+				output += " (publicly): ";
+				output += " a new room has been created";
+				strncpy(response.message, output.c_str(), output.length());
+				response.message[output.length()] = 0;
+				outStream.Write(response);
+				if (IPToRoom[packet->systemAddress.ToString()] == "lobby")
+				{
+					map<string, string>::iterator it;
+					it = IPToRoom.find(packet->systemAddress.ToString());
+					for (it = IPToRoom.begin(); it != IPToRoom.end(); it++) //check to see if we send the message to a user, as long as they aren't in a game, they get the message
+					{
+						if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+						{
+							peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+						}
+					}
+				}
 			}
 			//send warning
 		}
@@ -238,7 +267,22 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			{
 				IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
 				CheckerRoom::joinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message, 1);
+				output += " a new user has joined the room";
+				strncpy(response.message, output.c_str(), output.length());
+				response.message[output.length()] = 0;
+				outStream.Write(response);
 				//alert other people
+				if (it != IPToRoom.end())
+				{
+					CheckerRoom* messageRoom = &roomKeyToRoom[it->second];
+					std::vector<Player>::iterator spcit;
+					for (spcit = messageRoom->spectators.begin(); spcit != messageRoom->spectators.end(); spcit++)
+					{
+						peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(spcit->address.c_str()), false);
+					}
+					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player1.address.c_str()), false);
+					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player2.address.c_str()), false);
+				}
 			}
 			//send warning
 		}
@@ -249,8 +293,24 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
 			{
 				IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
+				CheckerRoom::spectateRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
+				output += " a new user has joined the room";
+				strncpy(response.message, output.c_str(), output.length());
+				response.message[output.length()] = 0;
+				outStream.Write(response);
+				if (it != IPToRoom.end())
+				{
+					CheckerRoom* messageRoom = &roomKeyToRoom[it->second];
+					std::vector<Player>::iterator spcit;
+					for (spcit = messageRoom->spectators.begin(); spcit != messageRoom->spectators.end(); spcit++)
+					{
+						peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(spcit->address.c_str()), false);
+					}
+					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player1.address.c_str()), false);
+					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player2.address.c_str()), false);
+				}
 			}
-			CheckerRoom::spectateRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
+			
 		}
 		if (strncmp(m->recipient, "userlist", 8) == 0) //get a list of users
 		{
