@@ -43,6 +43,8 @@
 #include "RakNet/RakNetTypes.h"  // MessageID
 #include "RakNet/GetTime.h"
 
+#include "gpro-net-Console-Server/server-utils.h"
+
 
 using namespace std;
 #define MAX_CLIENTS 5
@@ -121,6 +123,7 @@ void handleGameMessage(Action* gAction, RakNet::Packet* packet)
 /// <param name="packet"></param>
 void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 {
+	//time calculation, some logging
 	float betterTime = (float)m->time;
 	float seconds = betterTime / 1000.0f;
 	float minutes = seconds / 60.0f;
@@ -128,35 +131,31 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	int hourVal = (int)hour % 12 + 11;
 	hourVal %= 12;
 	int minutesInt = (int)((hour - (int)hour) * 60);
-	printf("%d:%d\n", hourVal, minutesInt + 20);
+	printf("%d:%d %s\n", hourVal, minutesInt + 20, m->sender);
 	string output = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m->sender; //timestamp + user who sent this
 
 	RakNet::BitStream outStream;
 	prepBitStream(&outStream, RakNet::GetTime());
+
 	ChatMessage response;
 	response.id2 = ID_MESSAGE_STRUCT;
 	response.isTimestamp = ID_TIMESTAMP;
-	response.messageFlag = 0;
+
 	switch (m->messageFlag & 3) //trim off the admin flag for now
 	{
 	case PUBLIC: //public
 	{
+		response.messageFlag = PUBLIC;
 		output += " (publicly): ";
 		output += m->message;
-		strncpy(response.message, output.c_str(), output.length());
-		response.message[output.length()] = 0;
+
+		response.setText(MESSAGE, output);
+
 		outStream.Write(response);
+
 		if (IPToRoom[packet->systemAddress.ToString()] == "lobby")
 		{
-			map<string, string>::iterator it;
-			it = IPToRoom.find(packet->systemAddress.ToString());
-			for (it = IPToRoom.begin(); it != IPToRoom.end(); it++) //check to see if we send the message to a user, as long as they aren't in a game, they get the message
-			{
-				if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(),"lobby",5)==0)
-				{
-					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
-				}
-			}
+			sendMessageToLobby(&IPToRoom, packet, peer, &outStream);
 		}
 		else
 		{
@@ -164,38 +163,18 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			it = IPToRoom.find(packet->systemAddress.ToString());
 			if (it != IPToRoom.end())
 			{	
-				CheckerRoom* messageRoom = &roomKeyToRoom[it->second];
-				std::vector<Player>::iterator spcit;
-				std::string addressLengthHolder = packet->systemAddress.ToString();
-				if (strncmp(addressLengthHolder.c_str(),messageRoom->player1.address.c_str(),addressLengthHolder.length())!=0 && strncmp(addressLengthHolder.c_str(), messageRoom->player2.address.c_str(), addressLengthHolder.length()) != 0)
-				{
-					for (spcit = messageRoom->spectators.begin(); spcit != messageRoom->spectators.end(); spcit++)
-					{
-						peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(spcit->address.c_str()), false);
-					}
-				}
-				else
-				{
-					for (spcit = messageRoom->spectators.begin(); spcit != messageRoom->spectators.end(); spcit++)
-					{
-						peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(spcit->address.c_str()), false);
-					}
-					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player1.address.c_str()), false);
-					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player2.address.c_str()), false);
-				}
-				
+				sendMessageToRoom(&roomKeyToRoom[it->second], packet, peer, &outStream);
 			}
-
 		}
-		
 	}
 	break;
 	case PRIVATE: //private
 	{
 		output += " (privately): ";
 		output += m->message;
-		strncpy(response.message, output.c_str(), output.length());
-		response.message[output.length()] = 0;
+
+		response.setText(MESSAGE, output);
+
 		outStream.Write(response);
 		map<string, string>::iterator it;
 		bool sent = false;
@@ -204,26 +183,31 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			if (strncmp(it->second.c_str(), m->recipient, it->second.length()) == 0)//check to see if the user exists
 			{
 				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+
 				string logOutput = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()];
 				logOutput += " (privately to " + it->second + "): " + m->message;
 				serverLog << logOutput << std::endl;
+
 				outStream.Reset();
+
 				prepBitStream(&outStream, RakNet::GetTime());
-				strncpy(response.message, logOutput.c_str(), (int)logOutput.length());
-				response.message[logOutput.length()] = 0;
+				response.setText(MESSAGE, logOutput);
+
 				outStream.Write(response);
 				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, adminAddress, false);
 				sent = true;
 				break;
 			}
 		}
-		if (!sent) //if no private message is sent
+		if (!sent) //if no private message was sent
 		{
 			outStream.Reset();
 			prepBitStream(&outStream, RakNet::GetTime());
-			strncpy(response.message, "[Error] user does not exist", 28);
-			response.message[28] = 0;
+
+			response.setText(MESSAGE, "[Error] user does not exist");
+
 			outStream.Write(response);
+
 			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 		}
 	}
