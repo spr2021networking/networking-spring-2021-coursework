@@ -225,8 +225,10 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
 			{
 				IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
+				CheckerRoom::createAndJoinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
+				//alert other people
 			}
-			CheckerRoom::createAndJoinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
+			//send warning
 		}
 		if (strncmp(m->recipient, "joinroom", 8) == 0) //join a checker room
 		{
@@ -235,8 +237,10 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
 			{
 				IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
+				CheckerRoom::joinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message, 1);
+				//alert other people
 			}
-			CheckerRoom::joinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message, 1);
+			//send warning
 		}
 		if (strncmp(m->recipient, "spectate", 8) == 0)//spectate a checker room
 		{
