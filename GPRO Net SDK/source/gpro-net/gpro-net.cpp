@@ -87,7 +87,7 @@ void Action::reset(bool resetName)
 	{
 		setName("lobby");
 	}
-	playerIndex = 0;
+	playerIndex = winner = 0;
 	startX = startY = endX = endY = capturedX = capturedY = -1;
 	hasCaptured = endTurn = becomeKing = false;
 }

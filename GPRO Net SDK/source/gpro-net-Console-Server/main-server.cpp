@@ -43,6 +43,8 @@
 #include "RakNet/RakNetTypes.h"  // MessageID
 #include "RakNet/GetTime.h"
 
+#include "gpro-net-Console-Server/server-utils.h"
+
 
 using namespace std;
 #define MAX_CLIENTS 5
@@ -52,6 +54,7 @@ using namespace std;
 RakNet::RakPeerInterface* peer;
 map<string, string> IPToUserName;
 map<string, CheckerRoom> roomKeyToRoom;
+map<string, string> IPToRoom;
 ofstream serverLog;
 
 string adminName = "IAmTheAdmin";
@@ -70,44 +73,27 @@ void handleGameMessage(Action* gAction, RakNet::Packet* packet)
 		if (it != roomKeyToRoom.end())
 		{
 			CheckerRoom* ch = &(it->second);
-			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(ch->player2.address.c_str()), false);
-			for (int i = 0; i < (int)ch->spectators.size(); i++)
+			ch->closed = true;
+			sendMessageToRoom(ch, packet, peer, &outStream, true);
+			if (gAction->winner != 0)
 			{
-				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(ch->spectators[i].address.c_str()), false);
+				//send whether north or south player won. Probably put in main client, after parsing the action and processing it
 			}
 		}
-		//update the piece position with endX & endY
-		if (gAction->hasCaptured)
-		{
-			//send a message that tells player 2 where player 1's piece moved to and what piece(s) were captured
-		}
-		else if(!gAction->hasCaptured)
-		{
-			//send a message that tells player 2 where player 1's piece moved to
-		}
-		
 	}
-	else //we send the relavent information to player 1
+	else if (gAction->playerIndex == 2)
 	{
 		map<string, CheckerRoom>::iterator it;
 		it = roomKeyToRoom.find(gAction->checkerRoomKey);
 		if (it != roomKeyToRoom.end())
 		{
 			CheckerRoom* ch = &(it->second);
-			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(ch->player1.address.c_str()), false);
-			for (int i = 0; i < (int)ch->spectators.size(); i++)
+			ch->closed = true;
+			sendMessageToRoom(ch, packet, peer, &outStream, true);
+			if (gAction->winner != 0)
 			{
-				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(ch->spectators[i].address.c_str()), false);
+				//send whether north or south player won
 			}
-		}
-		//update the piece position with endX & endY
-		if (gAction->hasCaptured)
-		{
-			//send a message that tells player 1 where player 2's piece moved to and what piece(s) were captured
-		}
-		else if(!gAction->hasCaptured)
-		{
-			//send a message that tells player 1 where player 2's piece moved to
 		}
 	}
 }
@@ -120,6 +106,7 @@ void handleGameMessage(Action* gAction, RakNet::Packet* packet)
 /// <param name="packet"></param>
 void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 {
+	//time calculation, some logging
 	float betterTime = (float)m->time;
 	float seconds = betterTime / 1000.0f;
 	float minutes = seconds / 60.0f;
@@ -127,34 +114,52 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	int hourVal = (int)hour % 12 + 11;
 	hourVal %= 12;
 	int minutesInt = (int)((hour - (int)hour) * 60);
-	printf("%d:%d\n", hourVal, minutesInt + 20);
-	string output = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m->sender; //timestamp + user who sent this
+	printf("%d:%d %s\n", hourVal, minutesInt + 20, m->sender);
+	string output = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] ";
 
 	RakNet::BitStream outStream;
 	prepBitStream(&outStream, RakNet::GetTime());
+
 	ChatMessage response;
 	response.id2 = ID_MESSAGE_STRUCT;
 	response.isTimestamp = ID_TIMESTAMP;
-	response.messageFlag = 0;
+
 	switch (m->messageFlag & 3) //trim off the admin flag for now
 	{
 	case PUBLIC: //public
 	{
+		response.messageFlag = PUBLIC;
+		output += m->sender;
 		output += " (publicly): ";
 		output += m->message;
-		strncpy(response.message, output.c_str(), output.length());
-		response.message[output.length()] = 0;
+
+		response.setText(MESSAGE, output);
+
 		outStream.Write(response);
-		map<string, string>::iterator it;
-		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(), true);
+
+		if (IPToRoom[packet->systemAddress.ToString()] == "lobby")
+		{
+			sendMessageToLobby(&IPToRoom, packet, peer, &outStream);
+		}
+		else
+		{
+			map<string, string>::iterator it;
+			it = IPToRoom.find(packet->systemAddress.ToString());
+			if (it != IPToRoom.end())
+			{	
+				sendMessageToRoom(&roomKeyToRoom[it->second], packet, peer, &outStream);
+			}
+		}
 	}
 	break;
 	case PRIVATE: //private
 	{
+		output += m->sender;
 		output += " (privately): ";
 		output += m->message;
-		strncpy(response.message, output.c_str(), output.length());
-		response.message[output.length()] = 0;
+
+		response.setText(MESSAGE, output);
+
 		outStream.Write(response);
 		map<string, string>::iterator it;
 		bool sent = false;
@@ -163,43 +168,92 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			if (strncmp(it->second.c_str(), m->recipient, it->second.length()) == 0)//check to see if the user exists
 			{
 				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
-				string logOutput = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + IPToUserName[packet->systemAddress.ToString()];
+
+				string logOutput = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m->sender;
 				logOutput += " (privately to " + it->second + "): " + m->message;
 				serverLog << logOutput << std::endl;
+
 				outStream.Reset();
+
 				prepBitStream(&outStream, RakNet::GetTime());
-				strncpy(response.message, logOutput.c_str(), (int)logOutput.length());
-				response.message[logOutput.length()] = 0;
+				response.setText(MESSAGE, logOutput);
+
 				outStream.Write(response);
 				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, adminAddress, false);
 				sent = true;
 				break;
 			}
 		}
-		if (!sent) //if no private message is sent
+		if (!sent) //if no private message was sent
 		{
 			outStream.Reset();
 			prepBitStream(&outStream, RakNet::GetTime());
-			strncpy(response.message, "[Error] user does not exist", 28);
-			response.message[28] = 0;
+
+			response.setText(MESSAGE, "[Error] user does not exist");
+
 			outStream.Write(response);
+
 			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 		}
 	}
 	break;
 	case COMMAND: //command
 	{
-		if (strncmp(m->recipient, "createroom", 10) == 0)
+		if (strncmp(m->recipient, "createroom", 10) == 0) //create a checker room
 		{
-			CheckerRoom::createAndJoinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
+			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+			{
+				if (CheckerRoom::createAndJoinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message))
+				{
+					IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
+
+					//alert other people
+					output += "System: a new room has been created.";
+
+					response.setText(MESSAGE, output);
+
+					outStream.Write(response);
+
+					sendMessageToLobby(&IPToRoom, packet, peer, &outStream, true);
+				}
+			}
 		}
-		if (strncmp(m->recipient, "joinroom", 8) == 0)
+		if (strncmp(m->recipient, "joinroom", 8) == 0) //join a checker room
 		{
-			CheckerRoom::joinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message, 1);
+			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+			{
+				if (CheckerRoom::joinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message, 1))
+				{
+					output += "System: a new user has joined the room";
+
+					response.setText(MESSAGE, output);
+
+					outStream.Write(response);
+
+					IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
+
+					sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, true);
+				}
+			}
 		}
-		if (strncmp(m->recipient, "spectate", 8) == 0)
+
+		if (strncmp(m->recipient, "spectate", 8) == 0)//spectate a checker room
 		{
-			CheckerRoom::spectateRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message);
+			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+			{
+				if (CheckerRoom::spectateRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message))
+				{
+					output += "System: a new user has joined the room";
+
+					response.setText(MESSAGE, output);
+
+					outStream.Write(response);
+
+					IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
+
+					sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, true);
+				}
+			}
 		}
 		if (strncmp(m->recipient, "userlist", 8) == 0) //get a list of users
 		{
@@ -410,6 +464,7 @@ int main(int const argc, char const* const argv[])
 				else
 				{
 					IPToUserName[packet->systemAddress.ToString()] = m.sender; //add the user to the username list
+					IPToRoom[packet->systemAddress.ToString()] = true; //set the user to be in the lobby so they get public messages
 
 					if (strncmp(adminName.c_str(), m.sender, adminName.length()) == 0)
 					{

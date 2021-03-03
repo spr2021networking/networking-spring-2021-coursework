@@ -39,7 +39,7 @@ RoomJoinInfo RoomJoinInfo::parseRoomInfo(RakNet::Packet* packet)
 	return r;
 }
 
-void CheckerRoom::createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
+bool CheckerRoom::createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 	RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName)
 {
 	RakNet::BitStream outStream;
@@ -66,10 +66,11 @@ void CheckerRoom::createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStor
 		prepBitStream(&outStream, RakNet::GetTime());
 		outStream.Write(response);
 		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+		return false;
 	}
 }
 
-void CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
+bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 	RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName, int defaultPlayerIndex)
 {
 	RakNet::BitStream outStream;
@@ -101,8 +102,7 @@ void CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 			}
 			else
 			{
-				spectateRoom(roomStorage, nameLookup, peer, packet, roomName);
-				return;
+				return spectateRoom(roomStorage, nameLookup, peer, packet, roomName);
 			}
 			break;
 		case 2:
@@ -120,19 +120,18 @@ void CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 			}
 			else
 			{
-				spectateRoom(roomStorage, nameLookup, peer, packet, roomName);
-				return;
+				return spectateRoom(roomStorage, nameLookup, peer, packet, roomName);
 			}
 			break;
 		case 0:
-			spectateRoom(roomStorage, nameLookup, peer, packet, roomName);
-			return;
+			return spectateRoom(roomStorage, nameLookup, peer, packet, roomName);
 		}
 	
 		//not spectating at this point
 		prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
 		outStream.Write(joinInfo);
 		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+		return true;
 	}
 	else
 	{
@@ -147,10 +146,11 @@ void CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 		prepBitStream(&outStream, RakNet::GetTime());
 		outStream.Write(response);
 		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+		return false;
 	}
 }
 
-void CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
+bool CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 	RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName)
 {
 	RakNet::BitStream outStream;
@@ -158,23 +158,42 @@ void CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, 
 	if (foundRoom != roomStorage->end()) //room exists
 	{
 		CheckerRoom* room = &(foundRoom->second);
+		if (!room->closed)
+		{
+			std::string address = packet->systemAddress.ToString();
+			std::string name = (*nameLookup)[room->player1.address];
 
-		std::string address = packet->systemAddress.ToString();
-		std::string name = (*nameLookup)[room->player1.address];
+			Player player;
+			player.address = address;
+			player.name = name;
+			room->spectators.push_back(player);
 
-		Player player;
-		player.address = address;
-		player.name = name;
-		room->spectators.push_back(player);
+			RoomJoinInfo joinInfo;
+			joinInfo.setName(roomName);
+			joinInfo.playerIndex = 0;
 
-		RoomJoinInfo joinInfo;
-		joinInfo.setName(roomName);
-		joinInfo.playerIndex = 0;
+			//not spectating at this point
+			prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
+			outStream.Write(joinInfo);
+			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			return true;
+		}
+		else
+		{
+			ChatMessage response;
+			response.isTimestamp = ID_TIMESTAMP;
+			response.id2 = ID_MESSAGE_STRUCT;
+			response.messageFlag = PUBLIC;
+			response.setText(SENDER, "[System]");
+			response.setText(MESSAGE, "Room " + roomName + " is closed.");
+			response.setText(RECIPIENT, (*nameLookup)[packet->systemAddress.ToString()]);
 
-		//not spectating at this point
-		prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
-		outStream.Write(joinInfo);
-		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			prepBitStream(&outStream, RakNet::GetTime());
+			outStream.Write(response);
+			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			return false;
+		}
+
 	}
 	else
 	{
@@ -189,5 +208,6 @@ void CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, 
 		prepBitStream(&outStream, RakNet::GetTime());
 		outStream.Write(response);
 		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+		return false;
 	}
 }

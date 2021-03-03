@@ -20,6 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\source\gpro-net-Console-Server\main-server.cpp" />
+    <ClCompile Include="..\..\..\source\gpro-net-Console-Server\server-utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\include\gpro-net-Console-Server\server-utils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
