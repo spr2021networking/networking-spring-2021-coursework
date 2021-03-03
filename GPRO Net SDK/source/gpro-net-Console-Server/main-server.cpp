@@ -169,7 +169,9 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				for (spcit = messageRoom->spectators.begin(); spcit != messageRoom->spectators.end(); spcit++)
 				{
 					peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(spcit->address.c_str()), false);
-0				}
+				}
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player1.address.c_str()), false);
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(messageRoom->player2.address.c_str()), false);
 			}
 
 		}
