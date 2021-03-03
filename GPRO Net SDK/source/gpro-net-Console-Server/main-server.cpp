@@ -268,6 +268,25 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				}
 			}
 		}
+
+		if (strncmp(m->recipient, "roomlist", 8) == 0)
+		{
+			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+			{
+				map<string, CheckerRoom>::iterator it;
+				for (it = roomKeyToRoom.begin(); it != roomKeyToRoom.end(); it++)
+				{
+					CheckerRoom room = it->second;
+					output += room.name;
+					output += " ";
+				}
+				outStream.Reset();
+				response.setText(MESSAGE, output);
+				outStream.Write(response);
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			}
+		}
+
 		if (strncmp(m->recipient, "userlist", 8) == 0) //get a list of users
 		{
 			output += " requested User List:";
