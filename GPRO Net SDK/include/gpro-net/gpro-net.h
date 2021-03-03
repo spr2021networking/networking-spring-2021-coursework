@@ -76,6 +76,8 @@ struct Action
 	bool endTurn = false;
 	bool becomeKing = false;
 
+	int winner = 0;
+
 	static Action parseAction(RakNet::Packet* packet);
 	bool setName(std::string name);
 	bool setName(const char* name, int length);

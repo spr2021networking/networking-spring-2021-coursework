@@ -19,15 +19,18 @@ struct CheckerRoom
 	Player player1;
 	Player player2;
 
+	int winner = 0; //send message to all players
+	bool closed = false; //prevent new spectators
+
 	std::vector<Player> spectators;
 
-	static void createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
+	static bool createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 		RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName);
 
-	static void joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
+	static bool joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 		RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName, int defaultPlayerIndex = 1);
 
-	static void spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
+	static bool spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 		RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName);
 };
 
