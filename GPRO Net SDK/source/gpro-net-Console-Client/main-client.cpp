@@ -108,13 +108,13 @@ int main(int const argc, char const* const argv[])
 	bool isServer = false;
 
 	//retrieve IP and name
-	textBox.addMessage("Enter server IP or hit enter for 172.16.2.60");
+	textBox.addMessage("Enter server IP or hit enter for 172.16.2.64");
 	textBox.draw(0, 0);
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.60\0";
+		stringBuffer = "172.16.2.64\0";
 	}
 	textBox.addMessage(stringBuffer);
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
@@ -149,7 +149,7 @@ int main(int const argc, char const* const argv[])
 	name[16] = 0;
 	textBox.addMessage(stringBuffer);
 	textBox.draw(0, 0);
-	peer->Connect(ip, SERVER_PORT, 0, 0);
+	RakNet::ConnectionAttemptResult connectResult = peer->Connect(ip, SERVER_PORT, 0, 0);
 
 	bool hasNameBeenSent = false;
 
@@ -347,9 +347,7 @@ int main(int const argc, char const* const argv[])
 				gpro_consoleSetCursor(0, textBox.getInputY(textY));
 			}
 			std::getline(std::cin, stringBuffer);
-			gpro_consoleClear();
-			checkers.dirty = true; //force a board redraw if a board is present! blankLine clears things.
-			textBox.dirty = true;
+			checkers.dirty = true;
 			strncpy(message, stringBuffer.c_str(), 128);
 			message[128] = 0;
 			RakNet::RakString messageBackup("%s", message);
