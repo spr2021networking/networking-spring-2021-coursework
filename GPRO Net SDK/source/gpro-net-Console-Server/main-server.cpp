@@ -255,6 +255,25 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				}
 			}
 		}
+
+		if (strncmp(m->recipient, "roomlist", 8) == 0)
+		{
+			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+			{
+				map<string, CheckerRoom>::iterator it;
+				for (it = roomKeyToRoom.begin(); it != roomKeyToRoom.end(); it++)
+				{
+					CheckerRoom room = it->second;
+					output += room.name;
+					output += " ";
+				}
+				outStream.Reset();
+				response.setText(MESSAGE, output);
+				outStream.Write(response);
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+			}
+		}
+
 		if (strncmp(m->recipient, "userlist", 8) == 0) //get a list of users
 		{
 			output += " requested User List:";
@@ -464,7 +483,7 @@ int main(int const argc, char const* const argv[])
 				else
 				{
 					IPToUserName[packet->systemAddress.ToString()] = m.sender; //add the user to the username list
-					IPToRoom[packet->systemAddress.ToString()] = true; //set the user to be in the lobby so they get public messages
+					IPToRoom[packet->systemAddress.ToString()] = "lobby"; //set the user to be in the lobby so they get public messages
 
 					if (strncmp(adminName.c_str(), m.sender, adminName.length()) == 0)
 					{
