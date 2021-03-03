@@ -51,7 +51,7 @@ bool CheckerRoom::createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStor
 		room.name = roomName;
 		(*roomStorage)[roomName] = room;
 
-		joinRoom(roomStorage, nameLookup, peer, packet, roomName, 2);
+		return joinRoom(roomStorage, nameLookup, peer, packet, roomName, 2);
 	}
 	else
 	{
