@@ -149,17 +149,18 @@ int main(int const argc, char const* const argv[])
 	name[16] = 0;
 	textBox.addMessage(stringBuffer);
 	textBox.draw(0, 0);
-	RakNet::ConnectionAttemptResult connectResult = peer->Connect(ip, SERVER_PORT, 0, 0);
+	peer->Connect(ip, SERVER_PORT, 0, 0);
 
 	bool hasNameBeenSent = false;
 
 	bool isAdmin = false;
 
+
 	while (!quitting)
 	{
 		int textY = 0;
 
-		if (checkers.action.checkerRoomKey[0] != 0)
+		if (strncmp(checkers.action.checkerRoomKey, "lobby", 5) != 0)
 		{
 			textY = 8;
 			textBox.setLineCount(5);

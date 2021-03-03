@@ -85,7 +85,7 @@ void Action::reset(bool resetName)
 {
 	if (resetName)
 	{
-		setName("");
+		setName("lobby");
 	}
 	playerIndex = 0;
 	startX = startY = endX = endY = capturedX = capturedY = -1;

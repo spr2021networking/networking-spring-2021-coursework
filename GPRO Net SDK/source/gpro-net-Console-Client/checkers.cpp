@@ -319,7 +319,7 @@ void CheckersInstance::processAction(Action* action)
 void CheckersInstance::reset()
 {
 	gpro_checkers_reset(chk);
-	action.setName("");
+	action.reset(true);
 }
 
 void CheckersInstance::handleSelection()

@@ -65,7 +65,7 @@ void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::Message
 typedef struct Action Action;
 struct Action
 {
-	char checkerRoomKey[17];
+	char checkerRoomKey[17] = "lobby\0";
 	char playerIndex;
 	char startX, startY;
 	char endX, endY;
