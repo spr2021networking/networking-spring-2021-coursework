@@ -80,7 +80,7 @@ bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 		CheckerRoom* room = &(foundRoom->second);
 
 		std::string address = packet->systemAddress.ToString();
-		std::string name = (*nameLookup)[room->player1.address];
+		std::string name = (*nameLookup)[address];
 
 		RoomJoinInfo joinInfo;
 		joinInfo.setName(roomName);
@@ -210,6 +210,50 @@ bool CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, 
 		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 		return false;
 	}
+}
+
+bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup, RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName)
+{
+	RakNet::BitStream outStream;
+	std::map<std::string, CheckerRoom>::iterator foundRoom = roomStorage->find(roomName);
+	if (foundRoom != roomStorage->end()) //room exists
+	{
+		CheckerRoom* room = &(foundRoom->second);
+
+		std::string address = packet->systemAddress.ToString();
+		std::string name = (*nameLookup)[address];
+
+		RoomJoinInfo joinInfo;
+		joinInfo.setName("lobby");
+		joinInfo.playerIndex = 0;
+
+		if (strncmp(name.c_str(), room->player1.name.c_str(), room->player1.name.length()))
+		{
+			room->player1.address = "";
+			room->player1.name = "";
+		}
+		else if (strncmp(name.c_str(), room->player2.name.c_str(), room->player2.name.length()))
+		{
+			room->player2.address = "";
+			room->player2.name = "";
+		}
+		else
+		{
+			for (int i = 0; i < (int)room->spectators.size(); i++)
+			{
+				if (strncmp(name.c_str(), room->spectators[i].name.c_str(), room->spectators[i].name.length()))
+				{
+					room->spectators.erase(room->spectators.begin() + i);
+				}
+			}
+		}
+
+		prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
+		outStream.Write(joinInfo);
+		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+		return true;
+	}
+	return false;
 }
 
 bool CheckerRoom::readyToPlay()
