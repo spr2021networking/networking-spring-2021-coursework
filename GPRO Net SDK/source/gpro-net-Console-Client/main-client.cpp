@@ -403,7 +403,7 @@ int main(int const argc, char const* const argv[])
 				}
 				else
 				{
-					ChatMessage::tryCreateCommand(&messageToSend, secondWord, isAdmin);
+					ChatMessage::tryCreateCommand(&messageToSend, secondWord, &textBox, isAdmin);
 				}
 			}
 			else //defaulting to a public message because the first word wasn't recognized as anything

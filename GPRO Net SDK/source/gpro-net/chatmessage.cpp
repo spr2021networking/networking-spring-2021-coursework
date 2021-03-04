@@ -75,7 +75,7 @@ bool ChatMessage::setText(ChatMessageField field, std::string text)
 	return setText(field, text.c_str(), (int)text.length());
 }
 
-void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args, bool isAdmin)
+void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args, TextBox* box, bool isAdmin)
 {
 	messageToSend->messageFlag = COMMAND;
 	//checking what command type
@@ -88,7 +88,7 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 	{
 		if (true)
 		{
-			printf("[Error] Kicking currently does not function correctly!\n");
+			box->addMessage("[Error] Kicking currently does not function correctly!");
 			messageToSend->setText(MESSAGE, "");
 			return;
 		}
@@ -118,7 +118,7 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 	{
 		if (!isAdmin)
 		{
-			printf("[Error] Only admins can close the server!\n");
+			box->addMessage("[Error] Only admins can close the server!");
 			messageToSend->setText(MESSAGE, "");
 		}
 		else
@@ -131,7 +131,7 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
 		if (startOfRoomName == args.c_str())
 		{
-			printf("[Error] No room stated\n");
+			box->addMessage("[Error] No room stated");
 			messageToSend->setText(MESSAGE, "");
 		}
 		else
@@ -146,7 +146,7 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
 		if (startOfRoomName == args.c_str())
 		{
-			printf("[Error] No room stated\n");
+			box->addMessage("[Error] No room stated");
 			messageToSend->setText(MESSAGE, "");
 		}
 		else
@@ -161,7 +161,7 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
 		if (startOfRoomName == args.c_str())
 		{
-			printf("[Error] No room stated\n");
+			box->addMessage("[Error] No room stated");
 			messageToSend->setText(MESSAGE, "");
 		}
 		else
@@ -171,9 +171,14 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 			messageToSend->setText(MESSAGE, messageBody);
 		}
 	}
+	else if (strncmp(args.c_str(), "roomlist", 8) == 0)
+	{
+		messageToSend->setText(RECIPIENT, "roomlist");
+		messageToSend->setText(MESSAGE, " ");
+	}
 	else
 	{
-		printf("[Error] Unknown command\n");
+		box->addMessage("[Error] Unknown command");
 		messageToSend->setText(MESSAGE, "");
 	}
 }

@@ -5,6 +5,7 @@
 #include "RakNet/BitStream.h"
 #include "RakNet/MessageIdentifiers.h"
 #include <string>
+#include "textbox.h"
 
 enum ChatMessageField
 {
@@ -36,7 +37,7 @@ struct ChatMessage
 	bool setText(ChatMessageField field, const char* text, int length);
 	bool setText(ChatMessageField field, std::string text);
 	static ChatMessage parseMessage(RakNet::Packet* packet);
-	static void tryCreateCommand(ChatMessage* messageToSend, std::string args, bool isAdmin = false);
+	static void tryCreateCommand(ChatMessage* messageToSend, std::string args, TextBox* box, bool isAdmin = false);
 
 	bool hasMessage();
 

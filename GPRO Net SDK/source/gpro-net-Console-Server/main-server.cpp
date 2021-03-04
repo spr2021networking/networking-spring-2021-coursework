@@ -273,6 +273,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		{
 			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
 			{
+				output += "Roomlist: ";
 				map<string, CheckerRoom>::iterator it;
 				for (it = roomKeyToRoom.begin(); it != roomKeyToRoom.end(); it++)
 				{
