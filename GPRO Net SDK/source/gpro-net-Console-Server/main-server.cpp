@@ -281,6 +281,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 					output += " ";
 				}
 				outStream.Reset();
+				prepBitStream(&outStream, RakNet::GetTime());
 				response.setText(MESSAGE, output);
 				outStream.Write(response);
 				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
