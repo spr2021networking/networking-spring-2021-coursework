@@ -353,6 +353,8 @@ int main(int const argc, char const* const argv[])
 			}
 			std::getline(std::cin, stringBuffer);
 			checkers.dirty = true;
+			gpro_consoleClear();
+			textBox.dirty;
 			strncpy(message, stringBuffer.c_str(), 128);
 			message[128] = 0;
 			RakNet::RakString messageBackup("%s", message);
