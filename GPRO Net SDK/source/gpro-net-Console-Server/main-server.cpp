@@ -291,11 +291,15 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 
 		if (strncmp(m->recipient, "userlist", 8) == 0) //get a list of users
 		{
-			output += " requested User List:";
+			output += m->sender;
+			output += " requested User List: ";
 			map<string, string>::iterator it;
 			for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
 			{
-				output += "\n";
+				if (it != IPToUserName.begin())
+				{
+					output += ", ";
+				}
 				string tmp;
 
 				if ((m->messageFlag & ISADMIN) > 0) //if admin, add IP. This now makes it possible for a string to be too long to send
