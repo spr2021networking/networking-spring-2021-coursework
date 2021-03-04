@@ -33,6 +33,9 @@ struct CheckerRoom
 	static bool spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 		RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName);
 
+	static bool leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
+		RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName);
+
 	bool readyToPlay();
 };
 
