@@ -176,6 +176,11 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 		messageToSend->setText(RECIPIENT, "roomlist");
 		messageToSend->setText(MESSAGE, " ");
 	}
+	else if (strncmp(args.c_str(), "leaveroom", 9) == 0)
+	{
+		messageToSend->setText(RECIPIENT, "leaveroom");
+		messageToSend->setText(MESSAGE, " ");
+	}
 	else
 	{
 		box->addMessage("[Error] Unknown command");
