@@ -62,23 +62,23 @@ enum GameMessages
 void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::MessageID mType = ID_MESSAGE_STRUCT);
 
 #pragma pack(push, 1)
-typedef struct Action Action;
+typedef struct Action Action;  //action struct stores all information about moves and states for checkers
 struct Action
 {
 	char checkerRoomKey[17] = "lobby\0";
-	char playerIndex;
-	char startX, startY;
-	char endX, endY;
+	char playerIndex; //what player we are
+	char startX, startY; //start pos
+	char endX, endY; //end pos
 
-	bool hasCaptured = false;
-	char capturedX, capturedY;
+	bool hasCaptured = false; //determines if a piece is captured
+	char capturedX, capturedY; //where the piece was captured
 
-	bool endTurn = false;
-	bool becomeKing = false;
+	bool endTurn = false; //ends the turn
+	bool becomeKing = false; //set a piece as king
 
-	int winner = 0;
+	int winner = 0; //set the winner
 
-	bool readyToPlay = false;
+	bool readyToPlay = false; //only let the player make a move if ready
 
 	static Action parseAction(RakNet::Packet* packet);
 	bool setName(std::string name);
