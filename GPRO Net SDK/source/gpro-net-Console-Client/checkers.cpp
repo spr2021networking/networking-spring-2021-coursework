@@ -314,7 +314,6 @@ void CheckersInstance::processAction(Action* action)
 	}
 	dirty = true;
 	this->action.readyToPlay = action->readyToPlay;
-	int winner;
 	checkWin(&this->action.winner);
 	
 }
