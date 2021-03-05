@@ -218,6 +218,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				}
 			}
 		}
+
 		if (strncmp(m->recipient, "joinroom", 8) == 0) //join a checker room
 		{
 			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
@@ -245,6 +246,47 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 						prepBitStream(&outStream, RakNet::GetTime(), ID_GAMEMESSAGE_STRUCT);
 						outStream.Write(action);
 						sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, false);
+					}
+				}
+			}
+		}
+
+		if (strncmp(m->recipient, "leaveroom", 9) == 0) //join a checker room
+		{
+			std::string roomName = IPToRoom[packet->systemAddress.ToString()];
+			if (strncmp(roomName.c_str(), "lobby", 5) != 0)
+			{
+				bool didPlayerLeave = false;
+				int winner = 0;
+				if (CheckerRoom::leaveRoom(&roomKeyToRoom, &IPToUserName, peer, packet, roomName, &didPlayerLeave, &winner)) //if the room existed and we left it
+				{
+					output += "System: a user has left the room";
+
+					response.setText(MESSAGE, output);
+					outStream.Write(response);
+					sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, true); //tell players that a person left
+
+					IPToRoom[packet->systemAddress.ToString()] = "lobby";
+
+					CheckerRoom* room = &roomKeyToRoom[m->message];
+					if (didPlayerLeave) //obtained from the leaveRoom call, false if spectator
+					{
+						Action act;
+						act.readyToPlay = false;
+						if (room->closed) //play has started
+						{
+							act.winner = winner;
+						}
+						outStream.Reset();
+						prepBitStream(&outStream, RakNet::GetTime(), ID_GAMEMESSAGE_STRUCT);
+						outStream.Write(act);
+						sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, true); //notify remaining people that someone left/who won
+					}
+
+					//clear out room
+					if (room->player1.name.length() == 0 && room->player2.name.length() == 0 && room->spectators.size() == 0)
+					{
+						roomKeyToRoom.erase(m->message);
 					}
 				}
 			}

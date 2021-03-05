@@ -34,7 +34,7 @@ struct CheckerRoom
 		RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName);
 
 	static bool leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
-		RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName);
+		RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName, bool* playerLeft, int* winner);
 
 	bool readyToPlay();
 };

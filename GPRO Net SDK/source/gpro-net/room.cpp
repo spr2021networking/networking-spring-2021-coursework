@@ -212,7 +212,8 @@ bool CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, 
 	}
 }
 
-bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup, RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName)
+bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
+	RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName, bool* playerLeft, int* winner)
 {
 	RakNet::BitStream outStream;
 	std::map<std::string, CheckerRoom>::iterator foundRoom = roomStorage->find(roomName);
@@ -227,21 +228,19 @@ bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std
 		joinInfo.setName("lobby");
 		joinInfo.playerIndex = 0;
 
-		bool playerLeft = false;
-		int winner = 0;
 		if (strncmp(name.c_str(), room->player1.name.c_str(), room->player1.name.length()))
 		{
 			room->player1.address = "";
 			room->player1.name = "";
-			playerLeft = true;
-			winner = 2;
+			*playerLeft = true;
+			*winner = 2;
 		}
 		else if (strncmp(name.c_str(), room->player2.name.c_str(), room->player2.name.length()))
 		{
 			room->player2.address = "";
 			room->player2.name = "";
-			playerLeft = true;
-			winner = 1;
+			*playerLeft = true;
+			*winner = 1;
 		}
 		else
 		{
@@ -257,24 +256,6 @@ bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std
 		prepBitStream(&outStream, RakNet::GetTime(), ID_JOIN_ROOM);
 		outStream.Write(joinInfo);
 		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-
-		if (playerLeft)
-		{
-			Action act;
-			if (room->closed) //play has started
-			{
-				act.winner = winner;
-			}
-			else
-			{
-				act.playerIndex = 0;
-				act.readyToPlay = false;
-			}
-			outStream.Reset();
-			prepBitStream(&outStream, RakNet::GetTime(), ID_GAMEMESSAGE_STRUCT);
-			outStream.Write(joinInfo);
-			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-		}
 
 		return true;
 	}
