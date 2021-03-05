@@ -255,6 +255,7 @@ int main(int const argc, char const* const argv[])
 			{
 				ChatMessage m = ChatMessage::parseMessage(packet);
 				textBox.addMessage(m.message);
+				gpro_consoleClear();
 			}
 			break;
 			case ID_MESSAGE_STRUCT:
