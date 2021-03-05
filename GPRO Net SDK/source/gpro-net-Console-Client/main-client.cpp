@@ -194,17 +194,20 @@ int main(int const argc, char const* const argv[])
 			{
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
 				textBox.addMessage("Another client has disconnected.");
+				gpro_consoleClear();
 				break;
 			case ID_REMOTE_CONNECTION_LOST:
 				textBox.addMessage("Another client has lost the connection.");
+				gpro_consoleClear();
 				break;
 			case ID_REMOTE_NEW_INCOMING_CONNECTION:
 				textBox.addMessage("Another client has lost the connection.");
+				gpro_consoleClear();
 				break;
 			case ID_CONNECTION_REQUEST_ACCEPTED:
 			{
 				textBox.addMessage("Our connection request has been accepted.");
-
+				gpro_consoleClear();
 				RakNet::BitStream bsOut;
 				if (!hasNameBeenSent) //we send our username to the server here, and we receive an ID_USERNAME message back that sets our admin status
 				{
@@ -222,16 +225,20 @@ int main(int const argc, char const* const argv[])
 			break;
 			case ID_NEW_INCOMING_CONNECTION:
 				textBox.addMessage("A connection is incoming.");
+				gpro_consoleClear();
 				break;
 			case ID_NO_FREE_INCOMING_CONNECTIONS:
 				textBox.addMessage("The server is full.");
+				gpro_consoleClear();
 				break;
 			case ID_DISCONNECTION_NOTIFICATION:
 				textBox.addMessage("We have been disconnected.");
+				gpro_consoleClear();
 				quitting = true;
 				break;
 			case ID_CONNECTION_LOST:
 				textBox.addMessage("Connection lost.");
+				gpro_consoleClear();
 				quitting = true;
 				break;
 
@@ -279,6 +286,7 @@ int main(int const argc, char const* const argv[])
 					winMessage += act.winner == 1 ? "Up " : "Down ";
 					winMessage += "Player Won!";
 					textBox.addMessage(winMessage);
+					gpro_consoleClear();
 				}
 				//check win state, send message to all spectators and players if there's a winner
 				break;

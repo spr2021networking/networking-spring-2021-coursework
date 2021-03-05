@@ -37,7 +37,7 @@ void sendMessageToRoom(CheckerRoom* room, RakNet::Packet* packet, RakNet::RakPee
 	for (it = room->spectators.begin(); it != room->spectators.end(); it++)
 	{
 		std::string iteratorIP = it->address;
-		if (!ignoreSender || strncmp(iteratorIP.c_str(), packetIP.c_str(), iteratorIP.length()) != 0 || forceSendAll)
+		if (!ignoreSender || strncmp(iteratorIP.c_str(), packetIP.c_str(), iteratorIP.length()) != 0)
 		{
 			peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->address.c_str()), false);
 		}
@@ -55,7 +55,7 @@ void sendMessageToRoom(CheckerRoom* room, RakNet::Packet* packet, RakNet::RakPee
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(room->player1.address.c_str()), false);
 	}
 
-	if ((isPlayer && !ignoreSender) || forceSendAll)
+	if ((isPlayer && !ignoreSender))
 	{
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 	}

@@ -265,8 +265,8 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 
 					response.setText(MESSAGE, output);
 					outStream.Write(response);
-					sendMessageToRoom(&roomKeyToRoom[roomName], packet, peer, &outStream, true, true); //tell players that a person left
 					IPToRoom[packet->systemAddress.ToString()] = "lobby";
+					sendMessageToRoom(&roomKeyToRoom[roomName], packet, peer, &outStream, true, true); //tell players that a person left
 
 					CheckerRoom* room = &roomKeyToRoom[roomName];
 					if (didPlayerLeave) //obtained from the leaveRoom call, false if spectator OR if the game has already ended and the final player is leaving
