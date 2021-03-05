@@ -1,6 +1,13 @@
 #include "gpro-net/chatmessage.h"
 #include "gpro-net/gpro-net.h"
 
+
+/*
+* main-client.cpp
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: chat messaging handling
+*/
+
 /// <summary>
 /// Extract a ChatMessage from packet data, assuming it was formatted properly (using prepBitStream)
 /// </summary>
@@ -27,7 +34,7 @@ bool ChatMessage::hasMessage()
 	return message[0] != 0;
 }
 
-bool ChatMessage::setText(ChatMessageField field, const char* text, int length)
+bool ChatMessage::setText(ChatMessageField field, const char* text, int length) //set either the message, sender, and recipient
 {
 	if (field < 0 || field > 2 || length < 0)
 	{
@@ -75,7 +82,7 @@ bool ChatMessage::setText(ChatMessageField field, std::string text)
 	return setText(field, text.c_str(), (int)text.length());
 }
 
-void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args, TextBox* box, bool isAdmin)
+void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args, TextBox* box, bool isAdmin) //create a command if valid
 {
 	messageToSend->messageFlag = COMMAND;
 	//checking what command type
@@ -129,7 +136,7 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 	else if (strncmp(args.c_str(), "createroom", 10) == 0) //create room
 	{
 		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
-		if (startOfRoomName == args.c_str())
+		if (startOfRoomName == args.c_str()) //failsafe check to require a room name
 		{
 			box->addMessage("[Error] No room stated");
 			messageToSend->setText(MESSAGE, "");
@@ -141,10 +148,10 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 			messageToSend->setText(MESSAGE, messageBody);
 		}
 	}
-	else if (strncmp(args.c_str(), "joinroom", 8) == 0)
+	else if (strncmp(args.c_str(), "joinroom", 8) == 0) //join room
 	{
 		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
-		if (startOfRoomName == args.c_str())
+		if (startOfRoomName == args.c_str()) //failsafe check to require a room name
 		{
 			box->addMessage("[Error] No room stated");
 			messageToSend->setText(MESSAGE, "");
@@ -159,7 +166,7 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 	else if (strncmp(args.c_str(), "spectate", 8) == 0) //spectate room
 	{
 		char* startOfRoomName = chopStr((char*)args.c_str(), (int)args.length(), ' ');
-		if (startOfRoomName == args.c_str())
+		if (startOfRoomName == args.c_str()) //failsafe check to require a room name
 		{
 			box->addMessage("[Error] No room stated");
 			messageToSend->setText(MESSAGE, "");
@@ -171,12 +178,12 @@ void ChatMessage::tryCreateCommand(ChatMessage* messageToSend, std::string args,
 			messageToSend->setText(MESSAGE, messageBody);
 		}
 	}
-	else if (strncmp(args.c_str(), "roomlist", 8) == 0)
+	else if (strncmp(args.c_str(), "roomlist", 8) == 0) // list all rooms
 	{
 		messageToSend->setText(RECIPIENT, "roomlist");
 		messageToSend->setText(MESSAGE, " ");
 	}
-	else if (strncmp(args.c_str(), "leaveroom", 9) == 0)
+	else if (strncmp(args.c_str(), "leaveroom", 9) == 0) //leave room
 	{
 		messageToSend->setText(RECIPIENT, "leaveroom");
 		messageToSend->setText(MESSAGE, " ");

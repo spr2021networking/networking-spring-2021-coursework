@@ -7,6 +7,12 @@
 #include <string>
 #include "textbox.h"
 
+/*
+* main-client.cpp
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: chat messaging handling
+*/
+
 enum ChatMessageField
 {
 	RECIPIENT,

@@ -50,7 +50,7 @@ void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::Message
 	stream->Write(mType);
 }
 
-Action Action::parseAction(RakNet::Packet* packet)
+Action Action::parseAction(RakNet::Packet* packet) //parse an action struct
 {
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
 	RakNet::MessageID mID;
@@ -70,7 +70,7 @@ bool Action::setName(std::string name)
 	return setName(name.c_str(), (int)name.length());
 }
 
-bool Action::setName(const char* name, int length)
+bool Action::setName(const char* name, int length) //set room name
 {
 	if (length < 0 || length > 16)
 	{
