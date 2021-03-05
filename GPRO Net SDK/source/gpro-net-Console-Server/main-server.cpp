@@ -486,6 +486,8 @@ int main(int const argc, char const* const argv[])
 					printf("A client lost the connection.\n");
 					map <string, string>::iterator userNameToRemove;
 					userNameToRemove = IPToUserName.find(packet->systemAddress.ToString());
+					map <string, string>::iterator userNameToRemoveFromRoom;
+					userNameToRemoveFromRoom = IPToRoom.find(packet->systemAddress.ToString());
 					ChatMessage leaveRoom;
 					std::string commandToSend = "leaveroom";
 					leaveRoom.setText(RECIPIENT, commandToSend);
@@ -497,9 +499,9 @@ int main(int const argc, char const* const argv[])
 						output += userNameToRemove->second;
 						IPToUserName.erase(userNameToRemove);
 					}
-					if (userNameToRemove != IPToRoom.end())
+					if (userNameToRemoveFromRoom != IPToRoom.end())
 					{
-						IPToRoom.erase(userNameToRemove);
+						IPToRoom.erase(userNameToRemoveFromRoom);
 					}
 					RakNet::Time t = RakNet::GetTime();
 					prepBitStream(&bsOut, t);
