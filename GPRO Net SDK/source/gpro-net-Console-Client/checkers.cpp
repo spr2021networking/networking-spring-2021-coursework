@@ -409,7 +409,7 @@ void CheckersInstance::handleSelection()
 
 			if (highlightX > selectionX) //moving to the right
 			{
-				if (chk[yAvg][selectionX / 2 + xOffset] != (3 - currentPlayer)) //ensure that we're actually jumping a piece
+				if ((chk[yAvg][selectionX / 2 + xOffset] & 3) != (3 - currentPlayer)) //ensure that we're actually jumping a piece
 				{
 					return; //if we're not jumping, we return, and no actions are taken
 				}
@@ -427,7 +427,7 @@ void CheckersInstance::handleSelection()
 			}
 			else //moving to the left
 			{
-				if (chk[yAvg][selectionX / 2 - 1 + xOffset] != (3 - currentPlayer))
+				if ((chk[yAvg][selectionX / 2 - 1 + xOffset] & 3) != (3 - currentPlayer))
 				{
 					return;
 				}
