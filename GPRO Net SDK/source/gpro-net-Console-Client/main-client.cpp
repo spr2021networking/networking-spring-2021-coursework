@@ -280,7 +280,7 @@ int main(int const argc, char const* const argv[])
 			{
 				Action act = Action::parseAction(packet);
 				checkers.processAction(&act);
-				if (act.winner != 0 || checkers.action.winner != 0)
+				if (act.winner != 0)
 				{
 					std::string winMessage = "The ";
 					winMessage += act.winner == 1 ? "Up " : "Down ";
@@ -349,6 +349,14 @@ int main(int const argc, char const* const argv[])
 				actionStream.Write(checkers.action);
 				peer->Send(&actionStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 				checkers.action.playerIndex = 0;
+			}
+			if (checkers.action.winner != 0)
+			{
+				std::string winMessage = "The ";
+				winMessage += checkers.action.winner == 1 ? "Up " : "Down ";
+				winMessage += "Player Won!";
+				textBox.addMessage(winMessage);
+				gpro_consoleClear();
 			}
 		}
 		if (hasInput)

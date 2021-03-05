@@ -55,7 +55,7 @@ void sendMessageToRoom(CheckerRoom* room, RakNet::Packet* packet, RakNet::RakPee
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(room->player1.address.c_str()), false);
 	}
 
-	if ((isPlayer && !ignoreSender))
+	if (isPlayer && !ignoreSender)
 	{
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 	}
