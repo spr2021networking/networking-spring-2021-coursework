@@ -21,15 +21,9 @@
     <ClCompile Include="..\..\..\source\gpro-net-Console-Client\checkers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\gpro-net-Console-Client\battleship.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\gpro-net-Console-Client\checkers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\gpro-net-Console-Client\battleship.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

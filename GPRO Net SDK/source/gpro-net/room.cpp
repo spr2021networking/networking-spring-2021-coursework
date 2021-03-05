@@ -1,7 +1,15 @@
+/*
+* room.cpp
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: Information about how a room is structured, mostly used by server
+*/
+
+
 #include "gpro-net/room.h"
 #include "gpro-net/gpro-net.h"
 #include "RakNet/GetTime.h"
 
+//set name and null terminate
 bool RoomJoinInfo::setName(std::string name)
 {
 	return setName(name.c_str(), (int)name.length());
@@ -23,6 +31,7 @@ bool RoomJoinInfo::setName(const char* name, int length)
 	return true;
 }
 
+//similar to parseMessage, reads in a RoomJoinInfo from a packet
 RoomJoinInfo RoomJoinInfo::parseRoomInfo(RakNet::Packet* packet)
 {
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -39,6 +48,15 @@ RoomJoinInfo RoomJoinInfo::parseRoomInfo(RakNet::Packet* packet)
 	return r;
 }
 
+/// <summary>
+/// Tries to create a room and then join it
+/// </summary>
+/// <param name="roomStorage"></param>
+/// <param name="nameLookup"></param>
+/// <param name="peer"></param>
+/// <param name="packet"></param>
+/// <param name="roomName"></param>
+/// <returns></returns>
 bool CheckerRoom::createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 	RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName)
 {
@@ -53,7 +71,7 @@ bool CheckerRoom::createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStor
 
 		return joinRoom(roomStorage, nameLookup, peer, packet, roomName, 2);
 	}
-	else
+	else //failed to create/join room, room already exists so we send an error.
 	{
 		ChatMessage response;
 		response.isTimestamp = ID_TIMESTAMP;
@@ -70,6 +88,16 @@ bool CheckerRoom::createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStor
 	}
 }
 
+/// <summary>
+/// Try to join an existing room either as a player or spectator
+/// </summary>
+/// <param name="roomStorage"></param>
+/// <param name="nameLookup"></param>
+/// <param name="peer"></param>
+/// <param name="packet"></param>
+/// <param name="roomName"></param>
+/// <param name="defaultPlayerIndex"></param>
+/// <returns>Whether the room existed to be joined</returns>
 bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 	RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName, int defaultPlayerIndex)
 {
@@ -85,7 +113,7 @@ bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 		RoomJoinInfo joinInfo;
 		joinInfo.setName(roomName);
 
-		switch (defaultPlayerIndex)
+		switch (defaultPlayerIndex) //check default index and try to add player to room in the right index
 		{
 		case 1:
 			if (room->player1.name == "")
@@ -133,7 +161,7 @@ bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 		return true;
 	}
-	else
+	else //error, room doesn't exist
 	{
 		ChatMessage response;
 		response.isTimestamp = ID_TIMESTAMP;
@@ -150,6 +178,15 @@ bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 	}
 }
 
+/// <summary>
+/// Code specifically for spectating
+/// </summary>
+/// <param name="roomStorage"></param>
+/// <param name="nameLookup"></param>
+/// <param name="peer"></param>
+/// <param name="packet"></param>
+/// <param name="roomName"></param>
+/// <returns></returns>
 bool CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 	RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName)
 {
@@ -158,7 +195,7 @@ bool CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, 
 	if (foundRoom != roomStorage->end()) //room exists
 	{
 		CheckerRoom* room = &(foundRoom->second);
-		if (!room->closed)
+		if (!room->closed) //if game hasn't started yet, add to spectator list
 		{
 			std::string address = packet->systemAddress.ToString();
 			std::string name = (*nameLookup)[room->player1.address];
@@ -178,7 +215,7 @@ bool CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, 
 			peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			return true;
 		}
-		else
+		else //error, game is in progress already
 		{
 			ChatMessage response;
 			response.isTimestamp = ID_TIMESTAMP;
@@ -195,7 +232,7 @@ bool CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, 
 		}
 
 	}
-	else
+	else //error, room doesn't exist
 	{
 		ChatMessage response;
 		response.isTimestamp = ID_TIMESTAMP;
@@ -212,6 +249,17 @@ bool CheckerRoom::spectateRoom(std::map<std::string, CheckerRoom>* roomStorage, 
 	}
 }
 
+/// <summary>
+/// Handle leaving/conceding a match. Outputs two variables playerLeft and winner
+/// </summary>
+/// <param name="roomStorage"></param>
+/// <param name="nameLookup"></param>
+/// <param name="peer"></param>
+/// <param name="packet"></param>
+/// <param name="roomName"></param>
+/// <param name="playerLeft"></param>
+/// <param name="winner"></param>
+/// <returns></returns>
 bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 	RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName, bool* playerLeft, int* winner)
 {
@@ -250,7 +298,7 @@ bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std
 			room->player2.name = "";
 
 		}
-		else
+		else //remove from spectators
 		{
 			for (int i = 0; i < (int)room->spectators.size(); i++)
 			{

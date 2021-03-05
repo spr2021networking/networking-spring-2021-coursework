@@ -278,17 +278,17 @@ int main(int const argc, char const* const argv[])
 			}
 			case ID_GAMEMESSAGE_STRUCT:
 			{
+				//receive an action from the other player and process it
 				Action act = Action::parseAction(packet);
 				checkers.processAction(&act);
-				if (act.winner != 0)
+				if (act.winner != 0) //local win state handling to avoid another action being sent to everyone. This is locally calculatable.
 				{
 					std::string winMessage = "The ";
 					winMessage += act.winner == 1 ? "Up " : "Down ";
 					winMessage += "Player Won!";
-					textBox.addMessage(winMessage);
+					textBox.addMessage(winMessage); //add text to the textbox and clear the console to prepare for the next frame
 					gpro_consoleClear();
 				}
-				//check win state, send message to all spectators and players if there's a winner
 				break;
 			}
 			case ID_JOIN_ROOM:
@@ -309,7 +309,6 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
-		//checkerLoop(&chk);
 		//check for user input! Iterate through keys and see if we're using any of them, if so let us type
 		bool hasInput = false;
 		for (int i = VK_SPACE; i <= 'Z'; i++)
@@ -338,18 +337,25 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
+		//if the player isn't sending a message, try to process a move
 		if (!hasInput && checkers.playerNum == checkers.currentPlayer && checkers.action.readyToPlay)
 		{
 			checkers.checkInput();
-			if (checkers.action.playerIndex != 0) //we need to store our local player somehow!
+			if (checkers.action.playerIndex != 0) //0 means no action was taken, 1 or 2 means an action was taken
 			{
 				bool win = checkers.checkWin(&checkers.action.winner);
+
+				//create bitstream and prepare it for an action
 				RakNet::BitStream actionStream;
 				prepBitStream(&actionStream, RakNet::GetTime(), (RakNet::MessageID)ID_GAMEMESSAGE_STRUCT);
+
+				//send action to server
 				actionStream.Write(checkers.action);
 				peer->Send(&actionStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+
+				//reset action index to prevent a duplicate message
 				checkers.action.playerIndex = 0;
-				if (win)
+				if (win) //handle win state from the side of the player whose turn it is.
 				{
 					std::string winMessage = "The ";
 					winMessage += checkers.action.winner == 1 ? "Up " : "Down ";
@@ -362,14 +368,16 @@ int main(int const argc, char const* const argv[])
 		}
 		if (hasInput)
 		{
+			//if we're not in the lobby (a board is visible), offset the cursor
 			if (strncmp(checkers.action.checkerRoomKey, "lobby", 5) != 0)
 			{
 				gpro_consoleSetCursor(0, textBox.getInputY(textY));
 			}
+			//get text input and prepare the bitstream
 			std::getline(std::cin, stringBuffer);
 			checkers.dirty = true;
 			gpro_consoleClear();
-			textBox.dirty;
+			textBox.dirty = true;
 			strncpy(message, stringBuffer.c_str(), 128);
 			message[128] = 0;
 			RakNet::RakString messageBackup("%s", message);
@@ -390,7 +398,9 @@ int main(int const argc, char const* const argv[])
 			char* startOfSecondWord = chopStr((char*)stringBuffer.c_str(), (int)stringBuffer.length(), ' ');
 
 			std::string secondWord = startOfSecondWord;
-			if (strncmp(stringBuffer.c_str(), "private", 7) == 0) //stringBuffer contains only the first word at this point
+			//disabling private messaging as it's not needed for this assignment
+
+			/*if (strncmp(stringBuffer.c_str(), "private", 7) == 0) //stringBuffer contains only the first word at this point
 			{
 
 				char* startOfMessageBody = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
@@ -409,7 +419,7 @@ int main(int const argc, char const* const argv[])
 					messageToSend.setText(MESSAGE, messageBody);
 				}
 			}
-			else if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
+			else*/ if (strncmp(stringBuffer.c_str(), "command", 7) == 0) //we're using a command
 			{
 				if (strncmp(secondWord.c_str(), "quit", 4) == 0) //special handling for quit
 				{
@@ -418,6 +428,7 @@ int main(int const argc, char const* const argv[])
 				}
 				else
 				{
+					//separate command handling
 					ChatMessage::tryCreateCommand(&messageToSend, secondWord, &textBox, isAdmin);
 				}
 			}

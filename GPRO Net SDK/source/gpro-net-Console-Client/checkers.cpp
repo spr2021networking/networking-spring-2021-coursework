@@ -1,3 +1,9 @@
+/*
+* checkers.cpp
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: checkers implementation, including state and logic
+*/
+
 #include "gpro-net-Console-Client/checkers.h"
 #include <math.h>
 
@@ -39,13 +45,17 @@ bool CheckersInstance::checkWin(int* outWinner)
 	return true;
 }
 
+/// <summary>
+/// Initialize the gpro_checkers instance and the stored action
+/// </summary>
 CheckersInstance::CheckersInstance()
 {
 	gpro_checkers_reset(chk);
+	action.reset(true);
 }
 
 /// <summary>
-/// The equivalent of an update loop. Outputs the winner after each loop. Default is -1
+/// The equivalent of an update loop. Outputs the winner after each loop. Default is 0. Not used in multiplayer
 /// </summary>
 /// <param name="outWinner"></param>
 void CheckersInstance::checkerLoop(int* outWinner)
@@ -54,10 +64,7 @@ void CheckersInstance::checkerLoop(int* outWinner)
 	if (dirty)
 	{
 		drawCheckers();
-		if (checkWin(outWinner))
-		{
-			return;
-		}
+		checkWin(outWinner);
 
 		gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
 		dirty = false;
@@ -65,6 +72,9 @@ void CheckersInstance::checkerLoop(int* outWinner)
 	checkInput();
 }
 
+/// <summary>
+/// Scan the arrow keys and the return key for any checkers-related input.
+/// </summary>
 void CheckersInstance::checkInput()
 {
 	timer--;
@@ -104,6 +114,9 @@ void CheckersInstance::checkInput()
 	}
 }
 
+/// <summary>
+/// Draws the board, the pieces, and optionally the selection + highlight if it's your turn and the game is running
+/// </summary>
 void CheckersInstance::drawCheckers()
 {
 	drawBoard();
@@ -161,7 +174,7 @@ void CheckersInstance::drawPieces()
 		{
 			char tile = chk[i][j];
 			char player = tile & 3;
-			gpro_consoleColor color = (player == 1) ? gpro_consoleColor_white : gpro_consoleColor_blue;
+			gpro_consoleColor color = (player == 1) ? gpro_consoleColor_white : gpro_consoleColor_blue; //blue for down, white for up
 			if (i % 2 == 0)
 			{
 				gpro_consoleSetCursor(4 * (j), i); //even-numbered rows don't have an offset
@@ -191,11 +204,11 @@ void CheckersInstance::drawHighlight()
 	{
 		char tile = chk[highlightY][highlightX / 2]; // divide by two because board x is between [0,4) and selection is between [0,8)
 		char player = tile & 3;
-		gpro_consoleColor color = (player == 1) ? gpro_consoleColor_white : gpro_consoleColor_blue;
+		gpro_consoleColor color = (player == 1) ? gpro_consoleColor_white : gpro_consoleColor_blue; //blue for down, white for up
 		if (tile != 0)
 		{
 			gpro_consoleSetColor(color, gpro_consoleColor_cyan);
-			printf(((tile & 4) > 0) ? "[]" : "()");
+			printf(((tile & 4) > 0) ? "[]" : "()"); //[] for king, () for pawn
 		}
 		else
 		{
@@ -209,7 +222,7 @@ void CheckersInstance::drawHighlight()
 }
 
 /// <summary>
-/// Draw the selected square
+/// Draw the selected square. Very similar code to dawHighlight, but skips some of the logic for an empty piece
 /// </summary>
 void CheckersInstance::drawSelection()
 {
@@ -228,6 +241,10 @@ void CheckersInstance::drawSelection()
 	}
 }
 
+/// <summary>
+/// Checks if a jump exists, scanning the tiles (up to 8) around the selected piece to look for the required pattern
+/// </summary>
+/// <returns></returns>
 bool CheckersInstance::hasJump()
 {
 	if (selectionX == -1 || selectionY == -1)
@@ -246,13 +263,13 @@ bool CheckersInstance::hasJump()
 	int otherPlayer = 3 - currentPlayer;
 	if (canCheckDown)
 	{
-		if (selectionX / 2 > 0)
+		if (selectionX / 2 > 0) //if we have space to jump left, check the down left two tiles
 		{
 			char diagDownLeft = chk[selectionY + 1][(selectionX / 2) - 1 + xOffset];
 			char diagDownLeft2 = chk[selectionY + 2][(selectionX / 2) - 1];
 			jumpExists |= ((diagDownLeft & 3) == otherPlayer && diagDownLeft2 == 0);
 		}
-		if (selectionX / 2 < 3)
+		if (selectionX / 2 < 3) //if we have space to jump right, check the down right two tiles
 		{
 			char diagDownRight = chk[selectionY + 1][(selectionX / 2) + xOffset];
 			char diagDownRight2 = chk[selectionY + 2][(selectionX / 2) + 1];
@@ -261,13 +278,13 @@ bool CheckersInstance::hasJump()
 	}
 	if (canCheckUp)
 	{
-		if (selectionX / 2 > 0)
+		if (selectionX / 2 > 0) //if we have space to jump left, check the up left two tiles
 		{
 			char diagUpLeft = chk[selectionY - 1][(selectionX / 2) - 1 + xOffset];
 			char diagUpLeft2 = chk[selectionY - 2][(selectionX / 2) - 1];
 			jumpExists |= ((diagUpLeft & 3) == otherPlayer && diagUpLeft2 == 0);
 		}
-		if (selectionX / 2 < 3)
+		if (selectionX / 2 < 3) //if we have space to jump right, check the up right two tiles
 		{
 			char diagUpRight = chk[selectionY - 1][(selectionX / 2) + xOffset];
 			char diagUpRight2 = chk[selectionY - 2][(selectionX / 2) + 1];
@@ -277,6 +294,10 @@ bool CheckersInstance::hasJump()
 	return jumpExists;
 }
 
+/// <summary>
+/// Attempt to king the selected piece.
+/// </summary>
+/// <returns></returns>
 bool CheckersInstance::tryKing()
 {
 	int kingIndex = currentPlayer == 1 ? 7 : 0;
@@ -293,19 +314,23 @@ bool CheckersInstance::tryKing()
 	return false;
 }
 
+/// <summary>
+/// Process a received action, updating pieces and checking for whether the game state indicates a player winning
+/// </summary>
+/// <param name="action"></param>
 void CheckersInstance::processAction(Action* action)
 {
 	if (action->playerIndex != playerNum)
 	{
-		chk[action->endY][action->endX] = chk[action->startY][action->startX];
+		chk[action->endY][action->endX] = chk[action->startY][action->startX]; //move piece
 		chk[action->startY][action->startX] = 0;
 		if (action->hasCaptured)
 		{
-			chk[action->capturedY][action->capturedX] = 0;
+			chk[action->capturedY][action->capturedX] = 0; //delete captured piece
 		}
 		if (action->endTurn)
 		{
-			currentPlayer = 3 - currentPlayer;
+			currentPlayer = 3 - currentPlayer; //swap turn
 		}
 		if (action->becomeKing)
 		{
@@ -318,12 +343,18 @@ void CheckersInstance::processAction(Action* action)
 	
 }
 
+/// <summary>
+/// Reset the board and the action
+/// </summary>
 void CheckersInstance::reset()
 {
 	gpro_checkers_reset(chk);
 	action.reset(true);
 }
 
+/// <summary>
+/// Handle pretty much all game logic. When enter is pressed, check whether a valid move has been performed and update the stored action
+/// </summary>
 void CheckersInstance::handleSelection()
 {
 	if (playerNum == 0) //spectators can't move
@@ -447,6 +478,7 @@ void CheckersInstance::handleSelection()
 			chk[selectionY][selectionX / 2] = 0; //set old position to 0
 			chk[highlightY][highlightX / 2] = selectedTile; //set new position to the tile
 
+			//update action
 			action.startX = selectionX / 2;
 			action.startY = selectionY;
 
@@ -462,9 +494,11 @@ void CheckersInstance::handleSelection()
 				return;
 			}
 
+			//update selection index
 			selectionX = highlightX;
 			selectionY = highlightY;
 
+			//check for a second jump
 			jumpExists = hasJump();
 			if (!jumpExists)
 			{
@@ -479,7 +513,7 @@ void CheckersInstance::handleSelection()
 				action.endTurn = false;
 			}
 		}
-		else if (!hasJumped)
+		else if (!hasJumped) //similar to !jumpExists, but also checks if the previous action was a jump, so people don't get a free extra move if they've already jumped
 		{
 			bool xError = abs(highlightX - selectionX) != 1;
 			bool yError = abs(selectionY - highlightY) != 1;
@@ -487,10 +521,13 @@ void CheckersInstance::handleSelection()
 			{
 				return;
 			}
+
+			//move tile
 			char tmp = selectedTile;
 			chk[selectionY][selectionX / 2] = 0;
 			chk[highlightY][highlightX / 2] = tmp;
 
+			//set action
 			action.playerIndex = currentPlayer;
 			action.hasCaptured = false;
 			action.endTurn = true;
