@@ -588,7 +588,8 @@ int main(int const argc, char const* const argv[])
 					strncpy(response.message, otherMess.c_str(), otherMess.length());
 					response.message[otherMess.length()] = 0;
 					bsOut.Write(response);
-					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
+					sendMessageToLobby(&IPToRoom, packet, peer, &bsOut, true);
+					//peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
 					serverLog << otherMess << "\n";
 
 				}

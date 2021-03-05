@@ -458,6 +458,7 @@ void CheckersInstance::handleSelection()
 			if (tryKing())
 			{
 				action.becomeKing = true;
+				action.endTurn = true;
 				return;
 			}
 
@@ -505,6 +506,7 @@ void CheckersInstance::handleSelection()
 			if (tryKing())
 			{
 				action.becomeKing = true;
+				action.endTurn = true;
 				return;
 			}
 
