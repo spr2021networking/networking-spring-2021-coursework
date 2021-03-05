@@ -24,7 +24,7 @@ void TextBox::draw(short xCursor, short yCursor)
 		for (int i = 0; i < (int)messages.size(); i++)
 		{
 			printf("%s", messages[i].c_str());
-			if (i < (int)messages.size() - 1)
+			//if (i < (int)messages.size() - 1)
 			{
 				printf("\n");
 			}

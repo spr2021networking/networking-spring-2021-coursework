@@ -228,7 +228,7 @@ bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std
 		joinInfo.setName("lobby");
 		joinInfo.playerIndex = 0;
 
-		if (strncmp(name.c_str(), room->player1.name.c_str(), room->player1.name.length()))
+		if (strncmp(name.c_str(), room->player1.name.c_str(), room->player1.name.length()) == 0)
 		{
 			if (room->readyToPlay()) //the room had two players, then leaving can cause a forfeit
 			{
@@ -239,7 +239,7 @@ bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std
 			room->player1.name = "";
 
 		}
-		else if (strncmp(name.c_str(), room->player2.name.c_str(), room->player2.name.length()))
+		else if (strncmp(name.c_str(), room->player2.name.c_str(), room->player2.name.length()) == 0)
 		{
 			if (room->readyToPlay()) //the room had two players
 			{
@@ -254,7 +254,7 @@ bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std
 		{
 			for (int i = 0; i < (int)room->spectators.size(); i++)
 			{
-				if (strncmp(name.c_str(), room->spectators[i].name.c_str(), room->spectators[i].name.length()))
+				if (strncmp(name.c_str(), room->spectators[i].name.c_str(), room->spectators[i].name.length()) == 0)
 				{
 					room->spectators.erase(room->spectators.begin() + i);
 				}
