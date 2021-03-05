@@ -1,11 +1,19 @@
+/*
+* textbox.cpp
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: text rendering
+*/
+
 #include "gpro-net/textbox.h"
 
+//create textbox with specific size
 TextBox::TextBox(int lines)
 {
 	numLines = lines;
 	dirty = true;
 }
 
+//add message and remove old if necessary
 void TextBox::addMessage(std::string message)
 {
 	messages.push_back(message);
@@ -16,6 +24,7 @@ void TextBox::addMessage(std::string message)
 	dirty = true;
 }
 
+//draw text if the text box has been modified
 void TextBox::draw(short xCursor, short yCursor)
 {
 	if (dirty)
@@ -24,7 +33,7 @@ void TextBox::draw(short xCursor, short yCursor)
 		for (int i = 0; i < (int)messages.size(); i++)
 		{
 			printf("%s", messages[i].c_str());
-			if (i > 0)
+			if (i > 0) //add whitespace to prevent a rendering error
 			{
 				int numSpaces = (int)messages[i - 1].size() - (int)messages[i].size();
 				for (int j = 0; j < numSpaces; j++)
@@ -47,11 +56,13 @@ void TextBox::setColor(gpro_consoleColor text, gpro_consoleColor bg)
 	gpro_consoleSetColor(text, bg);
 }
 
+//find offset from the start coordinate
 int TextBox::getInputY(int startY)
 {
 	return startY + (int)messages.size();
 }
 
+//resize textbox, erasing old messages as needed
 void TextBox::setLineCount(int lines)
 {
 	if (lines < (int)messages.size())
@@ -62,13 +73,7 @@ void TextBox::setLineCount(int lines)
 	numLines = lines;
 }
 
-void TextBox::blankLine(short yCoord)
-{
-	gpro_consoleClear();
-	dirty = true;
-	draw(0, yCoord);
-}
-
+//clear all messages
 void TextBox::clear()
 {
 	messages.erase(messages.begin(), messages.end());

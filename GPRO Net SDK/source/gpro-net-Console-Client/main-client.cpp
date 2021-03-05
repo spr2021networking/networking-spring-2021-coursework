@@ -364,7 +364,6 @@ int main(int const argc, char const* const argv[])
 					gpro_consoleClear();
 				}
 			}
-			
 		}
 		if (hasInput)
 		{

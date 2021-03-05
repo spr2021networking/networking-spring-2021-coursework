@@ -1,3 +1,9 @@
+/*
+* server-utils.cpp
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: Messaging utilities
+*/
+
 #pragma once
 
 #include <map>

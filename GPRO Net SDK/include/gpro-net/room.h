@@ -27,7 +27,6 @@ struct CheckerRoom
 	Player player1;
 	Player player2;
 
-	int winner = 0; //send message to all players
 	bool closed = false; //prevent new spectators as the game is in progress
 
 	std::vector<Player> spectators;

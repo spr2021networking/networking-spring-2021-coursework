@@ -1,3 +1,8 @@
+/*
+* textbox.h
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: text rendering
+*/
 #pragma once
 
 #include <vector>
@@ -15,7 +20,6 @@ struct TextBox
 
 	int getInputY(int startY);
 	void setLineCount(int lines);
-	void blankLine(short yCoord);
 	void clear();
 
 	bool dirty;

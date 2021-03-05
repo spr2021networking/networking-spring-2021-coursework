@@ -1,3 +1,9 @@
+/*
+* server-utils.cpp
+* Contributors: Ben Cooper and Scott Dagen
+* Contributions: Messaging utilities
+*/
+
 #include "gpro-net-Console-Server/server-utils.h"
 
 /// <summary>
@@ -28,12 +34,22 @@ void sendMessageToLobby(std::map<std::string, std::string>* IPToRoom, RakNet::Pa
 	}
 }
 
+/// <summary>
+/// Send messages to everyone in the room
+/// </summary>
+/// <param name="room"></param>
+/// <param name="packet"></param>
+/// <param name="peer"></param>
+/// <param name="stream"></param>
+/// <param name="ignoreSender"></param>
+/// <param name="forceSendAll"></param>
 void sendMessageToRoom(CheckerRoom* room, RakNet::Packet* packet, RakNet::RakPeerInterface* peer, RakNet::BitStream* stream, bool ignoreSender, bool forceSendAll)
 {
 	std::vector<Player>::iterator it;
 	std::string packetIP = packet->systemAddress.ToString();
 	bool isPlayer = false;
 
+	//send to all spectators
 	for (it = room->spectators.begin(); it != room->spectators.end(); it++)
 	{
 		std::string iteratorIP = it->address;
@@ -43,18 +59,21 @@ void sendMessageToRoom(CheckerRoom* room, RakNet::Packet* packet, RakNet::RakPee
 		}
 	}
 
+	//if we're player 1, send to player 2 (or force a message to player 2 if someone is leaving the room)
 	if (strncmp(packetIP.c_str(), room->player1.address.c_str(), packetIP.length()) == 0 || forceSendAll)
 	{
 		isPlayer = true;
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(room->player2.address.c_str()), false);
 	}
 
+	//if we're player 2, send to player 1 (or force a message to player 2 if someone is leaving the room)
 	if (strncmp(packetIP.c_str(), room->player2.address.c_str(), packetIP.length()) == 0 || forceSendAll)
 	{
 		isPlayer = true;
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(room->player1.address.c_str()), false);
 	}
 
+	//if we're a player and not ignoring the sender, send message to self
 	if (isPlayer && !ignoreSender)
 	{
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
