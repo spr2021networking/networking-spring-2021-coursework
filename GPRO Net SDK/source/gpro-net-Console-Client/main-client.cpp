@@ -343,21 +343,22 @@ int main(int const argc, char const* const argv[])
 			checkers.checkInput();
 			if (checkers.action.playerIndex != 0) //we need to store our local player somehow!
 			{
-
+				bool win = checkers.checkWin(&checkers.action.winner);
 				RakNet::BitStream actionStream;
 				prepBitStream(&actionStream, RakNet::GetTime(), (RakNet::MessageID)ID_GAMEMESSAGE_STRUCT);
 				actionStream.Write(checkers.action);
 				peer->Send(&actionStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
 				checkers.action.playerIndex = 0;
+				if (win)
+				{
+					std::string winMessage = "The ";
+					winMessage += checkers.action.winner == 1 ? "Up " : "Down ";
+					winMessage += "Player Won!";
+					textBox.addMessage(winMessage);
+					gpro_consoleClear();
+				}
 			}
-			if (checkers.action.winner != 0)
-			{
-				std::string winMessage = "The ";
-				winMessage += checkers.action.winner == 1 ? "Up " : "Down ";
-				winMessage += "Player Won!";
-				textBox.addMessage(winMessage);
-				gpro_consoleClear();
-			}
+			
 		}
 		if (hasInput)
 		{
