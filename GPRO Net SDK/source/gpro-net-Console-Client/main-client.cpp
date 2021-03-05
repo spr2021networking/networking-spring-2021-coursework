@@ -275,8 +275,8 @@ int main(int const argc, char const* const argv[])
 				if (act.winner != 0 || checkers.action.winner != 0)
 				{
 					std::string winMessage = "The ";
-					winMessage += act.winner == 1 ? "North " : "South ";
-					winMessage += " Player Won!";
+					winMessage += act.winner == 1 ? "Up " : "Down ";
+					winMessage += "Player Won!";
 					textBox.addMessage(winMessage);
 				}
 				//check win state, send message to all spectators and players if there's a winner
