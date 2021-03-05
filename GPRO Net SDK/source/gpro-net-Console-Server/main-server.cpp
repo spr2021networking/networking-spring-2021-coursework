@@ -486,6 +486,11 @@ int main(int const argc, char const* const argv[])
 					printf("A client lost the connection.\n");
 					map <string, string>::iterator userNameToRemove;
 					userNameToRemove = IPToUserName.find(packet->systemAddress.ToString());
+					ChatMessage leaveRoom;
+					std::string commandToSend = "leaveroom";
+					leaveRoom.setText(RECIPIENT, commandToSend);
+					leaveRoom.messageFlag = COMMAND;
+					handleMessage(&leaveRoom, packet);
 					string output = "";
 					if (userNameToRemove != IPToUserName.end())//remove the user who disconnected from the server and userlist
 					{
