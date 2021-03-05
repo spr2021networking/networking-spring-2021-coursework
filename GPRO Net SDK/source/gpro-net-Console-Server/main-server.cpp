@@ -269,7 +269,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 					IPToRoom[packet->systemAddress.ToString()] = "lobby";
 
 					CheckerRoom* room = &roomKeyToRoom[m->message];
-					if (didPlayerLeave) //obtained from the leaveRoom call, false if spectator
+					if (didPlayerLeave) //obtained from the leaveRoom call, false if spectator OR if the game has already ended and the final player is leaving
 					{
 						Action act;
 						act.readyToPlay = false;

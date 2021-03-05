@@ -230,17 +230,25 @@ bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std
 
 		if (strncmp(name.c_str(), room->player1.name.c_str(), room->player1.name.length()))
 		{
+			if (room->readyToPlay()) //the room had two players, then leaving can cause a forfeit
+			{
+				*playerLeft = true;
+				*winner = 2;
+			}
 			room->player1.address = "";
 			room->player1.name = "";
-			*playerLeft = true;
-			*winner = 2;
+
 		}
 		else if (strncmp(name.c_str(), room->player2.name.c_str(), room->player2.name.length()))
 		{
+			if (room->readyToPlay()) //the room had two players
+			{
+				*playerLeft = true;
+				*winner = 1;
+			}
 			room->player2.address = "";
 			room->player2.name = "";
-			*playerLeft = true;
-			*winner = 1;
+
 		}
 		else
 		{
