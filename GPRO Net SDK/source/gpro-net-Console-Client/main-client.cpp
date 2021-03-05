@@ -288,6 +288,7 @@ int main(int const argc, char const* const argv[])
 				checkers.playerNum = r.playerIndex;
 				checkers.action.setName(r.roomID, (int)strnlen(r.roomID, 16));
 				textBox.clear();
+				gpro_consoleClear();
 				break;
 			}
 			case ID_KICK:
@@ -343,7 +344,7 @@ int main(int const argc, char const* const argv[])
 		}
 		if (hasInput)
 		{
-			if (checkers.action.checkerRoomKey[0] != 0)
+			if (strncmp(checkers.action.checkerRoomKey, "lobby", 5) != 0)
 			{
 				gpro_consoleSetCursor(0, textBox.getInputY(textY));
 			}
