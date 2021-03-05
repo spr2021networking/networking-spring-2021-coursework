@@ -272,9 +272,12 @@ int main(int const argc, char const* const argv[])
 			{
 				Action act = Action::parseAction(packet);
 				checkers.processAction(&act);
-				if (act.winner != 0)
+				if (act.winner != 0 || checkers.action.winner != 0)
 				{
-					//display winner
+					std::string winMessage = "The ";
+					winMessage += act.winner == 1 ? "North " : "South ";
+					winMessage += " Player Won!";
+					textBox.addMessage(winMessage);
 				}
 				//check win state, send message to all spectators and players if there's a winner
 				break;
@@ -330,19 +333,12 @@ int main(int const argc, char const* const argv[])
 			checkers.checkInput();
 			if (checkers.action.playerIndex != 0) //we need to store our local player somehow!
 			{
-				int winner = -1;
-				if (checkers.checkWin(&winner))
-				{
-					//send notification that the game was won, then close after x seconds
-				}
-				else
-				{
-					RakNet::BitStream actionStream;
-					prepBitStream(&actionStream, RakNet::GetTime(), (RakNet::MessageID)ID_GAMEMESSAGE_STRUCT);
-					actionStream.Write(checkers.action);
-					peer->Send(&actionStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
-					checkers.action.playerIndex = 0;
-				}
+
+				RakNet::BitStream actionStream;
+				prepBitStream(&actionStream, RakNet::GetTime(), (RakNet::MessageID)ID_GAMEMESSAGE_STRUCT);
+				actionStream.Write(checkers.action);
+				peer->Send(&actionStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, serverAddress, false);
+				checkers.action.playerIndex = 0;
 			}
 		}
 		if (hasInput)
