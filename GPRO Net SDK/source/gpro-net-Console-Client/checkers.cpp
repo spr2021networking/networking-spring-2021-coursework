@@ -13,7 +13,7 @@ bool CheckersInstance::checkWin(int* outWinner)
 	//loop through all tiles to check whether they have a piece in them
 	for (int i = 0; i < 8; i++)
 	{
-		for (int j = 0; i < 4; j++)
+		for (int j = 0; j < 4; j++)
 		{
 			if (hasP1 && hasP2)
 			{
