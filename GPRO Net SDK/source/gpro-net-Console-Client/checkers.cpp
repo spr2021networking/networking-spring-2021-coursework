@@ -17,7 +17,7 @@ bool CheckersInstance::checkWin(int* outWinner)
 		{
 			if (hasP1 && hasP2)
 			{
-				*outWinner = -1;
+				*outWinner = 0;
 				return false;
 			}
 			hasP1 |= (chk[i][j] & 3) == 1;
@@ -34,7 +34,7 @@ bool CheckersInstance::checkWin(int* outWinner)
 	}
 	else
 	{
-		*outWinner = 0; //this should never happen, it means the board is empty
+		*outWinner = 4; //this should never happen, it means the board is empty. Ghosts are probably involved.
 	}
 	return true;
 }
