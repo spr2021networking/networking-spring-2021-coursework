@@ -108,13 +108,13 @@ int main(int const argc, char const* const argv[])
 	bool isServer = false;
 
 	//retrieve IP and name
-	textBox.addMessage("Enter server IP or hit enter for 172.16.2.64");
+	textBox.addMessage("Enter server IP or hit enter for 172.16.2.59");
 	textBox.draw(0, 0);
 	//std::cin >> inputBuffer;
 	std::getline(std::cin, stringBuffer);
 	if (stringBuffer.length() == 0)
 	{
-		stringBuffer = "172.16.2.64\0";
+		stringBuffer = "172.16.2.59\0";
 	}
 	textBox.addMessage(stringBuffer);
 	stringBuffer.copy(ip, stringBuffer.length() + 1);
