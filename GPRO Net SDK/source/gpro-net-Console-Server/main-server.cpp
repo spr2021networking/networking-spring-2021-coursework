@@ -497,6 +497,10 @@ int main(int const argc, char const* const argv[])
 						output += userNameToRemove->second;
 						IPToUserName.erase(userNameToRemove);
 					}
+					if (userNameToRemove != IPToRoom.end())
+					{
+						IPToRoom.erase(userNameToRemove);
+					}
 					RakNet::Time t = RakNet::GetTime();
 					prepBitStream(&bsOut, t);
 
