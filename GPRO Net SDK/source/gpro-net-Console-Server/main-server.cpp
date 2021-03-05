@@ -146,7 +146,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			map<string, string>::iterator it;
 			it = IPToRoom.find(packet->systemAddress.ToString());
 			if (it != IPToRoom.end())
-			{	
+			{
 				sendMessageToRoom(&roomKeyToRoom[it->second], packet, peer, &outStream);
 			}
 		}
@@ -258,17 +258,17 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			{
 				bool didPlayerLeave = false;
 				int winner = 0;
+
 				if (CheckerRoom::leaveRoom(&roomKeyToRoom, &IPToUserName, peer, packet, roomName, &didPlayerLeave, &winner)) //if the room existed and we left it
 				{
 					output += "System: a user has left the room";
 
 					response.setText(MESSAGE, output);
 					outStream.Write(response);
-					sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, true); //tell players that a person left
-
+					sendMessageToRoom(&roomKeyToRoom[roomName], packet, peer, &outStream, true, true); //tell players that a person left
 					IPToRoom[packet->systemAddress.ToString()] = "lobby";
 
-					CheckerRoom* room = &roomKeyToRoom[m->message];
+					CheckerRoom* room = &roomKeyToRoom[roomName];
 					if (didPlayerLeave) //obtained from the leaveRoom call, false if spectator OR if the game has already ended and the final player is leaving
 					{
 						Action act;
@@ -280,13 +280,13 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 						outStream.Reset();
 						prepBitStream(&outStream, RakNet::GetTime(), ID_GAMEMESSAGE_STRUCT);
 						outStream.Write(act);
-						sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, true); //notify remaining people that someone left/who won
+						sendMessageToRoom(&roomKeyToRoom[roomName], packet, peer, &outStream, true, true); //notify remaining people that someone left/who won
 					}
 
 					//clear out room
 					if (room->player1.name.length() == 0 && room->player2.name.length() == 0 && room->spectators.size() == 0)
 					{
-						roomKeyToRoom.erase(m->message);
+						roomKeyToRoom.erase(roomName);
 					}
 				}
 			}
@@ -591,10 +591,10 @@ int main(int const argc, char const* const argv[])
 					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
 					serverLog << otherMess << "\n";
 
-				}	
+				}
 			}
 			break;
-			
+
 			case ID_GAMEMESSAGE:
 			{
 				prepBitStream(&bsOut, RakNet::GetTime(), ID_GAMEMESSAGE);

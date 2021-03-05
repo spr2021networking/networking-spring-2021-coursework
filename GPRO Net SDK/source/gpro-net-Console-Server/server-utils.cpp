@@ -28,7 +28,7 @@ void sendMessageToLobby(std::map<std::string, std::string>* IPToRoom, RakNet::Pa
 	}
 }
 
-void sendMessageToRoom(CheckerRoom* room, RakNet::Packet* packet, RakNet::RakPeerInterface* peer, RakNet::BitStream* stream, bool ignoreSender)
+void sendMessageToRoom(CheckerRoom* room, RakNet::Packet* packet, RakNet::RakPeerInterface* peer, RakNet::BitStream* stream, bool ignoreSender, bool forceSendAll)
 {
 	std::vector<Player>::iterator it;
 	std::string packetIP = packet->systemAddress.ToString();
@@ -37,25 +37,25 @@ void sendMessageToRoom(CheckerRoom* room, RakNet::Packet* packet, RakNet::RakPee
 	for (it = room->spectators.begin(); it != room->spectators.end(); it++)
 	{
 		std::string iteratorIP = it->address;
-		if (!ignoreSender || strncmp(iteratorIP.c_str(), packetIP.c_str(), iteratorIP.length()) != 0)
+		if (!ignoreSender || strncmp(iteratorIP.c_str(), packetIP.c_str(), iteratorIP.length()) != 0 || forceSendAll)
 		{
 			peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->address.c_str()), false);
 		}
 	}
 
-	if (strncmp(packetIP.c_str(), room->player1.address.c_str(), packetIP.length()) == 0)
+	if (strncmp(packetIP.c_str(), room->player1.address.c_str(), packetIP.length()) == 0 || forceSendAll)
 	{
 		isPlayer = true;
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(room->player2.address.c_str()), false);
 	}
 
-	if (strncmp(packetIP.c_str(), room->player2.address.c_str(), packetIP.length()) == 0)
+	if (strncmp(packetIP.c_str(), room->player2.address.c_str(), packetIP.length()) == 0 || forceSendAll)
 	{
 		isPlayer = true;
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(room->player1.address.c_str()), false);
 	}
 
-	if (isPlayer && !ignoreSender)
+	if ((isPlayer && !ignoreSender) || forceSendAll)
 	{
 		peer->Send(stream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 	}
