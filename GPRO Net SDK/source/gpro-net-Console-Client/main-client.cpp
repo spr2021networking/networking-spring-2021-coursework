@@ -79,6 +79,7 @@ void quit()
 	peer->Shutdown(300);
 }
 
+///All processing occurs here
 int main(int const argc, char const* const argv[])
 {
 	peer = RakNet::RakPeerInterface::GetInstance();
@@ -109,7 +110,7 @@ int main(int const argc, char const* const argv[])
 	stringBuffer = "";
 	while (stringBuffer.length() == 0)
 	{
-		//parse a name
+		//parse a name and ensure it's valid
 		printf("Enter nickname (16 character max)\n");
 		std::getline(std::cin, stringBuffer);
 		int prevLen = (int)stringBuffer.length();
@@ -155,6 +156,7 @@ int main(int const argc, char const* const argv[])
 				idIndex += sizeof(RakNet::MessageID) + sizeof(RakNet::Time);
 			}
 
+			//switch on either index 0 or, if we have a timestamped message, whatever value idIndex is
 			switch (packet->data[idIndex])
 			{
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
@@ -250,7 +252,7 @@ int main(int const argc, char const* const argv[])
 				break;
 			}
 		}
-		if (hasInput)
+		if (hasInput) //if we detect an input, call getline
 		{
 			std::getline(std::cin, stringBuffer);
 			strncpy(message, stringBuffer.c_str(), 128);
@@ -282,19 +284,21 @@ int main(int const argc, char const* const argv[])
 				messageToSend.time = timeStamp;
 				messageToSend.id2 = ID_MESSAGE_STRUCT;
 
+				//try to retrieve the second word of the message
 				char* startOfSecondWord = chopStr((char*)stringBuffer.c_str(), (int)stringBuffer.length(), ' ');
 
+				//if the only text sent was "quit"
 				if (strncmp(stringBuffer.c_str(), "quit", 4) == 0 && stringBuffer.length() == 4)
 				{
 					quit();
 					break;
 				}
-				else if (startOfSecondWord == stringBuffer.c_str()) //there's no space in the message
+				else if (startOfSecondWord == stringBuffer.c_str()) //there's no space in the message, this is a single word
 				{
 					if (strncmp(stringBuffer.c_str(), "command", 7) != 0) //make sure this isn't an empty command, meaning that it's a one-word public message
 					{
 						//set message to public and load the entire string buffer into the message.
-						messageToSend.messageType = 0;
+						messageToSend.messageType = 0;  //see messageflags in gpro-net.h
 						strncpy(messageToSend.message, stringBuffer.c_str(), (int)stringBuffer.length());
 						messageToSend.message[stringBuffer.length()] = 0;
 					}
@@ -309,7 +313,8 @@ int main(int const argc, char const* const argv[])
 					std::string secondWord = startOfSecondWord;
 					if (strncmp(stringBuffer.c_str(), "private", 7) == 0) //stringBuffer contains only the first word at this point
 					{
-						messageToSend.messageType = 1;
+						messageToSend.messageType = 1; //see messageflags in gpro-net.h
+						//check for third word
 						char* startOfMessageBody = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
 						if (startOfMessageBody == secondWord.c_str()) //there's no actual message body
 						{
@@ -337,7 +342,7 @@ int main(int const argc, char const* const argv[])
 							messageToSend.recipient[8] = 0;
 							messageToSend.message[0] = ' ';
 						}
-						else if (strncmp(secondWord.c_str(), "kick", 4) == 0) //kick (admin only)
+						else if (strncmp(secondWord.c_str(), "kick", 4) == 0) //kick (admin only). Disabled for now as it causes the kicked user to crash
 						{
 							if (true)
 							{
@@ -351,6 +356,7 @@ int main(int const argc, char const* const argv[])
 							}
 							else
 							{
+								//check for third word
 								char* startOfKickTarget = chopStr((char*)secondWord.c_str(), (int)strlen(startOfSecondWord), ' ');
 								if (startOfKickTarget == secondWord.c_str()) //no kick target
 								{
@@ -394,7 +400,7 @@ int main(int const argc, char const* const argv[])
 				}
 				if (isAdmin)
 				{
-					messageToSend.messageType |= ISADMIN;
+					messageToSend.messageType |= ISADMIN; //needed for the stop command to function
 				}
 				if (messageToSend.message[0] != 0) //prevents empty messages or invalid messages.
 				{

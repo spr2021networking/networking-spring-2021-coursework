@@ -72,7 +72,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	hourVal %= 12;
 	int minutesInt = (int)((hour - (int)hour) * 60);
 	printf("%d:%d\n", hourVal, minutesInt + 20);
-	string output = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m->sender; //timestamp + user who sent this
+	string output = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m->sender; //(attempt at) timestamp + user who sent this
 
 	RakNet::BitStream outStream;
 	prepBitStream(&outStream, RakNet::GetTime());
@@ -90,7 +90,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		response.message[output.length()] = 0;
 		outStream.Write(response);
 		map<string, string>::iterator it;
-		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(), true);
+		peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(), true); //broadcast message to everyone
 	}
 	break;
 	case PRIVATE: //private
@@ -102,6 +102,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		outStream.Write(response);
 		map<string, string>::iterator it;
 		bool sent = false;
+		//search for username to send to
 		for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
 		{
 			if (strncmp(it->second.c_str(), m->recipient, it->second.length()) == 0)//check to see if the user exists
@@ -172,7 +173,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				break;
 			}
 		}
-		if (strncmp(m->recipient, "kick", 4) == 0) //kick the user
+		if (strncmp(m->recipient, "kick", 4) == 0) //kick the user. Currently disabled, but would send a kick command to the target
 		{
 			outStream.Reset();
 			prepBitStream(&outStream, RakNet::GetTime(), ID_KICK);
@@ -188,7 +189,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				}
 			}
 		}
-		if (strncmp(m->recipient, "stop", 4) == 0) //stop the server
+		if (strncmp(m->recipient, "stop", 4) == 0) //stop the server and notify users
 		{
 			string quitMessage = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] The server is now shutting down.";
 			strncpy(response.message, quitMessage.c_str(), quitMessage.length());
@@ -242,13 +243,15 @@ int main(int const argc, char const* const argv[])
 			RakNet::Time time;
 			int idIndex = 0;
 			RakNet::BitStream bsIn(packet->data, packet->length, false);
-			if (packet->data[0] == ID_TIMESTAMP) //timestamping
+			//this function checks if there's a timestamp stored in the packet. If there is, we advance the switch past the timestamp
+			if (packet->data[0] == ID_TIMESTAMP)
 			{
 				bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 				bsIn.Read(time);
 				idIndex += sizeof(RakNet::MessageID) + sizeof(RakNet::Time);
 			}
 
+			//switch on either index 0 or, if we have a timestamped message, whatever value idIndex is
 			switch (packet->data[idIndex])//run through cases to see what to do
 			{
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
@@ -293,6 +296,7 @@ int main(int const argc, char const* const argv[])
 					RakNet::Time t = RakNet::GetTime();
 					prepBitStream(&bsOut, t);
 
+					//attempt to calculate timestamp for output
 					ChatMessage response;
 					float betterTime = (float)t;
 					float seconds = betterTime / 1000.0f;
@@ -301,7 +305,9 @@ int main(int const argc, char const* const argv[])
 					int hourVal = (int)hour % 12 + 11;
 					hourVal %= 12;
 					int minutesInt = (int)((hour - (int)hour) * 60);
-					output = "[Received at " + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + output + " has disconnected."; //send a notification that someone disconnected
+
+					//send a notification that someone disconnected
+					output = "[Received at " + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + output + " has disconnected.";
 					strncpy(response.message, output.c_str(), output.length());
 					response.message[output.length()] = 0;
 					bsOut.Write(response);
@@ -317,6 +323,7 @@ int main(int const argc, char const* const argv[])
 
 			case ID_USERNAME:
 			{
+				//regiter the username, or try to alert the client that the username already exists. Unclear whether this safeguard functions correctly
 				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
 				ChatMessage m = parseMessage(packet);
 				map<string, string>::iterator it;
@@ -362,7 +369,7 @@ int main(int const argc, char const* const argv[])
 					RakNet::Time tmpTime = RakNet::GetTime();
 					prepBitStream(&bsOut, tmpTime);
 
-					//timestamping
+					//attempt to calculate timestamp for output
 					float betterTime = (float)tmpTime;
 					float seconds = betterTime / 1000.0f;
 					float minutes = seconds / 60.0f;
@@ -374,7 +381,7 @@ int main(int const argc, char const* const argv[])
 					strncpy(response.message, otherMess.c_str(), otherMess.length());
 					response.message[otherMess.length()] = 0;
 					bsOut.Write(response);
-					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
+					peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true); //alert others that the person joined
 					serverLog << otherMess << "\n";
 
 				}	

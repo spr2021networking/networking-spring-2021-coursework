@@ -37,6 +37,16 @@
 #include "RakNet/BitStream.h"
 #include "RakNet/MessageIdentifiers.h"
 
+/// <summary>
+/// Splits a cstring by a delimiter, with a maxmimum length. Returns the start point of the new string.
+/// You can check if a string contains a character by comparing the return value with the in value. If they're equal,
+/// no operation occurred.
+/// WARNING: this function does null-terminate the input string, like strtok().
+/// </summary>
+/// <param name="in">The string to input</param>
+/// <param name="length">How long the input string is (or how far to scan)</param>
+/// <param name="delim">The character to scan for</param>
+/// <returns></returns>
 char* chopStr(char* in, int length, char delim);
 
 #pragma pack(push, 1)
@@ -60,6 +70,9 @@ struct ChatMessage
 /// <returns></returns>
 ChatMessage parseMessage(RakNet::Packet* packet);
 
+/// <summary>
+/// An extension of the default RakNet message IDs
+/// </summary>
 enum GameMessages
 {
 	ID_USERNAME = ID_USER_PACKET_ENUM + 1,
@@ -68,6 +81,9 @@ enum GameMessages
 	ID_KICK
 };
 
+/// <summary>
+/// Tags for what kind of message is being sent
+/// </summary>
 enum MessageFlag
 {
 	PUBLIC = 0,
@@ -79,9 +95,9 @@ enum MessageFlag
 /// <summary>
 /// sets the first several bytes of the bitstream so the timestamp is properly recognized.
 /// </summary>
-/// <param name="stream"></param>
-/// <param name="time"></param>
-/// <param name="mType"></param>
+/// <param name="stream">The stream to prepare</param>
+/// <param name="time">The timestamp</param>
+/// <param name="mType">What the "true" message ID is.</param>
 void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::MessageID mType = ID_MESSAGE_STRUCT);
 
 #endif	// !_GPRO_NET_H_
