@@ -23,7 +23,7 @@
 
 	Modified by Scott Dagen and Benjamin Cooper
 	Purpose: Demonstrate an understanding of how to make a chat client
-	What we each did: Both worked on message handling and timestamping
+	What we each did: Both worked on message handling and timestamping, as well as handling checker game messages
 */
 
 #include "gpro-net/gpro-net.h"
@@ -81,7 +81,7 @@ void handleGameMessage(Action* gAction, RakNet::Packet* packet)
 			}
 		}
 	}
-	else if (gAction->playerIndex == 2)
+	else if (gAction->playerIndex == 2)//we need to send the relavent information to player 1
 	{
 		map<string, CheckerRoom>::iterator it;
 		it = roomKeyToRoom.find(gAction->checkerRoomKey);
@@ -137,14 +137,14 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 
 		outStream.Write(response);
 
-		if (IPToRoom[packet->systemAddress.ToString()] == "lobby")
+		if (IPToRoom[packet->systemAddress.ToString()] == "lobby") //if the person who sent the message is in the lobby, send the message to anyone in the lobby
 		{
 			sendMessageToLobby(&IPToRoom, packet, peer, &outStream);
 		}
-		else
+		else //if the person who sent the message is not in the lobby, look for the room they are in and send the message to that room
 		{
 			map<string, string>::iterator it;
-			it = IPToRoom.find(packet->systemAddress.ToString());
+			it = IPToRoom.find(packet->systemAddress.ToString());//search for the room the person is in
 			if (it != IPToRoom.end())
 			{
 				sendMessageToRoom(&roomKeyToRoom[it->second], packet, peer, &outStream);
@@ -201,9 +201,9 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 	{
 		if (strncmp(m->recipient, "createroom", 10) == 0) //create a checker room
 		{
-			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0) //only let someone create a room in the lobby
 			{
-				if (CheckerRoom::createAndJoinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message))
+				if (CheckerRoom::createAndJoinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message)) //if creating and joining that room works
 				{
 					IPToRoom[packet->systemAddress.ToString()] = roomKeyToRoom[m->message].name; //remove the player from the lobby so they don't get public messages
 
@@ -221,9 +221,9 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 
 		if (strncmp(m->recipient, "joinroom", 8) == 0) //join a checker room
 		{
-			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0) //only let someone join a room from the lobby
 			{
-				if (CheckerRoom::joinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message, 1))
+				if (CheckerRoom::joinRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message, 1)) //if joining the room works
 				{
 					output += "System: a new user has joined the room";
 
@@ -235,7 +235,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 
 					sendMessageToRoom(&roomKeyToRoom[m->message], packet, peer, &outStream, true);
 
-					if (roomKeyToRoom[m->message].readyToPlay())
+					if (roomKeyToRoom[m->message].readyToPlay()) //if there are two players in the room, actions can be taken
 					{
 						Action action;
 						action.reset();
@@ -254,7 +254,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		if (strncmp(m->recipient, "leaveroom", 9) == 0) //join a checker room
 		{
 			std::string roomName = IPToRoom[packet->systemAddress.ToString()];
-			if (strncmp(roomName.c_str(), "lobby", 5) != 0)
+			if (strncmp(roomName.c_str(), "lobby", 5) != 0) //if the player is not in the lobby
 			{
 				bool didPlayerLeave = false;
 				int winner = 0;
@@ -294,9 +294,9 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 
 		if (strncmp(m->recipient, "spectate", 8) == 0)//spectate a checker room
 		{
-			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0) //only let the player run the spectate command if they are in the lobby
 			{
-				if (CheckerRoom::spectateRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message))
+				if (CheckerRoom::spectateRoom(&roomKeyToRoom, &IPToUserName, peer, packet, m->message)) //if spectating the room is successful
 				{
 					output += "System: a new user has joined the room";
 
@@ -311,13 +311,13 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			}
 		}
 
-		if (strncmp(m->recipient, "roomlist", 8) == 0)
+		if (strncmp(m->recipient, "roomlist", 8) == 0) //list rooms
 		{
-			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0)
+			if (strncmp(IPToRoom[packet->systemAddress.ToString()].c_str(), "lobby", 5) == 0) //only let the player run the roomlist from lobby
 			{
 				output += "Roomlist: ";
 				map<string, CheckerRoom>::iterator it;
-				for (it = roomKeyToRoom.begin(); it != roomKeyToRoom.end(); it++)
+				for (it = roomKeyToRoom.begin(); it != roomKeyToRoom.end(); it++) //run through the map of rooms
 				{
 					CheckerRoom room = it->second;
 					output += room.name;
@@ -336,7 +336,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 			output += m->sender;
 			output += " requested User List: ";
 			map<string, string>::iterator it;
-			for (it = IPToUserName.begin(); it != IPToUserName.end(); it++)
+			for (it = IPToUserName.begin(); it != IPToUserName.end(); it++) //run through the list of users to print out
 			{
 				if (it != IPToUserName.begin())
 				{
@@ -485,9 +485,9 @@ int main(int const argc, char const* const argv[])
 				if (isServer) {
 					printf("A client lost the connection.\n");
 					map <string, string>::iterator userNameToRemove;
-					userNameToRemove = IPToUserName.find(packet->systemAddress.ToString());
+					userNameToRemove = IPToUserName.find(packet->systemAddress.ToString()); //remove the user from the userlist
 					map <string, string>::iterator userNameToRemoveFromRoom;
-					userNameToRemoveFromRoom = IPToRoom.find(packet->systemAddress.ToString());
+					userNameToRemoveFromRoom = IPToRoom.find(packet->systemAddress.ToString()); //remove the user from the roomlist
 					ChatMessage leaveRoom;
 					std::string commandToSend = "leaveroom";
 					leaveRoom.setText(RECIPIENT, commandToSend);
@@ -499,7 +499,7 @@ int main(int const argc, char const* const argv[])
 						output += userNameToRemove->second;
 						IPToUserName.erase(userNameToRemove);
 					}
-					if (userNameToRemoveFromRoom != IPToRoom.end())
+					if (userNameToRemoveFromRoom != IPToRoom.end())//remove the user who disconnected from the server and roomlist
 					{
 						IPToRoom.erase(userNameToRemoveFromRoom);
 					}
@@ -507,6 +507,7 @@ int main(int const argc, char const* const argv[])
 					prepBitStream(&bsOut, t);
 
 					ChatMessage response;
+					//time stamping
 					float betterTime = (float)t;
 					float seconds = betterTime / 1000.0f;
 					float minutes = seconds / 60.0f;
@@ -528,7 +529,7 @@ int main(int const argc, char const* const argv[])
 				}
 				break;
 
-			case ID_USERNAME: //reuse and/or rebuild this to work with prompting a user to join the lobby and if they want to be a player or spectator
+			case ID_USERNAME: //sets the username of the person joining the lobby.
 			{
 				prepBitStream(&bsOut, RakNet::GetTime(), ID_USERNAME);
 				ChatMessage m = ChatMessage::parseMessage(packet);
@@ -611,9 +612,9 @@ int main(int const argc, char const* const argv[])
 			}
 			case ID_GAMEMESSAGE_STRUCT:
 			{
-				Action gAction = Action::parseAction(packet);
+				Action gAction = Action::parseAction(packet); //parse the action
 				int i = 0;
-				handleGameMessage(&gAction, packet);
+				handleGameMessage(&gAction, packet); //handle the game message
 				break;
 			}
 
