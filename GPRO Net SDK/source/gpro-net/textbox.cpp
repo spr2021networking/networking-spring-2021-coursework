@@ -51,6 +51,7 @@ void TextBox::draw(short xCursor, short yCursor)
 	}
 }
 
+//wrapper for gpro_consoleSetColor, assigns the text and background color.
 void TextBox::setColor(gpro_consoleColor text, gpro_consoleColor bg)
 {
 	gpro_consoleSetColor(text, bg);

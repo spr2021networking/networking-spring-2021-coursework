@@ -37,28 +37,39 @@ struct CheckersInstance
 
 	bool hasJumped = false; //used once a jump has occurred to prevent normal movement
 
+	//constructor, same as reset()
 	CheckersInstance();
 
-	//local implementation
+	/// <summary>
+	/// The equivalent of an update loop. Outputs the winner after each loop. Default is 0. Not used in multiplayer
+	/// </summary>
+	/// <param name="outWinner"></param>
 	void checkerLoop(int* outWinner);
 
-	//rendering
+	//rendering functions. drawCheckers() draws the entire system, each of the other functions are a step in the process
 	void drawCheckers();
-	void drawBoard();
-	void drawPieces();
-	void drawHighlight();
-	void drawSelection();
+	void drawBoard(); //step 1, background
+	void drawPieces(); //step 2, pieces
+	void drawHighlight(); //step 4, cursor (listed out of function order because they were written in a different order)
+	void drawSelection(); //step 3, selection
 
-	//selection processing
+	//selection processing (handle the enter key)
 	void handleSelection();
+	//update the highlight
 	void checkInput();
 
 	//utility functions, including processing input from other player
+
+	// Return whether a winner has been determined, and outputs the result to outWinner. "No winner" = 0
 	bool checkWin(int* outWinner);
+	//check whether any jumps are possible from the selected position
 	bool hasJump();
+	//try to king the highlighted/selected piece
 	bool tryKing();
+	//process action from server (from other player)
 	void processAction(Action* action);
 
+	//same as constructor, resets gamestate and Action
 	void reset();
 	
 };

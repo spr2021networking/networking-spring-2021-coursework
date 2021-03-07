@@ -167,7 +167,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 		{
 			if (strncmp(it->second.c_str(), m->recipient, it->second.length()) == 0)//check to see if the user exists
 			{
-				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false);
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::SystemAddress(it->first.c_str()), false); //send if it exists
 
 				string logOutput = "[" + std::to_string(hourVal) + ":" + std::to_string(minutesInt + 20) + "] " + m->sender;
 				logOutput += " (privately to " + it->second + "): " + m->message;
@@ -179,7 +179,7 @@ void handleMessage(ChatMessage* m, RakNet::Packet* packet)
 				response.setText(MESSAGE, logOutput);
 
 				outStream.Write(response);
-				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, adminAddress, false);
+				peer->Send(&outStream, HIGH_PRIORITY, RELIABLE_ORDERED, 0, adminAddress, false); //send to admin
 				sent = true;
 				break;
 			}

@@ -30,11 +30,12 @@
 
 #include "gpro-net/gpro-net.h"
 
+//String splitting utility. See gpro-net.h for more information
 char* chopStr(char* in, int length, char delim)
 {
 	for (int i = 0; i < length; i++)
 	{
-		if (in[i] == delim)
+		if (in[i] == delim)  //if the character at this index is the one we're looking for, set it to null (terminate) and return the next character after
 		{
 			in[i] = 0;
 			return in + i + 1;
@@ -43,6 +44,7 @@ char* chopStr(char* in, int length, char delim)
 	return in;
 }
 
+//configures bitstream so client and server can properly parse ChatMessages. See gpro-net.h for more information
 void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::MessageID mType)
 {
 	stream->Write((RakNet::MessageID)ID_TIMESTAMP);
@@ -50,7 +52,8 @@ void prepBitStream(RakNet::BitStream* stream, RakNet::Time time, RakNet::Message
 	stream->Write(mType);
 }
 
-Action Action::parseAction(RakNet::Packet* packet) //parse an action struct
+//parse an action struct from a prepped bitstream. (see above)
+Action Action::parseAction(RakNet::Packet* packet) 
 {
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
 	RakNet::MessageID mID;
@@ -65,12 +68,14 @@ Action Action::parseAction(RakNet::Packet* packet) //parse an action struct
 	return gAction;
 }
 
+//set room name, ensuring that the text is null-terminated.
 bool Action::setName(std::string name)
 {
 	return setName(name.c_str(), (int)name.length());
 }
 
-bool Action::setName(const char* name, int length) //set room name
+//set room name, ensuring that the text is null-terminated.
+bool Action::setName(const char* name, int length)
 {
 	if (length < 0 || length > 16)
 	{
@@ -81,13 +86,14 @@ bool Action::setName(const char* name, int length) //set room name
 	return true;
 }
 
+//reset most values (except readyToPlay)
 void Action::reset(bool resetName)
 {
 	if (resetName)
 	{
-		setName("lobby");
+		setName("lobby"); //set name to "lobby" if requested
 	}
-	playerIndex = winner = 0;
+	playerIndex = winner = 0; //clear out all other data
 	startX = startY = endX = endY = capturedX = capturedY = -1;
 	hasCaptured = endTurn = becomeKing = false;
 }

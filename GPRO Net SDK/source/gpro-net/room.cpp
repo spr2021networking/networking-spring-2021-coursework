@@ -15,6 +15,7 @@ bool RoomJoinInfo::setName(std::string name)
 	return setName(name.c_str(), (int)name.length());
 }
 
+//set name and null terminate
 bool RoomJoinInfo::setName(const char* name, int length)
 {
 	int maxLen = 16;
@@ -88,16 +89,7 @@ bool CheckerRoom::createAndJoinRoom(std::map<std::string, CheckerRoom>* roomStor
 	}
 }
 
-/// <summary>
-/// Try to join an existing room either as a player or spectator
-/// </summary>
-/// <param name="roomStorage"></param>
-/// <param name="nameLookup"></param>
-/// <param name="peer"></param>
-/// <param name="packet"></param>
-/// <param name="roomName"></param>
-/// <param name="defaultPlayerIndex"></param>
-/// <returns>Whether the room existed to be joined</returns>
+// Try to join an existing room either as a player or spectator. See room.h for more information
 bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std::map<std::string, std::string>* nameLookup,
 	RakNet::RakPeerInterface* peer, RakNet::Packet* packet, std::string roomName, int defaultPlayerIndex)
 {
@@ -115,7 +107,7 @@ bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 
 		switch (defaultPlayerIndex) //check default index and try to add player to room in the right index
 		{
-		case 1:
+		case 1: //if we're requesting player 1, we first try to enter player 1, if not we try for player 2. If both fail, we spectate
 			if (room->player1.name == "")
 			{
 				room->player1.address = address;
@@ -133,7 +125,7 @@ bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 				return spectateRoom(roomStorage, nameLookup, peer, packet, roomName);
 			}
 			break;
-		case 2:
+		case 2: //if we're requesting player 2, we first try to enter player 2, if not we try for player 1. If both fail, we spectate
 			if (room->player2.name == "")
 			{
 				room->player2.address = address;
@@ -151,7 +143,7 @@ bool CheckerRoom::joinRoom(std::map<std::string, CheckerRoom>* roomStorage, std:
 				return spectateRoom(roomStorage, nameLookup, peer, packet, roomName);
 			}
 			break;
-		case 0:
+		case 0: //auto spectate
 			return spectateRoom(roomStorage, nameLookup, peer, packet, roomName);
 		}
 	
@@ -318,6 +310,7 @@ bool CheckerRoom::leaveRoom(std::map<std::string, CheckerRoom>* roomStorage, std
 	return false;
 }
 
+//checks if the players are both present (names aren't empty)
 bool CheckerRoom::readyToPlay()
 {
 	return player2.name.length() > 0 && player1.name.length() > 0;

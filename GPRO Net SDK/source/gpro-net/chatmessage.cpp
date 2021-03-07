@@ -8,11 +8,7 @@
 * Contributions: chat messaging handling
 */
 
-/// <summary>
-/// Extract a ChatMessage from packet data, assuming it was formatted properly (using prepBitStream)
-/// </summary>
-/// <param name="packet"></param>
-/// <returns></returns>
+//Tries to retrieve a ChatMessage from a RakNet::Packet. See chatmessage.h for more information
 ChatMessage ChatMessage::parseMessage(RakNet::Packet* packet)
 {
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -29,6 +25,7 @@ ChatMessage ChatMessage::parseMessage(RakNet::Packet* packet)
 	return m;
 }
 
+//Quick check that the ChatMessage is not 'empty' (there's text to relay). Commands bypass this
 bool ChatMessage::hasMessage()
 {
 	return message[0] != 0;

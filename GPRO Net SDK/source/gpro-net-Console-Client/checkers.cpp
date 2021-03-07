@@ -7,11 +7,7 @@
 #include "gpro-net-Console-Client/checkers.h"
 #include <math.h>
 
-/// <summary>
-/// Return whether a winner has been determined, and outputs the result to outWinner. "No winner" = -1
-/// </summary>
-/// <param name="outWinner"></param>
-/// <returns></returns>
+// Return whether a winner has been determined, and outputs the result to outWinner. "No winner" = 0
 bool CheckersInstance::checkWin(int* outWinner)
 {
 	bool hasP1 = false, hasP2 = false;
@@ -26,7 +22,7 @@ bool CheckersInstance::checkWin(int* outWinner)
 				*outWinner = 0;
 				return false;
 			}
-			hasP1 |= (chk[i][j] & 3) == 1;
+			hasP1 |= (chk[i][j] & 3) == 1; //check if the player flag is 1 or 2, and OR it with hasP1 or hasP2
 			hasP2 |= (chk[i][j] & 3) == 2;
 		}
 	}
@@ -40,7 +36,7 @@ bool CheckersInstance::checkWin(int* outWinner)
 	}
 	else
 	{
-		*outWinner = 4; //this should never happen, it means the board is empty. Ghosts are probably involved.
+		*outWinner = 4; //this should never happen, it means the board is empty.
 	}
 	return true;
 }
@@ -54,34 +50,29 @@ CheckersInstance::CheckersInstance()
 	action.reset(true);
 }
 
-/// <summary>
-/// The equivalent of an update loop. Outputs the winner after each loop. Default is 0. Not used in multiplayer
-/// </summary>
-/// <param name="outWinner"></param>
+//local version of checkers. See gpro-net.h for more information
 void CheckersInstance::checkerLoop(int* outWinner)
 {
 	timer--;
 	if (dirty)
 	{
-		drawCheckers();
-		checkWin(outWinner);
+		drawCheckers(); //rendering
+		checkWin(outWinner); //check win state
 
 		gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
 		dirty = false;
 	}
-	checkInput();
+	checkInput(); //check input
 }
 
-/// <summary>
-/// Scan the arrow keys and the return key for any checkers-related input.
-/// </summary>
+//update highlight or selection
 void CheckersInstance::checkInput()
 {
-	timer--;
+	timer--; //used to slow down input so the player can actually select things with any degree of precision
 	//printf("%i\n", keyState >> 15);
 	if (timer <= 0)
 	{
-		if (GetKeyState(VK_UP) >> 15 != 0)
+		if (GetKeyState(VK_UP) >> 15 != 0) //check keypresses for up, down, left, right, and enter
 		{
 			highlightY = max(0, highlightY - 1);
 			dirty = true;
@@ -126,7 +117,7 @@ void CheckersInstance::drawCheckers()
 		drawSelection();
 		drawHighlight();
 	}
-	gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black);
+	gpro_consoleSetColor(gpro_consoleColor_white, gpro_consoleColor_black); //reset colors post-rendering
 	dirty = false;
 }
 
@@ -354,10 +345,11 @@ void CheckersInstance::reset()
 
 /// <summary>
 /// Handle pretty much all game logic. When enter is pressed, check whether a valid move has been performed and update the stored action
+/// Has a LOT of early exits
 /// </summary>
 void CheckersInstance::handleSelection()
 {
-	if (playerNum == 0) //spectators can't move
+	if (playerNum == 0) //spectators can't move, no action taken
 	{
 		return;
 	}
@@ -399,15 +391,13 @@ void CheckersInstance::handleSelection()
 		bool isSelectedKing = (selectedTile & 4) != 0;
 		int xOffset = selectionY % 2 == 1;
 
-		//conditions that apply regardless of player
-
-		//we're moving more than two spaces or not changing X at all
+		//we're moving more than two spaces or not changing X at all. Valid differences are 1 and 2
 		if (abs(selectionX - highlightX) > 2 || selectionX == highlightX)
 		{
 			return;
 		}
 
-		//we're moving more than two spaces or not changing Y at all
+		//we're moving more than two spaces or not changing Y at all. Valid differences are 1 and 2
 		if (abs(selectionY - highlightY) > 2 || selectionY == highlightY)
 		{
 			return;
@@ -527,7 +517,7 @@ void CheckersInstance::handleSelection()
 			chk[selectionY][selectionX / 2] = 0;
 			chk[highlightY][highlightX / 2] = tmp;
 
-			//set action
+			//set action data
 			action.playerIndex = currentPlayer;
 			action.hasCaptured = false;
 			action.endTurn = true;
@@ -549,7 +539,7 @@ void CheckersInstance::handleSelection()
 
 			selectionX = -1;
 			selectionY = -1;
-			currentPlayer = 3 - currentPlayer;
+			currentPlayer = 3 - currentPlayer; //end our turn
 		}
 	}
 	return;
