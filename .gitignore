@@ -93,4 +93,5 @@ Mkfile.old
 dkms.conf
 
 # Unity directories
-Unity/
+# Unity/
+**/Unity/**/Logs
