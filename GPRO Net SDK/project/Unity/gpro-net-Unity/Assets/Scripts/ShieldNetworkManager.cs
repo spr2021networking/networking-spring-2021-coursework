@@ -6,6 +6,7 @@ using UnityEngine.Networking;
 
 public class ShieldNetworkManager : MonoBehaviour
 {
+
     // Start is called before the first frame update
     void Start()
     {
@@ -17,13 +18,13 @@ public class ShieldNetworkManager : MonoBehaviour
 
         //define the type of connections. Channels are basically data streams, probably used for different types of info
         ConnectionConfig config = new ConnectionConfig();
-        int myReliableChannelId = config.AddChannel(QosType.ReliableSequenced);
-
+        int myReliableChannelId = config.AddChannel(QosType.Reliable);
+        int myUnreliableChannelID = config.AddChannel(QosType.Unreliable);
 
         HostTopology topology = new HostTopology(config, 10); //set to 1 for client, 10 for server. Use the ConnectionConfig from before
 
         //finish making the IP
-        int hostId = NetworkTransport.AddHost(topology, 7777);
+        int hostId = NetworkTransport.AddHost(topology, 0);
         Debug.Log(hostId);
         byte error;
         int connectionId = NetworkTransport.Connect(hostId, "192.168.1.42", 8888, 0, out error);
