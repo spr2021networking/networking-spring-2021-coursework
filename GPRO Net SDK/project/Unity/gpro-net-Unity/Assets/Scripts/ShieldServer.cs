@@ -38,7 +38,7 @@ public class ShieldServer : MonoBehaviour
         HostTopology topology = new HostTopology(config, 10); //set to 1 for client, 10 for server. Use the ConnectionConfig from before
 
         //finish making the IP
-        hostID = NetworkTransport.AddHost(topology, 0);
+        hostID = NetworkTransport.AddHost(topology, port);
 
         running = true;
         //end of adapted code
