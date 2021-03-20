@@ -95,3 +95,4 @@ dkms.conf
 # Unity directories
 # Unity/
 **/Unity/**/Logs
+**/Unity/**/Temp
