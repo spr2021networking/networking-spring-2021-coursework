@@ -4,6 +4,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
+/// <summary>
+/// Network Server for game. The start function is adapted from
+/// https://docs.unity3d.com/Manual/UNetUsingTransport.html (UNet docs)
+/// https://www.youtube.com/watch?v=qGkkaNkq8co (N3K EN video)
+/// 
+/// Authors: Scott Dagen, Ben Cooper
+/// </summary>
 public class ShieldServer : MonoBehaviour
 {
 
@@ -20,7 +27,7 @@ public class ShieldServer : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //some init stuff that I don't yet understand
+        //start of adapted code
         NetworkTransport.Init();
 
         //define the type of connections. Channels are basically data streams, probably used for different types of info
@@ -34,6 +41,7 @@ public class ShieldServer : MonoBehaviour
         hostID = NetworkTransport.AddHost(topology, 0);
 
         running = true;
+        //end of adapted code
     }
 
     // Update is called once per frame
