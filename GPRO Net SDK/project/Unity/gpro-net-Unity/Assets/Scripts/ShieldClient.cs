@@ -9,7 +9,7 @@ public class ShieldClient : MonoBehaviour
 {
     private const int MAX_CONNECTION = 100;
 
-    private int port = 5701;
+    private int port = 7777;
 
     private int hostID;
     private int webHostID;
