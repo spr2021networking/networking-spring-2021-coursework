@@ -47,7 +47,22 @@ public class ShieldServer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        Debug.Log("Update");
+        byte[] buffer = new byte[1024];
+        NetworkEventType packetType = NetworkTransport.Receive(out int hostID, out int connectionID, out int channelID, buffer, 1024, out int receivedSize, out byte error);
+        switch (packetType)
+        {
+            case NetworkEventType.Nothing: break;
+            case NetworkEventType.ConnectEvent:
+                Debug.Log("Hello!!");
+                break;
+            case NetworkEventType.DataEvent: break;
+            case NetworkEventType.DisconnectEvent: break;
+
+            case NetworkEventType.BroadcastEvent:
+
+                break;
+        }
     }
 }
 #pragma warning restore CS0618 // Type or member is obsolete

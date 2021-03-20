@@ -24,10 +24,12 @@ public class ShieldClient : MonoBehaviour
     private bool isConnected = false;
     private byte error;
 
+    private void Start()
+    {
+    }
 
     public void Connect()
     {
-
         NetworkTransport.Init();
         ConnectionConfig cc = new ConnectionConfig();
 
@@ -45,6 +47,10 @@ public class ShieldClient : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            Connect();
+        }
         if (!isConnected)
             return;
 

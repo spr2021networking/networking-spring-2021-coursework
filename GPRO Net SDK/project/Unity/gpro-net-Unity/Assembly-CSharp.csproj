@@ -60,6 +60,7 @@
     <Compile Include="Assets\Scripts\gproClientManager.cs" />
     <Compile Include="Assets\Scripts\Gameplay\PlayerScript.cs" />
     <Compile Include="Assets\Scripts\Plugins\gproClientPlugin.cs" />
+    <Compile Include="Assets\Scripts\ShieldClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
