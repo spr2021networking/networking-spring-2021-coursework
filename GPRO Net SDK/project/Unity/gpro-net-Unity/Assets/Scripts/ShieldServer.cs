@@ -44,6 +44,8 @@ public class ShieldServer : MonoBehaviour
         //end of adapted code
     }
 
+
+    List<int> connections = new List<int>();
     // Update is called once per frame
     void Update()
     {
@@ -54,13 +56,19 @@ public class ShieldServer : MonoBehaviour
         {
             case NetworkEventType.Nothing: break;
             case NetworkEventType.ConnectEvent:
-                Debug.Log("Hello!!");
+                connections.Add(connectionID);
                 break;
             case NetworkEventType.DataEvent: break;
             case NetworkEventType.DisconnectEvent: break;
 
             case NetworkEventType.BroadcastEvent:
-
+                for (int i = 0; i < connections.Count; i++)
+                {
+                    if (connections[i] != connectionID)
+                    {
+                        NetworkTransport.Send(hostID, connectionID, channelID, buffer, sizeof(char), out error);
+                    }
+                }
                 break;
         }
     }
