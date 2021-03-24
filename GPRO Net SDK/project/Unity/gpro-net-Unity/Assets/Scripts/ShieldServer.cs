@@ -58,18 +58,18 @@ public class ShieldServer : MonoBehaviour
             case NetworkEventType.ConnectEvent:
                 connections.Add(connectionID);
                 break;
-            case NetworkEventType.DataEvent: break;
-            case NetworkEventType.DisconnectEvent: break;
-
-            case NetworkEventType.BroadcastEvent:
+            case NetworkEventType.DataEvent:
                 for (int i = 0; i < connections.Count; i++)
                 {
                     if (connections[i] != connectionID)
                     {
-                        NetworkTransport.Send(hostID, connectionID, channelID, buffer, sizeof(char), out error);
+                        NetworkTransport.Send(hostID, connections[i], channelID, buffer, sizeof(char), out error);
                     }
                 }
                 break;
+            case NetworkEventType.DisconnectEvent: break;
+
+            case NetworkEventType.BroadcastEvent: break;
         }
     }
 }
