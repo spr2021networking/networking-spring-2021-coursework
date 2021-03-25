@@ -15,4 +15,9 @@ public class RemoteInput : MonoBehaviour
     {
         
     }
+
+    public void InterpretPosition(float x)
+    {
+        transform.position = new Vector3(x, transform.position.y, transform.position.z);
+    }
 }

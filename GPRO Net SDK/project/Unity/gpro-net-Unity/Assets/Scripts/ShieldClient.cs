@@ -69,12 +69,9 @@ public class ShieldClient : MonoBehaviour
         int bufferSize = 1024;
         int dataSize;
         byte error;
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            byte[] buffer = BitConverter.GetBytes('A');
+        byte[] buffer = BitConverter.GetBytes(localPlayer.transform.position.x);
 
-            NetworkTransport.Send(hostID, this.connectionID, reliableChannel, buffer, 1, out error);
-        }
+        NetworkTransport.Send(hostID, this.connectionID, reliableChannel, buffer, 1, out error);
         NetworkEventType recData = NetworkTransport.Receive(out hostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
         switch (recData)
         {
@@ -83,8 +80,9 @@ public class ShieldClient : MonoBehaviour
             case NetworkEventType.ConnectEvent:
                 break;
             case NetworkEventType.DataEvent:
-                string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
-                text.text = str;
+                remotePlayer.InterpretPosition(BitConverter.ToSingle(buffer, 0));
+                //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
+                //text.text = str;
                 break;
             case NetworkEventType.DisconnectEvent:
                 break;
