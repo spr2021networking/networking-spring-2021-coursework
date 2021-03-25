@@ -80,7 +80,7 @@ public class ShieldClient : MonoBehaviour
             case NetworkEventType.ConnectEvent:
                 break;
             case NetworkEventType.DataEvent:
-                remotePlayer.InterpretPosition(BitConverter.ToSingle(buffer, 0));
+                remotePlayer.InterpretPosition(BitConverter.ToSingle(recBuffer, 0));
                 //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
                 //text.text = str;
                 break;
