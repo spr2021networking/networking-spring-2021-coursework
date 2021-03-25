@@ -71,7 +71,7 @@ public class ShieldClient : MonoBehaviour
         byte error;
         byte[] buffer = BitConverter.GetBytes(localPlayer.transform.position.x);
 
-        NetworkTransport.Send(hostID, this.connectionID, reliableChannel, buffer, 1, out error);
+        NetworkTransport.Send(hostID, this.connectionID, reliableChannel, buffer, buffer.Length, out error);
         NetworkEventType recData = NetworkTransport.Receive(out hostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
         switch (recData)
         {

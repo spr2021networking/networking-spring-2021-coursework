@@ -98,3 +98,4 @@ dkms.conf
 **/Unity/**/Temp
 **/Unity/**/TextMesh Pro/Documentation
 *.csproj
+**/UserSettings
