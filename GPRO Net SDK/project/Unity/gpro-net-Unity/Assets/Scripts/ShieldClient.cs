@@ -29,6 +29,9 @@ public class ShieldClient : MonoBehaviour
 
     public TextMeshProUGUI text;
 
+    public RemoteInput remotePlayer;
+    public PlayerInput localPlayer;
+
     private void Start()
     {
     }
