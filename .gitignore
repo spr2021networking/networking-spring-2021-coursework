@@ -97,3 +97,4 @@ dkms.conf
 **/Unity/**/Logs
 **/Unity/**/Temp
 **/Unity/**/TextMesh Pro/Documentation
+*.csproj
