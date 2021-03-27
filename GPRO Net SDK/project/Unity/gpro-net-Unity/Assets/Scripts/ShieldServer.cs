@@ -1,6 +1,7 @@
 #pragma warning disable CS0618 // Type or member is obsolete
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -46,6 +47,8 @@ public class ShieldServer : MonoBehaviour
 
 
     List<int> connections = new List<int>();
+
+    private int positionLength = Encoding.UTF8.GetBytes(new Vector3(0, 0, 0).ToString("0.00")).Length;
     // Update is called once per frame
     void Update()
     {
@@ -63,7 +66,7 @@ public class ShieldServer : MonoBehaviour
                 {
                     if (connections[i] != connectionID)
                     {
-                        NetworkTransport.Send(hostID, connections[i], channelID, buffer, sizeof(char), out error);
+                        NetworkTransport.Send(hostID, connections[i], channelID, buffer, positionLength, out error);
                     }
                 }
                 break;
