@@ -16,8 +16,9 @@ public class RemoteInput : MonoBehaviour
         
     }
 
-    public void InterpretPosition(float x)
+    public void InterpretPosition(string pos)
     {
-        transform.position = new Vector3(x, transform.position.y, transform.position.z);
+        Debug.Log(pos);
+        //transform.position = new Vector3(x, transform.position.y, transform.position.z);
     }
 }

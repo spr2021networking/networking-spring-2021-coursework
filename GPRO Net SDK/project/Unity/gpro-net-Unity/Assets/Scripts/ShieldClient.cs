@@ -71,7 +71,7 @@ public class ShieldClient : MonoBehaviour
         byte error;
         byte[] buffer = BitConverter.GetBytes(localPlayer.transform.position.x);
 
-        NetworkTransport.Send(hostID, this.connectionID, reliableChannel, buffer, buffer.Length, out error);
+        SendPosition();
         NetworkEventType recData = NetworkTransport.Receive(out hostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
         switch (recData)
         {
@@ -80,13 +80,20 @@ public class ShieldClient : MonoBehaviour
             case NetworkEventType.ConnectEvent:
                 break;
             case NetworkEventType.DataEvent:
-                remotePlayer.InterpretPosition(BitConverter.ToSingle(recBuffer, 0));
+                remotePlayer.InterpretPosition(Encoding.Unicode.GetString(recBuffer));
                 //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
                 //text.text = str;
                 break;
             case NetworkEventType.DisconnectEvent:
                 break;
         }
+    }
+
+    private void SendPosition()
+    {
+        string pos = localPlayer.transform.position.ToString();
+        byte[] buffer = Encoding.Unicode.GetBytes(pos);
+        NetworkTransport.Send(hostID, connectionID, reliableChannel, buffer, buffer.Length, out error);
     }
 }
 
