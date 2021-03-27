@@ -80,7 +80,7 @@ public class ShieldClient : MonoBehaviour
             case NetworkEventType.ConnectEvent:
                 break;
             case NetworkEventType.DataEvent:
-                remotePlayer.InterpretPosition(Encoding.Unicode.GetString(recBuffer, 0, dataSize));
+                remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                 //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
                 //text.text = str;
                 break;
@@ -92,7 +92,7 @@ public class ShieldClient : MonoBehaviour
     private void SendPosition()
     {
         string pos = localPlayer.transform.position.ToString();
-        byte[] buffer = Encoding.Unicode.GetBytes(pos);
+        byte[] buffer = Encoding.UTF8.GetBytes(pos);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, buffer, buffer.Length, out error);
     }
 }
