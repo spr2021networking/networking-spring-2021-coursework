@@ -66,7 +66,7 @@ public class ShieldServer : MonoBehaviour
                 {
                     if (connections[i] != connectionID)
                     {
-                        NetworkTransport.Send(hostID, connections[i], channelID, buffer, positionLength, out error);
+                        NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
                     }
                 }
                 break;

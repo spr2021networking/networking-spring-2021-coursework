@@ -92,7 +92,6 @@ public class ShieldClient : MonoBehaviour
     private void SendPosition()
     {
         string pos = localPlayer.transform.position.ToString("0.00");
-        Debug.Log(pos);
         byte[] buffer = Encoding.UTF8.GetBytes(pos);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, buffer, buffer.Length, out error);
     }
