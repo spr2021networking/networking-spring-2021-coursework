@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -34,6 +35,14 @@ public class ShieldClient : MonoBehaviour
 
     private void Start()
     {
+        Vector3 vec = Vector3.up + 2 * Vector3.right;
+        byte[] arr = GetBytes(vec);
+        Vector3 recon = FromBytes<Vector3>(arr);
+
+        Matrix4x4 mat = new Matrix4x4();
+        mat.m32 = 100;
+        arr = GetBytes(mat);
+        Matrix4x4 mat2 = FromBytes<Matrix4x4>(arr);
     }
 
     public void Connect()
@@ -94,6 +103,33 @@ public class ShieldClient : MonoBehaviour
         string pos = localPlayer.transform.position.ToString("0.00");
         byte[] buffer = Encoding.UTF8.GetBytes(pos);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, buffer, buffer.Length, out error);
+    }
+
+
+    public byte[] GetBytes<T>(T data)
+    {
+        int size = Marshal.SizeOf(data);
+        byte[] arr = new byte[size];
+
+        IntPtr ptr = Marshal.AllocHGlobal(size);
+        Marshal.StructureToPtr(data, ptr, true);
+        Marshal.Copy(ptr, arr, 0, size);
+        Marshal.FreeHGlobal(ptr);
+        return arr;
+    }
+
+    public T FromBytes<T>(byte[] arr)
+    {
+        T val;
+        int size = Marshal.SizeOf(typeof(T));
+        IntPtr ptr = Marshal.AllocHGlobal(size);
+
+        Marshal.Copy(arr, 0, ptr, size);
+
+        val = (T)Marshal.PtrToStructure(ptr, typeof(T));
+        Marshal.FreeHGlobal(ptr);
+
+        return val;
     }
 }
 
