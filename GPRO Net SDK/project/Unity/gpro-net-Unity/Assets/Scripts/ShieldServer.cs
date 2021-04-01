@@ -62,13 +62,25 @@ public class ShieldServer : MonoBehaviour
                 connections.Add(connectionID);
                 break;
             case NetworkEventType.DataEvent:
-                for (int i = 0; i < connections.Count; i++)
+                switch (MessageOps.ExtractMessageID(ref buffer, receivedSize, out byte[] subArr))
                 {
-                    if (connections[i] != connectionID)
-                    {
-                        NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
-                    }
+                    case MessageOps.MessageType.CONNECT_REQUEST:
+
+                        ConnectResponseMessage mess = new ConnectResponseMessage();
+                        mess.playerIndex = connections.IndexOf(connectionID);
+
+                        byte[] messArr = MessageOps.GetBytes(mess);
+                        messArr = MessageOps.PackMessageID(messArr, MessageOps.MessageType.CONNECT_RESPONSE);
+                        NetworkTransport.Send(hostID, connectionID, channelID, messArr, receivedSize, out error);
+                        break;
                 }
+                //for (int i = 0; i < connections.Count; i++)
+                //{
+                //    if (connections[i] != connectionID)
+                //    {
+                //        NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                //    }
+                //}
                 break;
             case NetworkEventType.DisconnectEvent: break;
 

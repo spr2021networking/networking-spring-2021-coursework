@@ -30,19 +30,25 @@ public class ShieldClient : MonoBehaviour
 
     public TextMeshProUGUI text;
 
+    int playerIndex = -1;
     public RemoteInput remotePlayer;
     public PlayerInput localPlayer;
 
     private void Start()
     {
+        DontDestroyOnLoad(gameObject);
         Vector3 vec = Vector3.up + 2 * Vector3.right;
-        byte[] arr = GetBytes(vec);
-        Vector3 recon = FromBytes<Vector3>(arr);
+        byte[] arr = MessageOps.GetBytes(vec);
+        Vector3 recon = MessageOps.FromBytes<Vector3>(arr);
 
         Matrix4x4 mat = new Matrix4x4();
         mat.m32 = 100;
-        arr = GetBytes(mat);
-        Matrix4x4 mat2 = FromBytes<Matrix4x4>(arr);
+        arr = MessageOps.GetBytes(mat);
+        Matrix4x4 mat2 = MessageOps.FromBytes<Matrix4x4>(arr);
+
+        ConnectResponseMessage m = new ConnectResponseMessage();
+        arr = MessageOps.GetBytes(m);
+        ConnectResponseMessage m2 = MessageOps.FromBytes<ConnectResponseMessage>(arr);
     }
 
     public void Connect()
@@ -62,12 +68,25 @@ public class ShieldClient : MonoBehaviour
         isConnected = true;
     }
 
+    public void Connect(string ip)
+    {
+        NetworkTransport.Init();
+        ConnectionConfig cc = new ConnectionConfig();
+
+        reliableChannel = cc.AddChannel(QosType.Reliable);
+        unreliableChannel = cc.AddChannel(QosType.Unreliable);
+
+        HostTopology topo = new HostTopology(cc, MAX_CONNECTION);
+
+        hostID = NetworkTransport.AddHost(topo, 0);
+        connectionID = NetworkTransport.Connect(hostID, ip, port, 0, out error);
+
+        connectionTime = Time.time;
+        isConnected = true;
+    }
+
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            Connect();
-        }
         if (!isConnected)
             return;
 
@@ -78,18 +97,28 @@ public class ShieldClient : MonoBehaviour
         int bufferSize = 1024;
         int dataSize;
         byte error;
-        byte[] buffer = BitConverter.GetBytes(localPlayer.transform.position.x);
+        //byte[] buffer = BitConverter.GetBytes(localPlayer.transform.position.x);
 
-        SendPosition();
+        //SendPosition();
         NetworkEventType recData = NetworkTransport.Receive(out hostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
         switch (recData)
         {
             case NetworkEventType.Nothing:
                 break;
             case NetworkEventType.ConnectEvent:
+                NetworkTransport.Send(hostID, connectionID, reliableChannel, new byte[] { (byte)MessageOps.MessageType.CONNECT_REQUEST }, 1, out error);
                 break;
             case NetworkEventType.DataEvent:
-                remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
+                switch (MessageOps.ExtractMessageID(ref recBuffer, bufferSize, out byte[] subArr))
+                {
+                    case MessageOps.MessageType.CONNECT_RESPONSE:
+
+                        ConnectResponseMessage mess = MessageOps.FromBytes<ConnectResponseMessage>(subArr);
+                        playerIndex = mess.playerIndex;
+                        Debug.Log("Received Player Index!");
+                        break;
+                }
+                //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                 //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
                 //text.text = str;
                 break;
@@ -103,33 +132,6 @@ public class ShieldClient : MonoBehaviour
         string pos = localPlayer.transform.position.ToString("0.00");
         byte[] buffer = Encoding.UTF8.GetBytes(pos);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, buffer, buffer.Length, out error);
-    }
-
-
-    public byte[] GetBytes<T>(T data)
-    {
-        int size = Marshal.SizeOf(data);
-        byte[] arr = new byte[size];
-
-        IntPtr ptr = Marshal.AllocHGlobal(size);
-        Marshal.StructureToPtr(data, ptr, true);
-        Marshal.Copy(ptr, arr, 0, size);
-        Marshal.FreeHGlobal(ptr);
-        return arr;
-    }
-
-    public T FromBytes<T>(byte[] arr)
-    {
-        T val;
-        int size = Marshal.SizeOf(typeof(T));
-        IntPtr ptr = Marshal.AllocHGlobal(size);
-
-        Marshal.Copy(arr, 0, ptr, size);
-
-        val = (T)Marshal.PtrToStructure(ptr, typeof(T));
-        Marshal.FreeHGlobal(ptr);
-
-        return val;
     }
 }
 
