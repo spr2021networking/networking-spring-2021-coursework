@@ -81,7 +81,7 @@ public class ShieldServer : MonoBehaviour
                         //pack as message
                         sendBuffer = MessageOps.GetBytes(connMess);
                         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
-                        NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, receivedSize, out error);
+                        NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
 
                         //reformat the message so it can be sent to other players
                         connMess.self = false;
@@ -93,7 +93,21 @@ public class ShieldServer : MonoBehaviour
                         {
                             if (connections[i] != connectionID)
                             {
-                                NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, receivedSize, out error);
+                                NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
+                            }
+                        }
+
+                        if (connMess.playerIndex > 0) //this is a new joining player, they don't know who else is here
+                        {
+                            for (int i = 0; i < connections.Count; i++)
+                            {
+                                if (connections[i] != connectionID) //if this isn't our index
+                                {
+                                    connMess.playerIndex = i; //set the player index to i and send to the new player
+                                    sendBuffer = MessageOps.GetBytes(connMess);
+                                    sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+                                    NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
+                                }
                             }
                         }
                         break;
@@ -113,7 +127,7 @@ public class ShieldServer : MonoBehaviour
 
                 for (int i = 0; i < connections.Count; i++)
                 {
-                    NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, receivedSize, out error);
+                    NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
                 }
                 break;
 
