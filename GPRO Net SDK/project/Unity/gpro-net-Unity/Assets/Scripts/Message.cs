@@ -55,4 +55,6 @@ public struct ConnectResponseMessage
 {
     public MessageOps.MessageType MessageType => MessageOps.MessageType.CONNECT_RESPONSE;
     public int playerIndex;
+    public bool self;
+    public bool connecting;
 }

@@ -54,35 +54,68 @@ public class ShieldServer : MonoBehaviour
     {
         Debug.Log("Update");
         byte[] buffer = new byte[1024];
+        byte[] sendBuffer;
         NetworkEventType packetType = NetworkTransport.Receive(out int hostID, out int connectionID, out int channelID, buffer, 1024, out int receivedSize, out byte error);
         switch (packetType)
         {
             case NetworkEventType.Nothing: break;
             case NetworkEventType.ConnectEvent:
-                connections.Add(connectionID);
+                if (!connections.Contains(connectionID))
+                {
+                    connections.Add(connectionID);
+                }
                 break;
             case NetworkEventType.DataEvent:
                 switch (MessageOps.ExtractMessageID(ref buffer, receivedSize, out byte[] subArr))
                 {
                     case MessageOps.MessageType.CONNECT_REQUEST:
 
-                        ConnectResponseMessage mess = new ConnectResponseMessage();
-                        mess.playerIndex = connections.IndexOf(connectionID);
+                        //create a ConnectResponseMessage saying that we have connected.
+                        ConnectResponseMessage connMess = new ConnectResponseMessage
+                        {
+                            playerIndex = connections.IndexOf(connectionID),
+                            self = true,
+                            connecting = true
+                        };
+                        Debug.Log(connMess.self + " " + connMess.playerIndex + " " + connMess.connecting);
+                        //pack as message
+                        sendBuffer = MessageOps.GetBytes(connMess);
+                        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+                        NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, receivedSize, out error);
 
-                        byte[] messArr = MessageOps.GetBytes(mess);
-                        messArr = MessageOps.PackMessageID(messArr, MessageOps.MessageType.CONNECT_RESPONSE);
-                        NetworkTransport.Send(hostID, connectionID, channelID, messArr, receivedSize, out error);
+                        //reformat the message so it can be sent to other players
+                        connMess.self = false;
+                        sendBuffer = MessageOps.GetBytes(connMess);
+                        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+
+                        //send message to other players.
+                        for (int i = 0; i < connections.Count; i++)
+                        {
+                            if (connections[i] != connectionID)
+                            {
+                                NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, receivedSize, out error);
+                            }
+                        }
                         break;
                 }
-                //for (int i = 0; i < connections.Count; i++)
-                //{
-                //    if (connections[i] != connectionID)
-                //    {
-                //        NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
-                //    }
-                //}
                 break;
-            case NetworkEventType.DisconnectEvent: break;
+            case NetworkEventType.DisconnectEvent:
+
+                ConnectResponseMessage dcMess = new ConnectResponseMessage();
+                dcMess.playerIndex = connections.IndexOf(connectionID);
+                dcMess.self = false;
+                dcMess.connecting =  false;
+
+                connections.Remove(connectionID);
+
+                sendBuffer = MessageOps.GetBytes(dcMess);
+                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+
+                for (int i = 0; i < connections.Count; i++)
+                {
+                    NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, receivedSize, out error);
+                }
+                break;
 
             case NetworkEventType.BroadcastEvent: break;
         }

@@ -30,7 +30,11 @@ public class ShieldClient : MonoBehaviour
 
     public TextMeshProUGUI text;
 
-    int playerIndex = -1;
+    private int _playerIndex = -1;
+    public int PlayerIndex => _playerIndex;
+
+    public bool OtherPlayerConnected { get; internal set; }
+
     public RemoteInput remotePlayer;
     public PlayerInput localPlayer;
 
@@ -114,7 +118,21 @@ public class ShieldClient : MonoBehaviour
                     case MessageOps.MessageType.CONNECT_RESPONSE:
 
                         ConnectResponseMessage mess = MessageOps.FromBytes<ConnectResponseMessage>(subArr);
-                        playerIndex = mess.playerIndex;
+                        if (mess.self)
+                        {
+                            _playerIndex = mess.playerIndex;
+                        }
+                        else
+                        {
+                            OtherPlayerConnected = mess.connecting;
+                            if (!OtherPlayerConnected)
+                            {
+                                if (mess.playerIndex < _playerIndex)
+                                {
+                                    _playerIndex--;
+                                }
+                            }
+                        }
                         Debug.Log("Received Player Index!");
                         break;
                 }
