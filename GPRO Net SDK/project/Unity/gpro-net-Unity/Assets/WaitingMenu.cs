@@ -32,7 +32,7 @@ public class WaitingMenu : MonoBehaviour
         //need a DC check for us
     }
 
-    void LoadGame()
+    public void LoadGame()
     {
         SceneManager.LoadScene("Client");
     }
