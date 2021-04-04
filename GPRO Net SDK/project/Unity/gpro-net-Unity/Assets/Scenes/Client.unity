@@ -815,8 +815,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3aff534893bfb59448a78dd8ecc80037, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cube: {fileID: 0}
-  sphere: {fileID: 0}
+  cube: {fileID: 805094817}
+  sphere: {fileID: 1149243268}
 --- !u!4 &1680512756
 Transform:
   m_ObjectHideFlags: 0
