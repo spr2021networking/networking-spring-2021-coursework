@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class WaitingMenu : MonoBehaviour
@@ -29,5 +30,10 @@ public class WaitingMenu : MonoBehaviour
         confirmButton.interactable = client.OtherPlayerConnected;
 
         //need a DC check for us
+    }
+
+    void LoadGame()
+    {
+        SceneManager.LoadScene("Client");
     }
 }

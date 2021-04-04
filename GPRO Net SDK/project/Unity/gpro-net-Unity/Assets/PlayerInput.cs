@@ -5,8 +5,7 @@ using UnityEngine;
 public class PlayerInput : MonoBehaviour
 {
     Rigidbody m_Rigidbody;
-    [SerializeField]
-    float movementSpeed = 2.5f;
+    float movementSpeed = 5.0f;
 
     float newXPos;
     // Start is called before the first frame update
