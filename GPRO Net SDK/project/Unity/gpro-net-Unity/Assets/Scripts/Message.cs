@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 public static class MessageOps
 {
     public enum MessageType
     {
-        CONNECT_REQUEST, CONNECT_RESPONSE, PLAYER_ID
+        CONNECT_REQUEST, CONNECT_RESPONSE, PLAYER_ID, PLAYER_STATE
     }
 
     //inspired by https://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
@@ -57,4 +58,18 @@ public struct ConnectResponseMessage
     public int playerIndex;
     public bool self;
     public bool connecting;
+}
+
+public struct PlayerStateMessage
+{
+    public MessageOps.MessageType MessageType => MessageOps.MessageType.CONNECT_RESPONSE;
+    public int playerIndex;
+    public Vector3 position;
+    public Vector3 velocity;
+    public float rotation;
+    public float angVel;
+
+    public float targetShieldRot;
+
+    public DateTime time;
 }

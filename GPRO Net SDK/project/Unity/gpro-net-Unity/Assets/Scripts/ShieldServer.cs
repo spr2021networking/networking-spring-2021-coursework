@@ -111,6 +111,17 @@ public class ShieldServer : MonoBehaviour
                             }
                         }
                         break;
+
+                    case MessageOps.MessageType.PLAYER_STATE:
+                        for (int i = 0; i < connections.Count; i++)
+                        {
+                            if (connections[i] != connectionID)
+                            {
+                                NetworkTransport.Send(hostID, connectionID, channelID, buffer, receivedSize, out error);
+                            }
+                        }
+                        break;
+
                 }
                 break;
             case NetworkEventType.DisconnectEvent:

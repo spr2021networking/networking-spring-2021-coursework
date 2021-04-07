@@ -41,18 +41,6 @@ public class ShieldClient : MonoBehaviour
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
-        Vector3 vec = Vector3.up + 2 * Vector3.right;
-        byte[] arr = MessageOps.GetBytes(vec);
-        Vector3 recon = MessageOps.FromBytes<Vector3>(arr);
-
-        Matrix4x4 mat = new Matrix4x4();
-        mat.m32 = 100;
-        arr = MessageOps.GetBytes(mat);
-        Matrix4x4 mat2 = MessageOps.FromBytes<Matrix4x4>(arr);
-
-        ConnectResponseMessage m = new ConnectResponseMessage();
-        arr = MessageOps.GetBytes(m);
-        ConnectResponseMessage m2 = MessageOps.FromBytes<ConnectResponseMessage>(arr);
     }
 
     public void Connect()
@@ -102,7 +90,6 @@ public class ShieldClient : MonoBehaviour
         int dataSize;
         byte error;
         //byte[] buffer = BitConverter.GetBytes(localPlayer.transform.position.x);
-
         //SendPosition();
         NetworkEventType recData = NetworkTransport.Receive(out hostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
         switch (recData)
@@ -135,6 +122,13 @@ public class ShieldClient : MonoBehaviour
                         }
                         Debug.Log("Received Player Index!");
                         break;
+                    case MessageOps.MessageType.PLAYER_STATE:
+                        PlayerStateMessage playerState = MessageOps.FromBytes<PlayerStateMessage>(subArr);
+                        if (playerState.playerIndex != PlayerIndex)
+                        {
+                            remotePlayer.ProcessInput(playerState);
+                        }
+                        break;
                 }
                 //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                 //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
@@ -143,13 +137,28 @@ public class ShieldClient : MonoBehaviour
             case NetworkEventType.DisconnectEvent:
                 break;
         }
+
+        if (localPlayer && PlayerIndex >= 0)
+        {
+            SendPosition();
+        }
     }
 
     private void SendPosition()
     {
-        string pos = localPlayer.transform.position.ToString("0.00");
-        byte[] buffer = Encoding.UTF8.GetBytes(pos);
-        NetworkTransport.Send(hostID, connectionID, reliableChannel, buffer, buffer.Length, out error);
+        PlayerStateMessage mess = new PlayerStateMessage
+        {
+            playerIndex = PlayerIndex,
+            position = localPlayer.transform.position,
+            velocity = localPlayer.rb.velocity,
+            rotation = localPlayer.transform.rotation.y,
+            angVel = localPlayer.rb.angularVelocity.y,
+            targetShieldRot = 0,
+            time = DateTime.UtcNow
+        };
+        byte[] sendBuffer = MessageOps.GetBytes(mess);
+        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.PLAYER_STATE);
+        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
     }
 }
 

@@ -5,10 +5,11 @@ using UnityEngine;
 
 public class RemoteInput : MonoBehaviour
 {
+    Rigidbody _rb;
     // Start is called before the first frame update
     void Start()
     {
-        
+        _rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -36,5 +37,16 @@ public class RemoteInput : MonoBehaviour
         }
 
         //transform.position = new Vector3(x, transform.position.y, transform.position.z);
+    }
+
+    internal void ProcessInput(PlayerStateMessage playerState)
+    {
+        transform.position = playerState.position;
+        _rb.velocity = playerState.velocity;
+        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, playerState.rotation, transform.rotation.eulerAngles.z);
+        _rb.angularVelocity = new Vector3(_rb.angularVelocity.x, playerState.angVel, _rb.angularVelocity.z);
+
+        //need shield rotation
+        //time shenanigans?
     }
 }
