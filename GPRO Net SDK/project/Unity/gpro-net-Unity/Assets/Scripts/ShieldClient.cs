@@ -154,7 +154,7 @@ public class ShieldClient : MonoBehaviour
             rotation = localPlayer.transform.rotation.y,
             angVel = localPlayer.rb.angularVelocity.y,
             targetShieldRot = 0,
-            time = DateTime.UtcNow
+            ticks = DateTime.UtcNow.Ticks
         };
         byte[] sendBuffer = MessageOps.GetBytes(mess);
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.PLAYER_STATE);

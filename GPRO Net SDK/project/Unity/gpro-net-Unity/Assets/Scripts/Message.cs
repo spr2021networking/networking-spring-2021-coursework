@@ -71,5 +71,5 @@ public struct PlayerStateMessage
 
     public float targetShieldRot;
 
-    public DateTime time;
+    public long ticks;
 }
