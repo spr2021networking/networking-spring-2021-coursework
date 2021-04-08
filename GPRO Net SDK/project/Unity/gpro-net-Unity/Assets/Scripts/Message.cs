@@ -62,7 +62,7 @@ public struct ConnectResponseMessage
 
 public struct PlayerStateMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.CONNECT_RESPONSE;
+    public MessageOps.MessageType MessageType => MessageOps.MessageType.PLAYER_STATE;
     public int playerIndex;
     public Vector3 position;
     public Vector3 velocity;
@@ -80,8 +80,6 @@ public struct BulletStateMessage
     public int playerIndex;
     public Vector3 position;
     public Vector3 velocity;
-    public float rotation;
-    public float angVel;
 
     public long ticks;
 }

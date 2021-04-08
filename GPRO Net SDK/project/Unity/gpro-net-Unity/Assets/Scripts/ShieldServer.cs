@@ -55,95 +55,108 @@ public class ShieldServer : MonoBehaviour
         Debug.Log("Update");
         byte[] buffer = new byte[1024];
         byte[] sendBuffer;
-        NetworkEventType packetType = NetworkTransport.Receive(out int hostID, out int connectionID, out int channelID, buffer, 1024, out int receivedSize, out byte error);
-        switch (packetType)
+        for (int j = 0; j < 20; j++)
         {
-            case NetworkEventType.Nothing: break;
-            case NetworkEventType.ConnectEvent:
-                if (!connections.Contains(connectionID))
-                {
-                    connections.Add(connectionID);
-                }
-                break;
-            case NetworkEventType.DataEvent:
-                switch (MessageOps.ExtractMessageID(ref buffer, receivedSize, out byte[] subArr))
-                {
-                    case MessageOps.MessageType.CONNECT_REQUEST:
+            NetworkEventType packetType = NetworkTransport.Receive(out int hostID, out int connectionID, out int channelID, buffer, 1024, out int receivedSize, out byte error);
+            switch (packetType)
+            {
+                case NetworkEventType.Nothing: break;
+                case NetworkEventType.ConnectEvent:
+                    if (!connections.Contains(connectionID))
+                    {
+                        connections.Add(connectionID);
+                    }
+                    break;
+                case NetworkEventType.DataEvent:
+                    switch (MessageOps.ExtractMessageID(ref buffer, receivedSize, out byte[] subArr))
+                    {
+                        case MessageOps.MessageType.CONNECT_REQUEST:
 
-                        //create a ConnectResponseMessage saying that we have connected.
-                        ConnectResponseMessage connMess = new ConnectResponseMessage
-                        {
-                            playerIndex = connections.IndexOf(connectionID),
-                            self = true,
-                            connecting = true
-                        };
-                        Debug.Log(connMess.self + " " + connMess.playerIndex + " " + connMess.connecting);
-                        //pack as message
-                        sendBuffer = MessageOps.GetBytes(connMess);
-                        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
-                        NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
-
-                        //reformat the message so it can be sent to other players
-                        connMess.self = false;
-                        sendBuffer = MessageOps.GetBytes(connMess);
-                        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
-
-                        //send message to other players.
-                        for (int i = 0; i < connections.Count; i++)
-                        {
-                            if (connections[i] != connectionID)
+                            //create a ConnectResponseMessage saying that we have connected.
+                            ConnectResponseMessage connMess = new ConnectResponseMessage
                             {
-                                NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
-                            }
-                        }
+                                playerIndex = connections.IndexOf(connectionID),
+                                self = true,
+                                connecting = true
+                            };
+                            Debug.Log(connMess.self + " " + connMess.playerIndex + " " + connMess.connecting);
+                            //pack as message
+                            sendBuffer = MessageOps.GetBytes(connMess);
+                            sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+                            NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
 
-                        if (connMess.playerIndex > 0) //this is a new joining player, they don't know who else is here
-                        {
+                            //reformat the message so it can be sent to other players
+                            connMess.self = false;
+                            sendBuffer = MessageOps.GetBytes(connMess);
+                            sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+
+                            //send message to other players.
                             for (int i = 0; i < connections.Count; i++)
                             {
-                                if (connections[i] != connectionID) //if this isn't our index
+                                if (connections[i] != connectionID)
                                 {
-                                    connMess.playerIndex = i; //set the player index to i and send to the new player
-                                    sendBuffer = MessageOps.GetBytes(connMess);
-                                    sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
-                                    NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
+                                    NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
                                 }
                             }
-                        }
-                        break;
 
-                    case MessageOps.MessageType.PLAYER_STATE:
-                        for (int i = 0; i < connections.Count; i++)
-                        {
-                            if (connections[i] != connectionID)
+                            if (connMess.playerIndex > 0) //this is a new joining player, they don't know who else is here
                             {
-                                NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                                for (int i = 0; i < connections.Count; i++)
+                                {
+                                    if (connections[i] != connectionID) //if this isn't our index
+                                    {
+                                        connMess.playerIndex = i; //set the player index to i and send to the new player
+                                        sendBuffer = MessageOps.GetBytes(connMess);
+                                        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+                                        NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
+                                    }
+                                }
                             }
-                        }
-                        break;
+                            break;
 
-                }
-                break;
-            case NetworkEventType.DisconnectEvent:
+                        case MessageOps.MessageType.PLAYER_STATE:
+                            for (int i = 0; i < connections.Count; i++)
+                            {
+                                if (connections[i] != connectionID)
+                                {
+                                    NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                                }
+                            }
+                            break;
+                        case MessageOps.MessageType.BULLET_STATE:
+                            for (int i = 0; i < connections.Count; i++)
+                            {
+                                if (connections[i] != connectionID)
+                                {
+                                    NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                                }
+                            }
+                            break;
 
-                ConnectResponseMessage dcMess = new ConnectResponseMessage();
-                dcMess.playerIndex = connections.IndexOf(connectionID);
-                dcMess.self = false;
-                dcMess.connecting =  false;
+                    }
+                    break;
+                case NetworkEventType.DisconnectEvent:
 
-                connections.Remove(connectionID);
+                    ConnectResponseMessage dcMess = new ConnectResponseMessage();
+                    dcMess.playerIndex = connections.IndexOf(connectionID);
+                    dcMess.self = false;
+                    dcMess.connecting = false;
 
-                sendBuffer = MessageOps.GetBytes(dcMess);
-                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+                    connections.Remove(connectionID);
 
-                for (int i = 0; i < connections.Count; i++)
-                {
-                    NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
-                }
-                break;
+                    sendBuffer = MessageOps.GetBytes(dcMess);
+                    sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
 
-            case NetworkEventType.BroadcastEvent: break;
+                    for (int i = 0; i < connections.Count; i++)
+                    {
+                        NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
+                    }
+                    break;
+
+                case NetworkEventType.BroadcastEvent: break;
+            }
         }
+       
     }
 }
 #pragma warning restore CS0618 // Type or member is obsolete

@@ -91,59 +91,63 @@ public class ShieldClient : MonoBehaviour
         byte error;
         //byte[] buffer = BitConverter.GetBytes(localPlayer.transform.position.x);
         //SendPosition();
-        NetworkEventType recData = NetworkTransport.Receive(out hostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
-        switch (recData)
+        for (int i = 0; i < 20; i++)
         {
-            case NetworkEventType.Nothing:
-                break;
-            case NetworkEventType.ConnectEvent:
-                NetworkTransport.Send(hostID, connectionID, reliableChannel, new byte[] { (byte)MessageOps.MessageType.CONNECT_REQUEST }, 1, out error);
-                break;
-            case NetworkEventType.DataEvent:
-                switch (MessageOps.ExtractMessageID(ref recBuffer, bufferSize, out byte[] subArr))
-                {
-                    case MessageOps.MessageType.CONNECT_RESPONSE:
+            NetworkEventType recData = NetworkTransport.Receive(out hostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
+            switch (recData)
+            {
+                case NetworkEventType.Nothing:
+                    break;
+                case NetworkEventType.ConnectEvent:
+                    NetworkTransport.Send(hostID, connectionID, reliableChannel, new byte[] { (byte)MessageOps.MessageType.CONNECT_REQUEST }, 1, out error);
+                    break;
+                case NetworkEventType.DataEvent:
+                    switch (MessageOps.ExtractMessageID(ref recBuffer, bufferSize, out byte[] subArr))
+                    {
+                        case MessageOps.MessageType.CONNECT_RESPONSE:
 
-                        ConnectResponseMessage mess = MessageOps.FromBytes<ConnectResponseMessage>(subArr);
-                        if (mess.self)
-                        {
-                            _playerIndex = mess.playerIndex;
-                        }
-                        else
-                        {
-                            OtherPlayerConnected = mess.connecting;
-                            if (!OtherPlayerConnected)
+                            ConnectResponseMessage mess = MessageOps.FromBytes<ConnectResponseMessage>(subArr);
+                            if (mess.self)
                             {
-                                if (mess.playerIndex < _playerIndex)
+                                _playerIndex = mess.playerIndex;
+                            }
+                            else
+                            {
+                                OtherPlayerConnected = mess.connecting;
+                                if (!OtherPlayerConnected)
                                 {
-                                    _playerIndex--;
+                                    if (mess.playerIndex < _playerIndex)
+                                    {
+                                        _playerIndex--;
+                                    }
                                 }
                             }
-                        }
-                        Debug.Log("Received Player Index!");
-                        break;
-                    case MessageOps.MessageType.PLAYER_STATE:
-                        PlayerStateMessage playerState = MessageOps.FromBytes<PlayerStateMessage>(subArr);
-                        if (playerState.playerIndex != PlayerIndex)
-                        {
-                            remotePlayer.ProcessInput(playerState);
-                        }
-                        break;
-                    case MessageOps.MessageType.BULLET_STATE:
-                        BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
-                        if (bulletState.playerIndex != PlayerIndex)
-                        {
-                            remotePlayer.ProccessBullet(bulletState);
-                        }
-                        break;
-                }
-                //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
-                //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
-                //text.text = str;
-                break;
-            case NetworkEventType.DisconnectEvent:
-                break;
+                            Debug.Log("Received Player Index!");
+                            break;
+                        case MessageOps.MessageType.PLAYER_STATE:
+                            PlayerStateMessage playerState = MessageOps.FromBytes<PlayerStateMessage>(subArr);
+                            if (playerState.playerIndex != PlayerIndex)
+                            {
+                                remotePlayer.ProcessInput(playerState);
+                            }
+                            break;
+                        case MessageOps.MessageType.BULLET_STATE:
+                            BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
+                            if (bulletState.playerIndex != PlayerIndex)
+                            {
+                                remotePlayer.ProccessBullet(bulletState);
+                            }
+                            break;
+                    }
+                    //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
+                    //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
+                    //text.text = str;
+                    break;
+                case NetworkEventType.DisconnectEvent:
+                    break;
+            }
         }
+        
 
         if (localPlayer && PlayerIndex >= 0)
         {
@@ -168,15 +172,13 @@ public class ShieldClient : MonoBehaviour
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
     }
 
-    public void createBullet(Vector3 bPosition, Vector3 bVelocity, Quaternion bRotation, Vector3 bAngVel)
+    public void createBullet(Vector3 bPosition, Vector3 bVelocity)
     {
         BulletStateMessage message = new BulletStateMessage
         {
             playerIndex = PlayerIndex,
             position = bPosition,
             velocity = bVelocity,
-            rotation = bRotation.y,
-            angVel = bAngVel.y,
             ticks = DateTime.UtcNow.Ticks
         };
         byte[] sendBuffer = MessageOps.GetBytes(message);
