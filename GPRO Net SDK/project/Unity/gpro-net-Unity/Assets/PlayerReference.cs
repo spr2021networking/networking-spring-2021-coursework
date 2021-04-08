@@ -14,6 +14,8 @@ public class PlayerReference : MonoBehaviour
 
         s.localPlayer = (isPlayerZero ? cube : sphere).AddComponent<PlayerInput>();
         s.remotePlayer = (!isPlayerZero ? cube : sphere).AddComponent<RemoteInput>();
+        s.remotePlayer.client = s;
+        s.localPlayer.client = s;
     }
 
     // Update is called once per frame

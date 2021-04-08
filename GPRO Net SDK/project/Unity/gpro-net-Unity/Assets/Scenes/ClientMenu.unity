@@ -155,6 +155,7 @@ MonoBehaviour:
   text: {fileID: 0}
   remotePlayer: {fileID: 0}
   localPlayer: {fileID: 0}
+  bullet: {fileID: 8824745959098266758, guid: 1d9b9c8ee1efbf34aabcce78b025c988, type: 3}
 --- !u!4 &22414772
 Transform:
   m_ObjectHideFlags: 0

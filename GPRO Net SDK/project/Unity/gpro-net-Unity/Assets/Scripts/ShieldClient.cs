@@ -145,7 +145,7 @@ public class ShieldClient : MonoBehaviour
             playerIndex = PlayerIndex,
             position = localPlayer.transform.position,
             velocity = localPlayer.rb.velocity,
-            rotation = localPlayer.transform.rotation.y,
+            rotation = localPlayer.transform.rotation.eulerAngles.y,
             angVel = localPlayer.rb.angularVelocity.y,
             targetShieldRot = 0,
             ticks = DateTime.UtcNow.Ticks
@@ -156,16 +156,16 @@ public class ShieldClient : MonoBehaviour
         Debug.Log("P" + error);
     }
 
-    public void createBullet(Vector3 bPosition, Vector3 bVelocity)
+    public void CreateBullet(Vector3 bPosition, Vector3 bVelocity)
     {
-        BulletStateMessage message = new BulletStateMessage
+        BulletStateMessage mess = new BulletStateMessage
         {
             playerIndex = PlayerIndex,
             position = bPosition,
             velocity = bVelocity,
             ticks = DateTime.UtcNow.Ticks
         };
-        byte[] sendBuffer = MessageOps.GetBytes(message);
+        byte[] sendBuffer = MessageOps.GetBytes(mess);
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_STATE);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
         Debug.Log("B" + error);

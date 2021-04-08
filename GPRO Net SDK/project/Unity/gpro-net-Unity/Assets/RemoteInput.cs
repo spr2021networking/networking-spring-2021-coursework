@@ -6,6 +6,7 @@ using UnityEngine;
 public class RemoteInput : MonoBehaviour
 {
     Rigidbody _rb;
+    public ShieldClient client;
     // Start is called before the first frame update
     void Start()
     {
@@ -52,7 +53,7 @@ public class RemoteInput : MonoBehaviour
 
     internal void ProccessBullet(BulletStateMessage bulletState)
     {
-        GameObject bulletToSpawn = Instantiate(GetComponent<ShieldClient>().bullet, bulletState.position, Quaternion.identity);
+        GameObject bulletToSpawn = Instantiate(client.bullet, bulletState.position, Quaternion.identity);
         bulletToSpawn.GetComponent<Rigidbody>().velocity = bulletState.velocity;
     }
 }

@@ -13,15 +13,12 @@ public class PlayerInput : MonoBehaviour
     float bulletSpeed = 7.5f;
     float newXPos;
     bool canShoot;
-
-    GameObject client;
+    public ShieldClient client;
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         canShoot = true;
-        client = GameObject.Find("Client");
-        bullet = client.GetComponent<ShieldClient>().bullet;
     }
 
     // Update is called once per frame
@@ -86,10 +83,10 @@ public class PlayerInput : MonoBehaviour
 
         if (shouldSpawn)
         {
-            GameObject spawnedBullet = Instantiate(bullet, transform.position + spawnOffset * 3, Quaternion.identity);
+            GameObject spawnedBullet = Instantiate(client.bullet, transform.position + spawnOffset * 3, Quaternion.identity);
             Vector3 vel = spawnOffset * bulletSpeed;
             spawnedBullet.GetComponent<Rigidbody>().velocity = vel;
-            client.GetComponent<ShieldClient>().createBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            client.CreateBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
         }
 
 
