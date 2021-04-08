@@ -6,7 +6,7 @@ public static class MessageOps
 {
     public enum MessageType
     {
-        CONNECT_REQUEST, CONNECT_RESPONSE, PLAYER_ID, PLAYER_STATE
+        CONNECT_REQUEST, CONNECT_RESPONSE, PLAYER_ID, PLAYER_STATE, BULLET_STATE
     }
 
     //inspired by https://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
@@ -70,6 +70,18 @@ public struct PlayerStateMessage
     public float angVel;
 
     public float targetShieldRot;
+
+    public long ticks;
+}
+
+public struct BulletStateMessage
+{
+    public MessageOps.MessageType MessageType => MessageOps.MessageType.BULLET_STATE;
+    public int playerIndex;
+    public Vector3 position;
+    public Vector3 velocity;
+    public float rotation;
+    public float angVel;
 
     public long ticks;
 }

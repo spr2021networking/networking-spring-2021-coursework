@@ -37,7 +37,7 @@ public class ShieldClient : MonoBehaviour
 
     public RemoteInput remotePlayer;
     public PlayerInput localPlayer;
-
+    public GameObject bullet;
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
@@ -54,7 +54,7 @@ public class ShieldClient : MonoBehaviour
         HostTopology topo = new HostTopology(cc, MAX_CONNECTION);
 
         hostID = NetworkTransport.AddHost(topo, 0);
-        connectionID = NetworkTransport.Connect(hostID, "172.16.4.196", port, 0, out error);
+        connectionID = NetworkTransport.Connect(hostID, "172.16.4.204", port, 0, out error);
 
         connectionTime = Time.time;
         isConnected = true;
@@ -129,6 +129,13 @@ public class ShieldClient : MonoBehaviour
                             remotePlayer.ProcessInput(playerState);
                         }
                         break;
+                    case MessageOps.MessageType.BULLET_STATE:
+                        BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
+                        if (bulletState.playerIndex != PlayerIndex)
+                        {
+                            remotePlayer.ProccessBullet(bulletState);
+                        }
+                        break;
                 }
                 //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                 //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
@@ -158,6 +165,22 @@ public class ShieldClient : MonoBehaviour
         };
         byte[] sendBuffer = MessageOps.GetBytes(mess);
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.PLAYER_STATE);
+        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+    }
+
+    public void createBullet(Vector3 bPosition, Vector3 bVelocity, Quaternion bRotation, Vector3 bAngVel)
+    {
+        BulletStateMessage message = new BulletStateMessage
+        {
+            playerIndex = PlayerIndex,
+            position = bPosition,
+            velocity = bVelocity,
+            rotation = bRotation.y,
+            angVel = bAngVel.y,
+            ticks = DateTime.UtcNow.Ticks
+        };
+        byte[] sendBuffer = MessageOps.GetBytes(message);
+        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_STATE);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
     }
 }

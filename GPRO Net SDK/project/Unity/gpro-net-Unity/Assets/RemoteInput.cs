@@ -49,4 +49,10 @@ public class RemoteInput : MonoBehaviour
         //need shield rotation
         //time shenanigans?
     }
+
+    internal void ProccessBullet(BulletStateMessage bulletState)
+    {
+        GameObject bulletToSpawn = Instantiate(GetComponent<ShieldClient>().bullet, bulletState.position, Quaternion.identity);
+        bulletToSpawn.GetComponent<Rigidbody>().velocity = bulletState.velocity;
+    }
 }
