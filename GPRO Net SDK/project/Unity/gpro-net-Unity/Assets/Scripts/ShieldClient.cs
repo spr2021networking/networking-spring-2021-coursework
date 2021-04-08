@@ -43,23 +43,6 @@ public class ShieldClient : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void Connect()
-    {
-        NetworkTransport.Init();
-        ConnectionConfig cc = new ConnectionConfig();
-
-        reliableChannel = cc.AddChannel(QosType.Reliable);
-        unreliableChannel = cc.AddChannel(QosType.Unreliable);
-
-        HostTopology topo = new HostTopology(cc, MAX_CONNECTION);
-
-        hostID = NetworkTransport.AddHost(topo, 0);
-        connectionID = NetworkTransport.Connect(hostID, "172.16.4.204", port, 0, out error);
-
-        connectionTime = Time.time;
-        isConnected = true;
-    }
-
     public void Connect(string ip)
     {
         NetworkTransport.Init();
@@ -126,14 +109,14 @@ public class ShieldClient : MonoBehaviour
                             break;
                         case MessageOps.MessageType.PLAYER_STATE:
                             PlayerStateMessage playerState = MessageOps.FromBytes<PlayerStateMessage>(subArr);
-                            if (playerState.playerIndex != PlayerIndex)
+                            if (remotePlayer != null && playerState.playerIndex != PlayerIndex)
                             {
                                 remotePlayer.ProcessInput(playerState);
                             }
                             break;
                         case MessageOps.MessageType.BULLET_STATE:
                             BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
-                            if (bulletState.playerIndex != PlayerIndex)
+                            if (remotePlayer != null && bulletState.playerIndex != PlayerIndex)
                             {
                                 remotePlayer.ProccessBullet(bulletState);
                             }
@@ -170,6 +153,7 @@ public class ShieldClient : MonoBehaviour
         byte[] sendBuffer = MessageOps.GetBytes(mess);
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.PLAYER_STATE);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+        Debug.Log("P" + error);
     }
 
     public void createBullet(Vector3 bPosition, Vector3 bVelocity)
@@ -184,6 +168,7 @@ public class ShieldClient : MonoBehaviour
         byte[] sendBuffer = MessageOps.GetBytes(message);
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_STATE);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+        Debug.Log("B" + error);
     }
 }
 

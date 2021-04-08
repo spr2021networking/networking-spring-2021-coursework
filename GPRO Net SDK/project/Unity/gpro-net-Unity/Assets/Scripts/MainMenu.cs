@@ -15,7 +15,7 @@ public class MainMenu : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        ip.text = "172.16.4.204";
+        ip.text = "172.16.4.196";
     }
 
     // Update is called once per frame

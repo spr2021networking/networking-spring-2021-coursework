@@ -33,66 +33,65 @@ public class PlayerInput : MonoBehaviour
         rb.MovePosition(transform.position + m_Input * Time.deltaTime * movementSpeed);
         if (Input.GetKey(KeyCode.Space) && canShoot)
         {
-            fireBullet();
+            FireBullet();
             canShoot = false;
             StartCoroutine("FireLimit");
         }
     }
 
-    void fireBullet()
+    void FireBullet()
     {
+        Vector3 spawnOffset = Vector3.zero;
+        bool shouldSpawn = false;
         if (Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.W))
         {
-            GameObject spawnedBullet = Instantiate(bullet, transform.position + (Vector3.left * 3), Quaternion.identity);
-            spawnedBullet.GetComponent<Rigidbody>().velocity = new Vector3(-bulletSpeed, 0, 0);
-            client.GetComponent<ShieldClient>().createBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            shouldSpawn = true;
+            spawnOffset = Vector3.left;
         }
         else if (Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
         {
-            GameObject spawnedBullet = Instantiate(bullet, transform.position + (Vector3.back * 3), Quaternion.identity);
-            spawnedBullet.GetComponent<Rigidbody>().velocity = new Vector3(0, 0, -bulletSpeed);
-            client.GetComponent<ShieldClient>().createBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            shouldSpawn = true;
+            spawnOffset = Vector3.back;
         }
         else if (Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.W))
         {
-            GameObject spawnedBullet = Instantiate(bullet, transform.position + (Vector3.right * 3), Quaternion.identity);
-            spawnedBullet.GetComponent<Rigidbody>().velocity = new Vector3(bulletSpeed, 0, 0);
-            client.GetComponent<ShieldClient>().createBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            shouldSpawn = true;
+            spawnOffset = Vector3.right;
         }
         else if (Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
         {
-            GameObject spawnedBullet = Instantiate(bullet, transform.position + (Vector3.forward * 3), Quaternion.identity);
-            spawnedBullet.GetComponent<Rigidbody>().velocity = new Vector3(0, 0, bulletSpeed);
-            client.GetComponent<ShieldClient>().createBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            shouldSpawn = true;
+            spawnOffset = Vector3.forward;
         }
         else if (Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.S))
         {
-            GameObject spawnedBullet = Instantiate(bullet, transform.position + ((Vector3.left + Vector3.back) * 3), Quaternion.identity);
-            spawnedBullet.GetComponent<Rigidbody>().velocity = new Vector3(-bulletSpeed, 0, -bulletSpeed);
-            client.GetComponent<ShieldClient>().createBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            shouldSpawn = true;
+            spawnOffset = Vector3.left + Vector3.back;
         }
         else if (Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.W))
         {
-            GameObject spawnedBullet = Instantiate(bullet, transform.position + ((Vector3.left + Vector3.forward) * 3), Quaternion.identity);
-            spawnedBullet.GetComponent<Rigidbody>().velocity = new Vector3(-bulletSpeed, 0, bulletSpeed);
-            client.GetComponent<ShieldClient>().createBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            shouldSpawn = true;
+            spawnOffset = Vector3.left + Vector3.forward;
         }
         else if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.S))
         {
-            GameObject spawnedBullet = Instantiate(bullet, transform.position + ((Vector3.right + Vector3.back) * 3), Quaternion.identity);
-            spawnedBullet.GetComponent<Rigidbody>().velocity = new Vector3(bulletSpeed, 0, -bulletSpeed);
-            client.GetComponent<ShieldClient>().createBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            shouldSpawn = true;
+            spawnOffset = Vector3.right + Vector3.back;
         }
         else if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.W))
         {
-            GameObject spawnedBullet = Instantiate(bullet, transform.position + ((Vector3.right + Vector3.forward) * 3), Quaternion.identity);
-            spawnedBullet.GetComponent<Rigidbody>().velocity = new Vector3(bulletSpeed, 0, bulletSpeed);
-            //if (TryGetComponent(out ShieldClient shieldClient))
-            //{
+            shouldSpawn = true;
+            spawnOffset = Vector3.right + Vector3.forward;
+        }
 
-            //}
+        if (shouldSpawn)
+        {
+            GameObject spawnedBullet = Instantiate(bullet, transform.position + spawnOffset * 3, Quaternion.identity);
+            Vector3 vel = spawnOffset * bulletSpeed;
+            spawnedBullet.GetComponent<Rigidbody>().velocity = vel;
             client.GetComponent<ShieldClient>().createBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
         }
+
 
     }
 

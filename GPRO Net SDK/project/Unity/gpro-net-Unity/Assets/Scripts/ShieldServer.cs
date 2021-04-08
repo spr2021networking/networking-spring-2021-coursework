@@ -132,7 +132,6 @@ public class ShieldServer : MonoBehaviour
                                 }
                             }
                             break;
-
                     }
                     break;
                 case NetworkEventType.DisconnectEvent:
