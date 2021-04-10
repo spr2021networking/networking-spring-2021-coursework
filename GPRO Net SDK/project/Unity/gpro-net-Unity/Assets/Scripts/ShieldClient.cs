@@ -38,6 +38,10 @@ public class ShieldClient : MonoBehaviour
     public RemoteInput remotePlayer;
     public PlayerInput localPlayer;
     public GameObject bullet;
+
+    public Dictionary<int, BulletScript> bulletTracker = new Dictionary<int, BulletScript>();
+    public static int bulletIDTracker = 0;
+
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
@@ -114,12 +118,21 @@ public class ShieldClient : MonoBehaviour
                                 remotePlayer.ProcessInput(playerState);
                             }
                             break;
+                        case MessageOps.MessageType.BULLET_CREATE:
+                            BulletCreateMessage bulletCreation = MessageOps.FromBytes<BulletCreateMessage>(subArr);
+                            if (remotePlayer != null && bulletCreation.playerIndex != PlayerIndex)
+                            {
+                                GameObject bulletToSpawn = Instantiate(bullet, bulletCreation.position, Quaternion.identity);
+                                bulletToSpawn.GetComponent<Rigidbody>().velocity = bulletCreation.velocity;
+                                bulletTracker.Add(bulletIDTracker, bulletToSpawn.GetComponent<BulletScript>());
+                                bulletToSpawn.GetComponent<BulletScript>().id = bulletIDTracker;
+                                bulletToSpawn.GetComponent<BulletScript>().bulletPlayerIndex = bulletCreation.playerIndex;
+                                bulletIDTracker++;
+                                //remotePlayer.ProccessBullet(bulletState);
+                            }
+                            break;
                         case MessageOps.MessageType.BULLET_STATE:
                             BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
-                            if (remotePlayer != null && bulletState.playerIndex != PlayerIndex)
-                            {
-                                remotePlayer.ProccessBullet(bulletState);
-                            }
                             break;
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
@@ -158,7 +171,7 @@ public class ShieldClient : MonoBehaviour
 
     public void CreateBullet(Vector3 bPosition, Vector3 bVelocity)
     {
-        BulletStateMessage mess = new BulletStateMessage
+        BulletCreateMessage mess = new BulletCreateMessage
         {
             playerIndex = PlayerIndex,
             position = bPosition,
@@ -166,7 +179,7 @@ public class ShieldClient : MonoBehaviour
             ticks = DateTime.UtcNow.Ticks
         };
         byte[] sendBuffer = MessageOps.GetBytes(mess);
-        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_STATE);
+        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_CREATE);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
         Debug.Log("B" + error);
     }

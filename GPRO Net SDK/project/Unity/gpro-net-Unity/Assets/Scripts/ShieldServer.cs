@@ -123,7 +123,7 @@ public class ShieldServer : MonoBehaviour
                                 }
                             }
                             break;
-                        case MessageOps.MessageType.BULLET_STATE:
+                        case MessageOps.MessageType.BULLET_CREATE:
                             for (int i = 0; i < connections.Count; i++)
                             {
                                 if (connections[i] != connectionID)

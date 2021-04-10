@@ -7,6 +7,9 @@ public class BulletScript : MonoBehaviour
     Rigidbody m_Rigidbody;
     [SerializeField]
     float timeUntilDeath = 5.0f;
+    public int id;
+    public int bulletPlayerIndex;
+    public bool hasHitShield;
     // Start is called before the first frame update
     void Start()
     {

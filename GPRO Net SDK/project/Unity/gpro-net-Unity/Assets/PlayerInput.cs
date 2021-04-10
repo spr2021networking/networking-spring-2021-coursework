@@ -87,6 +87,10 @@ public class PlayerInput : MonoBehaviour
             Vector3 vel = spawnOffset * bulletSpeed;
             spawnedBullet.GetComponent<Rigidbody>().velocity = vel;
             client.CreateBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            client.bulletTracker.Add(ShieldClient.bulletIDTracker, spawnedBullet.GetComponent<BulletScript>());
+            spawnedBullet.GetComponent<BulletScript>().id = ShieldClient.bulletIDTracker;
+            spawnedBullet.GetComponent<BulletScript>().bulletPlayerIndex = client.PlayerIndex;
+            ShieldClient.bulletIDTracker++;
         }
 
 
