@@ -40,11 +40,13 @@ public class ShieldClient : MonoBehaviour
     public GameObject bullet;
 
     public Dictionary<int, BulletScript> bulletTracker = new Dictionary<int, BulletScript>();
-    public static int bulletIDTracker = 0;
+
+    public List<GameObject> remoteBullets;
 
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
+
     }
 
     public void Connect(string ip)
@@ -124,16 +126,22 @@ public class ShieldClient : MonoBehaviour
                             {
                                 GameObject bulletToSpawn = Instantiate(bullet, bulletCreation.position, Quaternion.identity);
                                 bulletToSpawn.GetComponent<Rigidbody>().velocity = bulletCreation.velocity;
-                                bulletTracker.Add(bulletIDTracker, bulletToSpawn.GetComponent<BulletScript>());
-                                bulletToSpawn.GetComponent<BulletScript>().id = bulletIDTracker;
+                                bulletTracker.Add(bulletToSpawn.GetComponent<BulletScript>().id, bulletToSpawn.GetComponent<BulletScript>());
                                 bulletToSpawn.GetComponent<BulletScript>().bulletPlayerIndex = bulletCreation.playerIndex;
-                                bulletIDTracker++;
+                                remoteBullets.Add(bulletToSpawn);
                                 //remotePlayer.ProccessBullet(bulletState);
                             }
                             break;
                         case MessageOps.MessageType.BULLET_STATE:
                             BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
                             break;
+                        case MessageOps.MessageType.BULLET_DESTROY:
+                            BulletDestroyMessage bulletDestroy = MessageOps.FromBytes<BulletDestroyMessage>(subArr);
+                            //call playerInput to destroy the bullet if need be
+                            //find the bullet with the correct ID and remove it from the list
+                            localPlayer.DestroyBullet();
+                            break;
+
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                     //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);

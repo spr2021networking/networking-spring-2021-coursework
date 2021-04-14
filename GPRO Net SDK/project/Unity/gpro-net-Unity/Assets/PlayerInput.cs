@@ -14,6 +14,8 @@ public class PlayerInput : MonoBehaviour
     float newXPos;
     bool canShoot;
     public ShieldClient client;
+    public int bulletsActive = 0;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -81,16 +83,19 @@ public class PlayerInput : MonoBehaviour
             spawnOffset = Vector3.right + Vector3.forward;
         }
 
-        if (shouldSpawn)
+        if (shouldSpawn && bulletsActive < 5)
         {
+            bulletsActive++;
+            
             GameObject spawnedBullet = Instantiate(client.bullet, transform.position + spawnOffset * 3, Quaternion.identity);
+            BulletScript bulletScript = spawnedBullet.GetComponent<BulletScript>();
             Vector3 vel = spawnOffset * bulletSpeed;
             spawnedBullet.GetComponent<Rigidbody>().velocity = vel;
             client.CreateBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
-            client.bulletTracker.Add(ShieldClient.bulletIDTracker, spawnedBullet.GetComponent<BulletScript>());
-            spawnedBullet.GetComponent<BulletScript>().id = ShieldClient.bulletIDTracker;
-            spawnedBullet.GetComponent<BulletScript>().bulletPlayerIndex = client.PlayerIndex;
-            ShieldClient.bulletIDTracker++;
+            bulletScript.id = bulletsActive;
+            bulletScript.owner = this;
+            client.bulletTracker.Add(bulletScript.id, bulletScript);
+            bulletScript.bulletPlayerIndex = client.PlayerIndex;
         }
 
 
@@ -100,5 +105,11 @@ public class PlayerInput : MonoBehaviour
     {
         yield return new WaitForSeconds(fireDelay);
         canShoot = true;
+    }
+
+    public void DestroyBullet()
+    {
+        //here we send a message to the server to destroy the bullet
+        bulletsActive--;
     }
 }

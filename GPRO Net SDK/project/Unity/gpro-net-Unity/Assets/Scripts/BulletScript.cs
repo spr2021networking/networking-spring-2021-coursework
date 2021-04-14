@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BulletScript : MonoBehaviour
 {
+    public PlayerInput owner;
     Rigidbody m_Rigidbody;
     [SerializeField]
     float timeUntilDeath = 5.0f;
@@ -22,6 +23,7 @@ public class BulletScript : MonoBehaviour
         timeUntilDeath = timeUntilDeath - Time.deltaTime;
         if (timeUntilDeath <= 0.0f)
         {
+
             Destroy(gameObject);
         }
     }
