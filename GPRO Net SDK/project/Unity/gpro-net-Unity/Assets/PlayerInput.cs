@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,9 +12,12 @@ public class PlayerInput : MonoBehaviour
     float fireDelay = 1.0f;
     [SerializeField]
     float bulletSpeed = 7.5f;
-    float newXPos;
     bool canShoot;
     public ShieldClient client;
+
+    public GameObject shieldHolder;
+    private float _targetRot = 0, _lastRot = 0;
+    public static float CLOSE_ENOUGH = 0.1f;
     // Start is called before the first frame update
     void Start()
     {
@@ -34,6 +38,70 @@ public class PlayerInput : MonoBehaviour
             canShoot = false;
             StartCoroutine("FireLimit");
         }
+
+        RotateShield();
+    }
+
+    private void RotateShield()
+    {
+        bool right = Input.GetKey(KeyCode.RightArrow);
+        bool left = Input.GetKey(KeyCode.LeftArrow);
+        bool up = Input.GetKey(KeyCode.UpArrow);
+        bool down = Input.GetKey(KeyCode.DownArrow);
+
+        float y = shieldHolder.transform.eulerAngles.y;
+        float targetAngle = 0;
+        float ccwDist = 0, cwDist = 0;
+        if (right && !left && !up && !down)
+        {
+            targetAngle = 0;
+        }
+        else if (right && !left && up && !down)
+        {
+            targetAngle = 45;
+        }
+        else if (!right && !left && up && !down)
+        {
+            targetAngle = 90;
+        }
+        else if (!right && left && up && !down)
+        {
+            targetAngle = 135;
+        }
+        else if (!right && left && !up && !down)
+        {
+            targetAngle = 180;
+        }
+        else if (!right && left && !up && down)
+        {
+            targetAngle = 225;
+        }
+        else if (!right && !left && !up && down)
+        {
+            targetAngle = 270;
+        }
+        else if (right && !left && !up && down)
+        {
+            targetAngle = 315;
+        }
+
+        if (Mathf.Abs(y - targetAngle) <= CLOSE_ENOUGH)
+        {
+            return;
+        }
+
+        if (y == (targetAngle + 180 % 360))
+        {
+            y += 1;
+        }
+
+        ccwDist = 360 + targetAngle - y;
+        cwDist = y - targetAngle;
+
+        int sign = ccwDist > cwDist ? -1 : 1;
+
+        y += Time.fixedDeltaTime * sign * 20;
+        shieldHolder.transform.rotation = Quaternion.Euler(0, y, 0);
     }
 
     void FireBullet()
