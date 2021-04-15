@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BulletScript : MonoBehaviour
 {
-    public PlayerInput owner;
+    public PlayerInput owner; //only set in playerInput, if null then remote bullet
     Rigidbody m_Rigidbody;
     [SerializeField]
     float timeUntilDeath = 5.0f;
@@ -21,9 +21,10 @@ public class BulletScript : MonoBehaviour
     void FixedUpdate()
     {
         timeUntilDeath = timeUntilDeath - Time.deltaTime;
-        if (timeUntilDeath <= 0.0f)
+        if (timeUntilDeath <= 0.0f && owner != null)
         {
-
+            owner.client.localBullets.Remove(gameObject);
+            owner.DestroyBullet();
             Destroy(gameObject);
         }
     }

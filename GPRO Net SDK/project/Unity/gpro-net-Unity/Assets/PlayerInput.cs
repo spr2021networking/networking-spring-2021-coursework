@@ -94,8 +94,8 @@ public class PlayerInput : MonoBehaviour
             client.CreateBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
             bulletScript.id = bulletsActive;
             bulletScript.owner = this;
-            client.bulletTracker.Add(bulletScript.id, bulletScript);
             bulletScript.bulletPlayerIndex = client.PlayerIndex;
+            client.localBullets.Add(spawnedBullet);
         }
 
 
@@ -110,6 +110,16 @@ public class PlayerInput : MonoBehaviour
     public void DestroyBullet()
     {
         //here we send a message to the server to destroy the bullet
+        client.DestroyBulletEvent(bulletsActive -1);
         bulletsActive--;
+    }
+
+    public void DestroyRemoteBullet(GameObject bulletToDestroy)
+    {
+        if (bulletToDestroy != null)
+        {
+            client.remoteBullets.Remove(bulletToDestroy);
+            Destroy(bulletToDestroy);
+        }
     }
 }

@@ -97,5 +97,6 @@ public struct BulletStateMessage
 public struct BulletDestroyMessage
 {
     public MessageOps.MessageType MessageType => MessageOps.MessageType.BULLET_DESTROY;
+    public int bulletIndex;
     public long ticks;
 }

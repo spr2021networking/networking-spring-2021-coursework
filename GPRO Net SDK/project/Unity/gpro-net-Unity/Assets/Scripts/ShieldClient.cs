@@ -39,9 +39,8 @@ public class ShieldClient : MonoBehaviour
     public PlayerInput localPlayer;
     public GameObject bullet;
 
-    public Dictionary<int, BulletScript> bulletTracker = new Dictionary<int, BulletScript>();
-
     public List<GameObject> remoteBullets;
+    public List<GameObject> localBullets;
 
     private void Start()
     {
@@ -126,7 +125,6 @@ public class ShieldClient : MonoBehaviour
                             {
                                 GameObject bulletToSpawn = Instantiate(bullet, bulletCreation.position, Quaternion.identity);
                                 bulletToSpawn.GetComponent<Rigidbody>().velocity = bulletCreation.velocity;
-                                bulletTracker.Add(bulletToSpawn.GetComponent<BulletScript>().id, bulletToSpawn.GetComponent<BulletScript>());
                                 bulletToSpawn.GetComponent<BulletScript>().bulletPlayerIndex = bulletCreation.playerIndex;
                                 remoteBullets.Add(bulletToSpawn);
                                 //remotePlayer.ProccessBullet(bulletState);
@@ -134,12 +132,19 @@ public class ShieldClient : MonoBehaviour
                             break;
                         case MessageOps.MessageType.BULLET_STATE:
                             BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
+                            foreach (GameObject remoteBullet in remoteBullets)
+                            {
+                                remoteBullet.transform.position = bulletState.position;
+                                remoteBullet.GetComponent<Rigidbody>().velocity = bulletState.velocity;
+                            }
                             break;
                         case MessageOps.MessageType.BULLET_DESTROY:
                             BulletDestroyMessage bulletDestroy = MessageOps.FromBytes<BulletDestroyMessage>(subArr);
                             //call playerInput to destroy the bullet if need be
                             //find the bullet with the correct ID and remove it from the list
-                            localPlayer.DestroyBullet();
+                            localPlayer.DestroyRemoteBullet(remoteBullets[bulletDestroy.bulletIndex]);
+                            //remoteBullets.Remove(remoteBullets[bulletDestroy.bulletIndex]);
+
                             break;
 
                     }
@@ -156,6 +161,7 @@ public class ShieldClient : MonoBehaviour
         if (localPlayer && PlayerIndex >= 0)
         {
             SendPosition();
+            UpdateLocalBullets();
         }
     }
 
@@ -190,6 +196,37 @@ public class ShieldClient : MonoBehaviour
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_CREATE);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
         Debug.Log("B" + error);
+    }
+
+    public void DestroyBulletEvent(int bulletIndex)
+    {
+        BulletDestroyMessage mess = new BulletDestroyMessage
+        {
+            bulletIndex = bulletIndex,
+            ticks = DateTime.UtcNow.Ticks
+        };
+        byte[] sendBuffer = MessageOps.GetBytes(mess);
+        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_DESTROY);
+        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+        Debug.Log("D" + error);
+    }
+
+    public void UpdateLocalBullets()
+    {
+        foreach (GameObject localBullet in localBullets)
+        {
+            BulletStateMessage mess = new BulletStateMessage
+            {
+                bulletIndex = localBullet.GetComponent<BulletScript>().id,
+                position = localBullet.transform.position,
+                velocity = localBullet.GetComponent<Rigidbody>().velocity,
+                ticks = DateTime.UtcNow.Ticks
+            };
+            byte[] sendBuffer = MessageOps.GetBytes(mess);
+            sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_STATE);
+            NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+            Debug.Log("L" + error);
+        }
     }
 }
 
