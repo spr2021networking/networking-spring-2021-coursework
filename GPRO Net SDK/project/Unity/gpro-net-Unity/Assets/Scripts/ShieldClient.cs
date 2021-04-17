@@ -39,12 +39,14 @@ public class ShieldClient : MonoBehaviour
     public PlayerInput localPlayer;
     public GameObject bullet;
 
-    public List<GameObject> remoteBullets;
-    public List<GameObject> localBullets;
+    public GameObject[] remoteBullets;
+    public GameObject[] localBullets;
 
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
+        remoteBullets = new GameObject[5];
+        localBullets = new GameObject[5];
 
     }
 
@@ -128,7 +130,7 @@ public class ShieldClient : MonoBehaviour
                                 BulletScript bulletInstance = bulletToSpawn.GetComponent<BulletScript>();
                                 bulletInstance.bulletPlayerIndex = bulletCreation.playerIndex;
                                 bulletInstance.id = bulletCreation.id;
-                                remoteBullets.Add(bulletToSpawn);
+                                remoteBullets[bulletInstance.id] = bulletToSpawn;
                                 //remotePlayer.ProccessBullet(bulletState);
                             }
                             break;
