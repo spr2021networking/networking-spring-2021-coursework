@@ -69,6 +69,7 @@ public struct PlayerStateMessage
     public float rotation;
     public float angVel;
 
+    public float currentShieldRot;
     public float targetShieldRot;
 
     public long ticks;

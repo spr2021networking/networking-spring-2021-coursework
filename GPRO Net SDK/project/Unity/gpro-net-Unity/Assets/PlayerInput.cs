@@ -16,7 +16,7 @@ public class PlayerInput : MonoBehaviour
     public ShieldClient client;
 
     public GameObject shieldHolder;
-    private float _targetRot = 0;
+    public float targetRot = 0;
     public float rotSpeed = 180.0f;
     private float CloseEnough => 2 * rotSpeed / 60f;
     // Start is called before the first frame update
@@ -55,49 +55,49 @@ public class PlayerInput : MonoBehaviour
 
         if (right && !left && !up && !down)
         {
-            _targetRot = 0;
+            targetRot = 0;
         }
         else if (right && !left && !up && down)
         {
-            _targetRot = 45;
+            targetRot = 45;
         }
         else if (!right && !left && !up && down)
         {
-            _targetRot = 90;
+            targetRot = 90;
         }
         else if (!right && left && !up && down)
         {
-            _targetRot = 135;
+            targetRot = 135;
         }
         else if (!right && left && !up && !down)
         {
-            _targetRot = 180;
+            targetRot = 180;
         }
         else if (!right && left && up && !down)
         {
-            _targetRot = 225;
+            targetRot = 225;
         }
         else if (!right && !left && up && !down)
         {
-            _targetRot = 270;
+            targetRot = 270;
         }
         else if (right && !left && up && !down)
         {
-            _targetRot = 315;
+            targetRot = 315;
         }
 
-        if (Mathf.Abs(y - _targetRot) <= CloseEnough)
+        if (Mathf.Abs(y - targetRot) <= CloseEnough)
         {
-            shieldHolder.transform.rotation = Quaternion.Euler(0, _targetRot, 0);
+            shieldHolder.transform.rotation = Quaternion.Euler(0, targetRot, 0);
             return;
         }
 
-        if (y == (_targetRot + 180 % 360)) //floats almost never equal exact integers, so y should NEVER hit this. It's a good safeguard though
+        if (y == (targetRot + 180 % 360)) //floats almost never equal exact integers, so y should NEVER hit this. It's a good safeguard though
         {
             y += 1;
         }
-        float diff = Mathf.Abs(y - _targetRot);
-        int sign = y > _targetRot == diff > 180.0f ? 1 : -1;
+        float diff = Mathf.Abs(y - targetRot);
+        int sign = y > targetRot == diff > 180.0f ? 1 : -1;
         y += Time.fixedDeltaTime * sign * rotSpeed;
         shieldHolder.transform.rotation = Quaternion.Euler(0, y, 0);
     }

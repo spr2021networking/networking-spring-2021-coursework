@@ -160,7 +160,8 @@ public class ShieldClient : MonoBehaviour
             velocity = localPlayer.rb.velocity,
             rotation = localPlayer.transform.rotation.eulerAngles.y,
             angVel = localPlayer.rb.angularVelocity.y,
-            targetShieldRot = 0,
+            currentShieldRot = localPlayer.shieldHolder.transform.eulerAngles.y,
+            targetShieldRot = localPlayer.targetRot,
             ticks = DateTime.UtcNow.Ticks
         };
         byte[] sendBuffer = MessageOps.GetBytes(mess);

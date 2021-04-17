@@ -7,10 +7,17 @@ public class RemoteInput : MonoBehaviour
 {
     Rigidbody _rb;
     public ShieldClient client;
+
+    public GameObject shieldHolder;
+    public float targetRot = 0;
+    public float rotSpeed = 180.0f;
+
+    private float CloseEnough => 2 * rotSpeed / 60f;
     // Start is called before the first frame update
     void Start()
     {
         _rb = GetComponent<Rigidbody>();
+        shieldHolder = transform.GetChild(0).gameObject;
     }
 
     // Update is called once per frame
@@ -19,26 +26,30 @@ public class RemoteInput : MonoBehaviour
         
     }
 
-    public void InterpretPosition(string pos)
+    private void FixedUpdate()
     {
-        Vector3 vec = Vector3.zero;
-        //(0.00, 0.00, 0.00)
-        //0123456789ABCDEFGH
-        if (pos.Length >= 18)
+        RemoteRotateShield(); //used between packets
+    }
+    private void RemoteRotateShield()
+    {
+        float y = shieldHolder.transform.eulerAngles.y;
+
+        if (Mathf.Abs(y - targetRot) <= CloseEnough)
         {
-            int firstNumStart = pos.IndexOf('(') + 1;
-            int firstComma = pos.Substring(firstNumStart).IndexOf(',') + firstNumStart;
-            int secondComma = pos.Substring(firstComma + 1).IndexOf(',') + firstComma + 1;
-            int closeParen = pos.Substring(secondComma).IndexOf(')') + secondComma;
-            vec.x = (float)Convert.ToDouble(pos.Substring(firstNumStart, firstComma - firstNumStart));
-            vec.y = (float)Convert.ToDouble(pos.Substring(firstComma + 1, secondComma - (firstComma + 1)));
-            vec.z = (float)Convert.ToDouble(pos.Substring(secondComma + 1, closeParen - (secondComma + 1)));
-            Debug.Log(vec);
-            transform.position = vec;
+            shieldHolder.transform.rotation = Quaternion.Euler(0, targetRot, 0);
+            return;
         }
 
-        //transform.position = new Vector3(x, transform.position.y, transform.position.z);
+        if (y == (targetRot + 180 % 360)) //floats almost never equal exact integers, so y should NEVER hit this. It's a good safeguard though
+        {
+            y += 1;
+        }
+        float diff = Mathf.Abs(y - targetRot);
+        int sign = y > targetRot == diff > 180.0f ? 1 : -1;
+        y += Time.fixedDeltaTime * sign * rotSpeed;
+        shieldHolder.transform.rotation = Quaternion.Euler(0, y, 0);
     }
+
 
     internal void ProcessInput(PlayerStateMessage playerState)
     {
@@ -47,6 +58,8 @@ public class RemoteInput : MonoBehaviour
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, playerState.rotation, transform.rotation.eulerAngles.z);
         _rb.angularVelocity = new Vector3(_rb.angularVelocity.x, playerState.angVel, _rb.angularVelocity.z);
 
+        shieldHolder.transform.rotation = Quaternion.Euler(0, playerState.currentShieldRot, 0);
+        targetRot = playerState.targetShieldRot;
         //need shield rotation
         //time shenanigans?
     }
