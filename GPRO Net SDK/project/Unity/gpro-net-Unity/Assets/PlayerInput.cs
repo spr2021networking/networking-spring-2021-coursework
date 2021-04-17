@@ -6,7 +6,7 @@ using UnityEngine;
 public class PlayerInput : MonoBehaviour
 {
     public Rigidbody rb;
-    float movementSpeed = 5.0f;
+    float movementSpeed = 10.0f;
     GameObject bullet;
     [SerializeField]
     float fireDelay = 1.0f;
@@ -16,13 +16,15 @@ public class PlayerInput : MonoBehaviour
     public ShieldClient client;
 
     public GameObject shieldHolder;
-    private float _targetRot = 0, _lastRot = 0;
-    public static float CLOSE_ENOUGH = 0.1f;
+    private float _targetRot = 0;
+    public float rotSpeed = 180.0f;
+    private float CloseEnough => 2 * rotSpeed / 60f;
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         canShoot = true;
+        shieldHolder = transform.GetChild(0).gameObject;
     }
 
     // Update is called once per frame
@@ -44,63 +46,59 @@ public class PlayerInput : MonoBehaviour
 
     private void RotateShield()
     {
-        bool right = Input.GetKey(KeyCode.RightArrow);
-        bool left = Input.GetKey(KeyCode.LeftArrow);
-        bool up = Input.GetKey(KeyCode.UpArrow);
-        bool down = Input.GetKey(KeyCode.DownArrow);
+        bool right = Input.GetKey(KeyCode.L); //works
+        bool left = Input.GetKey(KeyCode.J); //works
+        bool up = Input.GetKey(KeyCode.I); //broken
+        bool down = Input.GetKey(KeyCode.K); //points up
 
         float y = shieldHolder.transform.eulerAngles.y;
-        float targetAngle = 0;
-        float ccwDist = 0, cwDist = 0;
+
         if (right && !left && !up && !down)
         {
-            targetAngle = 0;
-        }
-        else if (right && !left && up && !down)
-        {
-            targetAngle = 45;
-        }
-        else if (!right && !left && up && !down)
-        {
-            targetAngle = 90;
-        }
-        else if (!right && left && up && !down)
-        {
-            targetAngle = 135;
-        }
-        else if (!right && left && !up && !down)
-        {
-            targetAngle = 180;
-        }
-        else if (!right && left && !up && down)
-        {
-            targetAngle = 225;
-        }
-        else if (!right && !left && !up && down)
-        {
-            targetAngle = 270;
+            _targetRot = 0;
         }
         else if (right && !left && !up && down)
         {
-            targetAngle = 315;
+            _targetRot = 45;
+        }
+        else if (!right && !left && !up && down)
+        {
+            _targetRot = 90;
+        }
+        else if (!right && left && !up && down)
+        {
+            _targetRot = 135;
+        }
+        else if (!right && left && !up && !down)
+        {
+            _targetRot = 180;
+        }
+        else if (!right && left && up && !down)
+        {
+            _targetRot = 225;
+        }
+        else if (!right && !left && up && !down)
+        {
+            _targetRot = 270;
+        }
+        else if (right && !left && up && !down)
+        {
+            _targetRot = 315;
         }
 
-        if (Mathf.Abs(y - targetAngle) <= CLOSE_ENOUGH)
+        if (Mathf.Abs(y - _targetRot) <= CloseEnough)
         {
+            shieldHolder.transform.rotation = Quaternion.Euler(0, _targetRot, 0);
             return;
         }
 
-        if (y == (targetAngle + 180 % 360))
+        if (y == (_targetRot + 180 % 360)) //floats almost never equal exact integers, so y should NEVER hit this. It's a good safeguard though
         {
             y += 1;
         }
-
-        ccwDist = 360 + targetAngle - y;
-        cwDist = y - targetAngle;
-
-        int sign = ccwDist > cwDist ? -1 : 1;
-
-        y += Time.fixedDeltaTime * sign * 20;
+        float diff = Mathf.Abs(y - _targetRot);
+        int sign = y > _targetRot == diff > 180.0f ? 1 : -1;
+        y += Time.fixedDeltaTime * sign * rotSpeed;
         shieldHolder.transform.rotation = Quaternion.Euler(0, y, 0);
     }
 
