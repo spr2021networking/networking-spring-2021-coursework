@@ -83,20 +83,33 @@ public class PlayerInput : MonoBehaviour
         }
         spawnOffset = spawnOffset.normalized;
 
-        if (shouldSpawn && client.localBullets.Count < 5)
+        int availableBulletIndex = FirstAvailableBullet(client.localBullets);
+        if (shouldSpawn && availableBulletIndex < 5)
         {
             GameObject spawnedBullet = Instantiate(client.bullet, transform.position + spawnOffset * 3, Quaternion.identity);
             BulletScript bulletScript = spawnedBullet.GetComponent<BulletScript>();
             Vector3 vel = spawnOffset * bulletSpeed;
             spawnedBullet.GetComponent<Rigidbody>().velocity = vel;
-            bulletScript.id = client.localBullets.Count;
+            bulletScript.id = availableBulletIndex;
             bulletScript.owner = this;
             bulletScript.bulletPlayerIndex = client.PlayerIndex;
-            client.localBullets.Add(spawnedBullet);
+            client.localBullets[availableBulletIndex] = spawnedBullet;
             client.SendBulletCreate(bulletScript, spawnedBullet.GetComponent<Rigidbody>().velocity);
         }
 
 
+    }
+
+    private int FirstAvailableBullet(GameObject[] bullets)
+    {
+        for (int i = 0; i < bullets.Length; i++)
+        {
+            if (bullets[i] == null)
+            {
+                return i;
+            }
+        }
+        return bullets.Length;
     }
 
     private IEnumerator FireLimit()
@@ -108,7 +121,7 @@ public class PlayerInput : MonoBehaviour
     public void DestroyBullet(int bulletID)
     {
         //here we send a message to the server to destroy the bullet
-        client.localBullets.RemoveAt(bulletID);
+        client.localBullets[bulletID] = null;
         client.DestroyBulletEvent(bulletID);
     }
 
@@ -117,6 +130,6 @@ public class PlayerInput : MonoBehaviour
 
         GameObject obj = client.remoteBullets[bulletIndex];
         Destroy(obj);
-        client.remoteBullets.RemoveAt(bulletIndex);
+        client.remoteBullets[bulletIndex] = null;
     }
 }

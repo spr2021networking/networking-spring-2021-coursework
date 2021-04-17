@@ -39,12 +39,14 @@ public class ShieldClient : MonoBehaviour
     public PlayerInput localPlayer;
     public GameObject bullet;
 
-    public List<GameObject> remoteBullets;
-    public List<GameObject> localBullets;
+    public GameObject[] remoteBullets;
+    public GameObject[] localBullets;
 
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
+        remoteBullets = new GameObject[5];
+        localBullets = new GameObject[5];
 
     }
 
@@ -128,7 +130,7 @@ public class ShieldClient : MonoBehaviour
                                 BulletScript bulletInstance = bulletToSpawn.GetComponent<BulletScript>();
                                 bulletInstance.bulletPlayerIndex = bulletCreation.playerIndex;
                                 bulletInstance.id = bulletCreation.id;
-                                remoteBullets.Add(bulletToSpawn);
+                                remoteBullets[bulletInstance.id] = bulletToSpawn;
                                 //remotePlayer.ProccessBullet(bulletState);
                             }
                             break;
@@ -216,19 +218,23 @@ public class ShieldClient : MonoBehaviour
 
     public void UpdateLocalBullets()
     {
-        foreach (GameObject localBullet in localBullets)
+        for (int i = 0; i < localBullets.Length; i++)
         {
-            BulletStateMessage mess = new BulletStateMessage
+            if (localBullets[i] != null)
             {
-                bulletIndex = localBullet.GetComponent<BulletScript>().id,
-                position = localBullet.transform.position,
-                velocity = localBullet.GetComponent<Rigidbody>().velocity,
-                ticks = DateTime.UtcNow.Ticks
-            };
-            byte[] sendBuffer = MessageOps.GetBytes(mess);
-            sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_STATE);
-            NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
-            Debug.Log("L" + error);
+                BulletStateMessage mess = new BulletStateMessage
+                {
+                    bulletIndex = localBullets[i].GetComponent<BulletScript>().id,
+                    position = localBullets[i].transform.position,
+                    velocity = localBullets[i].GetComponent<Rigidbody>().velocity,
+                    ticks = DateTime.UtcNow.Ticks
+                };
+                byte[] sendBuffer = MessageOps.GetBytes(mess);
+                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_STATE);
+                NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+                Debug.Log("L" + error);
+            }
+
         }
     }
 }
