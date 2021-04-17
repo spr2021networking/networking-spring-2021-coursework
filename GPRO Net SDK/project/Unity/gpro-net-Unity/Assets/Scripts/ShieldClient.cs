@@ -125,24 +125,26 @@ public class ShieldClient : MonoBehaviour
                             {
                                 GameObject bulletToSpawn = Instantiate(bullet, bulletCreation.position, Quaternion.identity);
                                 bulletToSpawn.GetComponent<Rigidbody>().velocity = bulletCreation.velocity;
-                                bulletToSpawn.GetComponent<BulletScript>().bulletPlayerIndex = bulletCreation.playerIndex;
+                                BulletScript bulletInstance = bulletToSpawn.GetComponent<BulletScript>();
+                                bulletInstance.bulletPlayerIndex = bulletCreation.playerIndex;
+                                bulletInstance.id = bulletCreation.id;
                                 remoteBullets.Add(bulletToSpawn);
                                 //remotePlayer.ProccessBullet(bulletState);
                             }
                             break;
                         case MessageOps.MessageType.BULLET_STATE:
+
                             BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
-                            foreach (GameObject remoteBullet in remoteBullets)
-                            {
-                                remoteBullet.transform.position = bulletState.position;
-                                remoteBullet.GetComponent<Rigidbody>().velocity = bulletState.velocity;
-                            }
+                            GameObject remoteBullet = remoteBullets[bulletState.bulletIndex];
+                            remoteBullet.transform.position = bulletState.position;
+                            remoteBullet.GetComponent<Rigidbody>().velocity = bulletState.velocity;
+
                             break;
                         case MessageOps.MessageType.BULLET_DESTROY:
                             BulletDestroyMessage bulletDestroy = MessageOps.FromBytes<BulletDestroyMessage>(subArr);
                             //call playerInput to destroy the bullet if need be
                             //find the bullet with the correct ID and remove it from the list
-                            localPlayer.DestroyRemoteBullet(remoteBullets[bulletDestroy.bulletIndex]);
+                            localPlayer.DestroyRemoteBullet(bulletDestroy.bulletIndex);
                             //remoteBullets.Remove(remoteBullets[bulletDestroy.bulletIndex]);
 
                             break;
@@ -156,7 +158,7 @@ public class ShieldClient : MonoBehaviour
                     break;
             }
         }
-        
+
 
         if (localPlayer && PlayerIndex >= 0)
         {
@@ -183,14 +185,15 @@ public class ShieldClient : MonoBehaviour
         Debug.Log("P" + error);
     }
 
-    public void CreateBullet(Vector3 bPosition, Vector3 bVelocity)
+    public void SendBulletCreate(BulletScript bullet, Vector3 bVelocity)
     {
         BulletCreateMessage mess = new BulletCreateMessage
         {
             playerIndex = PlayerIndex,
-            position = bPosition,
+            position = bullet.transform.position,
             velocity = bVelocity,
-            ticks = DateTime.UtcNow.Ticks
+            ticks = DateTime.UtcNow.Ticks,
+            id = bullet.id
         };
         byte[] sendBuffer = MessageOps.GetBytes(mess);
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_CREATE);

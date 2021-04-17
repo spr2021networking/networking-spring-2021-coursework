@@ -80,7 +80,7 @@ public struct BulletCreateMessage
     public int playerIndex;
     public Vector3 position;
     public Vector3 velocity;
-
+    public int id; //id within the array
     public long ticks;
 }
 

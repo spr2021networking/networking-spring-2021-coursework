@@ -14,7 +14,6 @@ public class PlayerInput : MonoBehaviour
     float newXPos;
     bool canShoot;
     public ShieldClient client;
-    public int bulletsActive = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -82,20 +81,19 @@ public class PlayerInput : MonoBehaviour
             shouldSpawn = true;
             spawnOffset = Vector3.right + Vector3.forward;
         }
+        spawnOffset = spawnOffset.normalized;
 
-        if (shouldSpawn && bulletsActive < 5)
+        if (shouldSpawn && client.localBullets.Count < 5)
         {
-            bulletsActive++;
-            
             GameObject spawnedBullet = Instantiate(client.bullet, transform.position + spawnOffset * 3, Quaternion.identity);
             BulletScript bulletScript = spawnedBullet.GetComponent<BulletScript>();
             Vector3 vel = spawnOffset * bulletSpeed;
             spawnedBullet.GetComponent<Rigidbody>().velocity = vel;
-            client.CreateBullet(spawnedBullet.transform.position, spawnedBullet.GetComponent<Rigidbody>().velocity);
-            bulletScript.id = bulletsActive;
+            bulletScript.id = client.localBullets.Count;
             bulletScript.owner = this;
             bulletScript.bulletPlayerIndex = client.PlayerIndex;
             client.localBullets.Add(spawnedBullet);
+            client.SendBulletCreate(bulletScript, spawnedBullet.GetComponent<Rigidbody>().velocity);
         }
 
 
@@ -107,19 +105,18 @@ public class PlayerInput : MonoBehaviour
         canShoot = true;
     }
 
-    public void DestroyBullet()
+    public void DestroyBullet(int bulletID)
     {
         //here we send a message to the server to destroy the bullet
-        client.DestroyBulletEvent(bulletsActive -1);
-        bulletsActive--;
+        client.localBullets.RemoveAt(bulletID);
+        client.DestroyBulletEvent(bulletID);
     }
 
-    public void DestroyRemoteBullet(GameObject bulletToDestroy)
+    public void DestroyRemoteBullet(int bulletIndex)
     {
-        if (bulletToDestroy != null)
-        {
-            client.remoteBullets.Remove(bulletToDestroy);
-            Destroy(bulletToDestroy);
-        }
+
+        GameObject obj = client.remoteBullets[bulletIndex];
+        Destroy(obj);
+        client.remoteBullets.RemoveAt(bulletIndex);
     }
 }
