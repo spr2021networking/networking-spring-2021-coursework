@@ -44,47 +44,34 @@ public class PlayerInput : MonoBehaviour
         RotateShield();
     }
 
+    /// <summary>
+    /// Translate user input into shield rotation
+    /// </summary>
     private void RotateShield()
     {
-        bool right = Input.GetKey(KeyCode.L); //works
-        bool left = Input.GetKey(KeyCode.J); //works
-        bool up = Input.GetKey(KeyCode.I); //broken
-        bool down = Input.GetKey(KeyCode.K); //points up
+        int up = Input.GetKey(KeyCode.I) ? 1 : 0;
+        int left = Input.GetKey(KeyCode.J) ? 1 : 0; ;
+        int down = Input.GetKey(KeyCode.K) ? 1 : 0; ;
+        int right = Input.GetKey(KeyCode.L) ? 1 : 0; ;
 
         float y = shieldHolder.transform.eulerAngles.y;
 
-        if (right && !left && !up && !down)
+        //checking for conflicting inputs
+        int xSum = left + right;
+        int ySum = up + down;
+        //If ySum is 2, then both up and down are pressed. If xSum is 2, then both left and right are pressed. If xSum+ySum == 0, then no buttons are pressed
+        if (ySum == 2 || xSum == 2 || xSum + ySum == 0)
         {
-            targetRot = 0;
+            return;
         }
-        else if (right && !left && !up && down)
+
+        //create a vector pointing in the desired direction and convert to angle.
+        Vector2 newAngleVec = new Vector2()
         {
-            targetRot = 45;
-        }
-        else if (!right && !left && !up && down)
-        {
-            targetRot = 90;
-        }
-        else if (!right && left && !up && down)
-        {
-            targetRot = 135;
-        }
-        else if (!right && left && !up && !down)
-        {
-            targetRot = 180;
-        }
-        else if (!right && left && up && !down)
-        {
-            targetRot = 225;
-        }
-        else if (!right && !left && up && !down)
-        {
-            targetRot = 270;
-        }
-        else if (right && !left && up && !down)
-        {
-            targetRot = 315;
-        }
+            x = right - left,
+            y = up - down
+        };
+        targetRot = (Vector2.SignedAngle(newAngleVec, Vector3.right) + 360) % 360;
 
         if (Mathf.Abs(y - targetRot) <= CloseEnough)
         {
