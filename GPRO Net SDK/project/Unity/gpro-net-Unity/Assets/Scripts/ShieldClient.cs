@@ -166,6 +166,15 @@ public class ShieldClient : MonoBehaviour
                                 AIToSpawn.GetComponent<AIScript>().isControlledLocally = false;
                             }
                             break;
+                        case MessageOps.MessageType.AI_STATE:
+                            AIStateMessage aIState = MessageOps.FromBytes<AIStateMessage>(subArr);
+                            if (aIState.id % 2 != PlayerIndex % 2)
+                            {
+                                GameObject AIToUpdate = AIDictionary[aIState.id];
+                                AIToUpdate.transform.position = aIState.position;
+                                AIToUpdate.GetComponent<Rigidbody>().velocity = aIState.velocity;
+                            }
+                            break;
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                     //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
@@ -251,6 +260,25 @@ public class ShieldClient : MonoBehaviour
                 Debug.Log("L" + error);
             }
 
+        }
+    }
+
+    public void UpdateLocalAI()
+    {
+        for (int i = 0; i < AIDictionary.Count; i++)
+        {
+            if (AIDictionary[i].GetComponent<AIScript>().isControlledLocally)
+            {
+                AIStateMessage mess = new AIStateMessage
+                {
+                    position = AIDictionary[i].transform.position,
+                    velocity = AIDictionary[i].GetComponent<Rigidbody>().velocity,
+                    id = i
+                };
+                byte[] sendBuffer = MessageOps.GetBytes(mess);
+                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_STATE);
+                NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+            }
         }
     }
 }
