@@ -38,16 +38,18 @@ public class ShieldClient : MonoBehaviour
     public RemoteInput remotePlayer;
     public PlayerInput localPlayer;
     public GameObject bullet;
+    public GameObject AI;
 
     public GameObject[] remoteBullets;
     public GameObject[] localBullets;
+    Dictionary<int, GameObject> AIDictionary;
 
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
         remoteBullets = new GameObject[5];
         localBullets = new GameObject[5];
-
+        AIDictionary = new Dictionary<int, GameObject>();
     }
 
     public void Connect(string ip)
@@ -150,7 +152,20 @@ public class ShieldClient : MonoBehaviour
                             //remoteBullets.Remove(remoteBullets[bulletDestroy.bulletIndex]);
 
                             break;
-
+                        case MessageOps.MessageType.AI_CREATE:
+                            AICreateMessge aICreate = MessageOps.FromBytes<AICreateMessge>(subArr);
+                            GameObject AIToSpawn = Instantiate(AI, aICreate.position,Quaternion.identity);
+                            AIDictionary.Add(aICreate.id, AIToSpawn);
+                            if (aICreate.id % 2 == PlayerIndex % 2)
+                            {
+                                AIToSpawn.GetComponent<AIScript>().client = this;
+                                AIToSpawn.GetComponent<AIScript>().isControlledLocally = true;
+                            }
+                            else
+                            {
+                                AIToSpawn.GetComponent<AIScript>().isControlledLocally = false;
+                            }
+                            break;
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                     //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);

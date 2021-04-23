@@ -6,7 +6,7 @@ public static class MessageOps
 {
     public enum MessageType
     {
-        CONNECT_REQUEST, CONNECT_RESPONSE, PLAYER_ID, PLAYER_STATE, BULLET_CREATE, BULLET_STATE, BULLET_DESTROY
+        CONNECT_REQUEST, CONNECT_RESPONSE, PLAYER_ID, PLAYER_STATE, BULLET_CREATE, BULLET_STATE, BULLET_DESTROY, AI_CREATE, AI_STATE, AI_DESTROY
     }
 
     //inspired by https://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
@@ -100,4 +100,25 @@ public struct BulletDestroyMessage
     public MessageOps.MessageType MessageType => MessageOps.MessageType.BULLET_DESTROY;
     public int bulletIndex;
     public long ticks;
+}
+
+public struct AICreateMessge
+{
+    public MessageOps.MessageType MessageType => MessageOps.MessageType.AI_CREATE;
+    public Vector3 position;
+    public int id;
+}
+
+public struct AIStateMessage
+{
+    public MessageOps.MessageType MessageType => MessageOps.MessageType.AI_STATE;
+    public Vector3 position;
+    public Vector3 velocity;
+    public int id;
+}
+
+public struct AIDestroyMessage
+{
+    public MessageOps.MessageType MessageType => MessageOps.MessageType.AI_DESTROY;
+    public int id;
 }

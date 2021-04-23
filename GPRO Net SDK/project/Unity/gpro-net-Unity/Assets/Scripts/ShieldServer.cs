@@ -25,6 +25,11 @@ public class ShieldServer : MonoBehaviour
     private int port = 7777;
 
     private bool running = false;
+
+    private float timer = 5.0f;
+    private float timerStorage = 5.0f;
+    private int AItoSpawn = 3;
+    private int AICounter = 0;
     // Start is called before the first frame update
     void Start()
     {
@@ -126,6 +131,7 @@ public class ShieldServer : MonoBehaviour
                                 }
                             }
                             break;
+                        
                     }
                     break;
                 case NetworkEventType.DisconnectEvent:
@@ -149,7 +155,35 @@ public class ShieldServer : MonoBehaviour
                 case NetworkEventType.BroadcastEvent: break;
             }
         }
-       
+        //run a timer, this is how frequent enemies spawn, if zero, gen valid coord, send create message
+        //gen random float 0 360
+        //multiply by deg to rad
+        //make a vector of
+        //cos of x (degtorad value)
+        //sin of z (degtorad value)
+        //multiply the vector by radius 45
+        timer -= Time.deltaTime;
+        if (timer <= 0.0f)
+        {
+            for (int i = 0; i < AItoSpawn; i++)
+            {
+                float random = Random.Range(0.0f, 360.0f);
+                random = random * Mathf.Deg2Rad;
+                Vector3 position = new Vector3(Mathf.Cos(random), 1.5f, Mathf.Sin(random));
+                AICreateMessge message = new AICreateMessge
+                {
+                    position = position,
+                    id = AICounter,
+                };
+                sendBuffer = MessageOps.GetBytes(message);
+                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_CREATE);
+                for (int j = 0; j < connections.Count; j++)
+                {
+                    NetworkTransport.Send(hostID, connections[j], reliableChannelID, buffer, sendBuffer.Length, out error);
+                }
+                AICounter++;
+            }
+        }
     }
 }
 #pragma warning restore CS0618 // Type or member is obsolete
