@@ -175,6 +175,11 @@ public class ShieldClient : MonoBehaviour
                                 AIToUpdate.GetComponent<Rigidbody>().velocity = aIState.velocity;
                             }
                             break;
+                        case MessageOps.MessageType.AI_DESTROY:
+                            AIDestroyMessage aIDestroy = MessageOps.FromBytes<AIDestroyMessage>(subArr);
+                            Destroy(AIDictionary[aIDestroy.id]);
+                            AIDictionary.Remove(aIDestroy.id);
+                            break;
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                     //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
@@ -278,6 +283,25 @@ public class ShieldClient : MonoBehaviour
                 byte[] sendBuffer = MessageOps.GetBytes(mess);
                 sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_STATE);
                 NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+            }
+        }
+    }
+
+    public void DestroyLocalAI(GameObject gameObject)
+    {
+        
+        for (int i = 0; i < AIDictionary.Count; i++)
+        {
+            if (AIDictionary[i] == gameObject)
+            {
+                AIDestroyMessage mess = new AIDestroyMessage
+                {
+                    id = i
+                };
+                byte[] sendBuffer = MessageOps.GetBytes(mess);
+                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_DESTROY);
+                NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+                AIDictionary.Remove(i);
             }
         }
     }
