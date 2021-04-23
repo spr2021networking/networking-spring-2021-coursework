@@ -28,7 +28,7 @@ public class AIScript : MonoBehaviour
     {
         if (collision.gameObject.tag == "Bullet" && isControlledLocally)
         {
-            client.DestroyLocalAI();
+            client.DestroyLocalAI(gameObject);
             Destroy(gameObject);
         }
     }
