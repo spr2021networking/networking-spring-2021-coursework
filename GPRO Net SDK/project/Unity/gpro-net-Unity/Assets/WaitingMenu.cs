@@ -29,7 +29,18 @@ public class WaitingMenu : MonoBehaviour
 
         confirmButton.interactable = client.OtherPlayerConnected;
 
+        if (client.enteringGame)
+        {
+            client.enteringGame = false;
+            LoadGame();
+        }
+
         //need a DC check for us
+    }
+
+    public void RequestLoadGame()
+    {
+        client.RequestStart();
     }
 
     public void LoadGame()

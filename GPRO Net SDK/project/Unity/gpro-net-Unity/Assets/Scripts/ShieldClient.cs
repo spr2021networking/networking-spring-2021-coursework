@@ -41,6 +41,8 @@ public class ShieldClient : MonoBehaviour
     public GameObject bullet;
     public GameObject AI;
 
+    public bool enteringGame; //set to true by server, turned back off when waiting menu sees it
+
     public GameObject[] remoteBullets;
     public GameObject[] localBullets;
     Dictionary<int, GameObject> AIDictionary;
@@ -86,7 +88,7 @@ public class ShieldClient : MonoBehaviour
         //SendPosition();
         for (int i = 0; i < 20; i++)
         {
-            NetworkEventType recData = NetworkTransport.Receive(out hostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
+            NetworkEventType recData = NetworkTransport.Receive(out recHostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
             switch (recData)
             {
                 case NetworkEventType.Nothing:
@@ -153,6 +155,10 @@ public class ShieldClient : MonoBehaviour
                             //remoteBullets.Remove(remoteBullets[bulletDestroy.bulletIndex]);
 
                             break;
+                        case MessageOps.MessageType.GAME_START:
+                            enteringGame = true;
+                            break;
+
                         case MessageOps.MessageType.AI_CREATE:
                             AICreateMessage aICreate = MessageOps.FromBytes<AICreateMessage>(subArr);
                             GameObject AIToSpawn = Instantiate(AI, aICreate.position, Quaternion.identity);
@@ -303,6 +309,14 @@ public class ShieldClient : MonoBehaviour
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_DESTROY);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
         AIDictionary.Remove(ai.id);
+    }
+        
+    internal void RequestStart()
+    {
+        StartGameMessage mess = new StartGameMessage();
+        byte[] sendBuffer = MessageOps.GetBytes(mess);
+        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.GAME_START);
+        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
     }
 }
 

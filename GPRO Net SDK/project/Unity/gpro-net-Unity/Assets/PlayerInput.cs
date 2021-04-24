@@ -8,10 +8,8 @@ public class PlayerInput : MonoBehaviour
     public Rigidbody rb;
     float movementSpeed = 10.0f;
     GameObject bullet;
-    [SerializeField]
     float fireDelay = 1.0f;
-    [SerializeField]
-    float bulletSpeed = 7.5f;
+    float bulletSpeed = 20.0f;
     bool canShoot;
     public ShieldClient client;
 
@@ -19,6 +17,10 @@ public class PlayerInput : MonoBehaviour
     public float targetRot = 0;
     public float rotSpeed = 180.0f;
     private float CloseEnough => 2 * rotSpeed / 60f;
+
+    private float bulletSpawnOffset = 7;
+
+    private Vector3 fireDirection = Vector3.forward;
     // Start is called before the first frame update
     void Start()
     {
@@ -32,8 +34,18 @@ public class PlayerInput : MonoBehaviour
     {
         float horizontalInput = Input.GetAxis("Horizontal");
         float verticalInput = Input.GetAxis("Vertical");
-        Vector3 m_Input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        rb.MovePosition(transform.position + m_Input * Time.deltaTime * movementSpeed);
+        Vector3 input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+
+        bool hasXInput = Mathf.Abs(input.x) > 0.1;
+        bool hasZInput = Mathf.Abs(input.z) > 0.1;
+        int dirX = hasXInput ? Math.Sign(input.x) : 0;
+        int dirZ = hasZInput ? Math.Sign(input.z) : 0;
+        if (hasXInput || hasZInput)
+        {
+            fireDirection = new Vector3(dirX, 0, dirZ).normalized; //update our fire position if we have nonzero input
+        }
+
+        rb.velocity = input * movementSpeed;
         if (Input.GetKey(KeyCode.Space) && canShoot)
         {
             FireBullet();
@@ -50,28 +62,29 @@ public class PlayerInput : MonoBehaviour
     private void RotateShield()
     {
         int up = Input.GetKey(KeyCode.I) ? 1 : 0;
-        int left = Input.GetKey(KeyCode.J) ? 1 : 0; ;
-        int down = Input.GetKey(KeyCode.K) ? 1 : 0; ;
-        int right = Input.GetKey(KeyCode.L) ? 1 : 0; ;
+        int left = Input.GetKey(KeyCode.J) ? 1 : 0;
+        int down = Input.GetKey(KeyCode.K) ? 1 : 0;
+        int right = Input.GetKey(KeyCode.L) ? 1 : 0;
 
         float y = shieldHolder.transform.eulerAngles.y;
 
         //checking for conflicting inputs
         int xSum = left + right;
         int ySum = up + down;
-        //If ySum is 2, then both up and down are pressed. If xSum is 2, then both left and right are pressed. If xSum+ySum == 0, then no buttons are pressed
-        if (ySum == 2 || xSum == 2 || xSum + ySum == 0)
+
+        //if we have input, bind the new position
+        if (ySum < 2 && xSum < 2 && xSum + ySum > 0)
         {
-            return;
+            Vector2 newAngleVec = new Vector2()
+            {
+                x = right - left,
+                y = up - down
+            };
+            targetRot = (Vector2.SignedAngle(newAngleVec, Vector3.right) + 360) % 360;
         }
 
         //create a vector pointing in the desired direction and convert to angle.
-        Vector2 newAngleVec = new Vector2()
-        {
-            x = right - left,
-            y = up - down
-        };
-        targetRot = (Vector2.SignedAngle(newAngleVec, Vector3.right) + 360) % 360;
+
 
         if (Mathf.Abs(y - targetRot) <= CloseEnough)
         {
@@ -91,56 +104,12 @@ public class PlayerInput : MonoBehaviour
 
     void FireBullet()
     {
-        Vector3 spawnOffset = Vector3.zero;
-        bool shouldSpawn = false;
-        if (Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.W))
-        {
-            shouldSpawn = true;
-            spawnOffset = Vector3.left;
-        }
-        else if (Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-        {
-            shouldSpawn = true;
-            spawnOffset = Vector3.back;
-        }
-        else if (Input.GetKey(KeyCode.D) && !Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.W))
-        {
-            shouldSpawn = true;
-            spawnOffset = Vector3.right;
-        }
-        else if (Input.GetKey(KeyCode.W) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-        {
-            shouldSpawn = true;
-            spawnOffset = Vector3.forward;
-        }
-        else if (Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.S))
-        {
-            shouldSpawn = true;
-            spawnOffset = Vector3.left + Vector3.back;
-        }
-        else if (Input.GetKey(KeyCode.A) && Input.GetKey(KeyCode.W))
-        {
-            shouldSpawn = true;
-            spawnOffset = Vector3.left + Vector3.forward;
-        }
-        else if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.S))
-        {
-            shouldSpawn = true;
-            spawnOffset = Vector3.right + Vector3.back;
-        }
-        else if (Input.GetKey(KeyCode.D) && Input.GetKey(KeyCode.W))
-        {
-            shouldSpawn = true;
-            spawnOffset = Vector3.right + Vector3.forward;
-        }
-        spawnOffset = spawnOffset.normalized;
-
         int availableBulletIndex = FirstAvailableBullet(client.localBullets);
-        if (shouldSpawn && availableBulletIndex < 5)
+        if (availableBulletIndex < 5)
         {
-            GameObject spawnedBullet = Instantiate(client.bullet, transform.position + spawnOffset * 3, Quaternion.identity);
+            GameObject spawnedBullet = Instantiate(client.bullet, transform.position + fireDirection * bulletSpawnOffset, Quaternion.identity);
             BulletScript bulletScript = spawnedBullet.GetComponent<BulletScript>();
-            Vector3 vel = spawnOffset * bulletSpeed;
+            Vector3 vel = fireDirection * bulletSpeed;
             spawnedBullet.GetComponent<Rigidbody>().velocity = vel;
             bulletScript.id = availableBulletIndex;
             bulletScript.owner = this;

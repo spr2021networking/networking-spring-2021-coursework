@@ -156,6 +156,9 @@ MonoBehaviour:
   remotePlayer: {fileID: 0}
   localPlayer: {fileID: 0}
   bullet: {fileID: 8824745959098266758, guid: 1d9b9c8ee1efbf34aabcce78b025c988, type: 3}
+  enteringGame: 0
+  remoteBullets: []
+  localBullets: []
 --- !u!4 &22414772
 Transform:
   m_ObjectHideFlags: 0
@@ -909,7 +912,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1805366735}
         m_TargetAssemblyTypeName: WaitingMenu, Assembly-CSharp
-        m_MethodName: LoadGame
+        m_MethodName: RequestLoadGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
