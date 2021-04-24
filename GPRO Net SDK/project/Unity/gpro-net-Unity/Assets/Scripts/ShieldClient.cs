@@ -195,6 +195,7 @@ public class ShieldClient : MonoBehaviour
         {
             SendPosition();
             UpdateLocalBullets();
+            UpdateLocalAI();
         }
     }
 
@@ -272,7 +273,7 @@ public class ShieldClient : MonoBehaviour
     {
         for (int i = 0; i < AIDictionary.Count; i++)
         {
-            if (AIDictionary[i].GetComponent<AIScript>().isControlledLocally)
+            if (AIDictionary[i].GetComponent<AIScript>().isControlledLocally && AIDictionary[i] != null)
             {
                 AIStateMessage mess = new AIStateMessage
                 {
