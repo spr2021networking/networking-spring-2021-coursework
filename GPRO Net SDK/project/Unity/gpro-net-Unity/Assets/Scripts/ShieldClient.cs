@@ -198,6 +198,7 @@ public class ShieldClient : MonoBehaviour
         {
             SendPosition();
             UpdateLocalBullets();
+            UpdateLocalAI();
         }
     }
 
