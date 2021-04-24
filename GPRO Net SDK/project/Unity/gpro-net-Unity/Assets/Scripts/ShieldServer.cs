@@ -123,6 +123,8 @@ public class ShieldServer : MonoBehaviour
                         case MessageOps.MessageType.BULLET_CREATE:
                         case MessageOps.MessageType.BULLET_STATE:
                         case MessageOps.MessageType.BULLET_DESTROY:
+                        case MessageOps.MessageType.AI_STATE:
+                        case MessageOps.MessageType.AI_DESTROY:
                             for (int i = 0; i < connections.Count; i++)
                             {
                                 if (connections[i] != connectionID)
@@ -167,10 +169,9 @@ public class ShieldServer : MonoBehaviour
         {
             for (int i = 0; i < AItoSpawn; i++)
             {
-                float random = Random.Range(0.0f, 360.0f);
-                random = random * Mathf.Deg2Rad;
+                float random = Random.Range(0.0f, 360.0f) * Mathf.Deg2Rad;
                 Vector3 position = new Vector3(Mathf.Cos(random), 1.5f, Mathf.Sin(random));
-                AICreateMessge message = new AICreateMessge
+                AICreateMessage message = new AICreateMessage
                 {
                     position = position,
                     id = AICounter,
@@ -183,6 +184,7 @@ public class ShieldServer : MonoBehaviour
                 }
                 AICounter++;
             }
+            timer = timerStorage;
         }
     }
 }

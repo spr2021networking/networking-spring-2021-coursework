@@ -7,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using System.Linq;
 
 #pragma warning disable CS0618
 public class ShieldClient : MonoBehaviour
@@ -153,17 +154,19 @@ public class ShieldClient : MonoBehaviour
 
                             break;
                         case MessageOps.MessageType.AI_CREATE:
-                            AICreateMessge aICreate = MessageOps.FromBytes<AICreateMessge>(subArr);
-                            GameObject AIToSpawn = Instantiate(AI, aICreate.position,Quaternion.identity);
+                            AICreateMessage aICreate = MessageOps.FromBytes<AICreateMessage>(subArr);
+                            GameObject AIToSpawn = Instantiate(AI, aICreate.position, Quaternion.identity);
                             AIDictionary.Add(aICreate.id, AIToSpawn);
+                            AIScript ai = AIToSpawn.GetComponent<AIScript>();
+                            ai.id = aICreate.id;
                             if (aICreate.id % 2 == PlayerIndex % 2)
                             {
-                                AIToSpawn.GetComponent<AIScript>().client = this;
-                                AIToSpawn.GetComponent<AIScript>().isControlledLocally = true;
+                                ai.client = this;
+                                ai.isControlledLocally = true;
                             }
                             else
                             {
-                                AIToSpawn.GetComponent<AIScript>().isControlledLocally = false;
+                                ai.isControlledLocally = false;
                             }
                             break;
                         case MessageOps.MessageType.AI_STATE:
@@ -213,7 +216,7 @@ public class ShieldClient : MonoBehaviour
         };
         byte[] sendBuffer = MessageOps.GetBytes(mess);
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.PLAYER_STATE);
-        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+        NetworkTransport.Send(hostID, connectionID, unreliableChannel, sendBuffer, sendBuffer.Length, out error);
         Debug.Log("P" + error);
     }
 
@@ -261,7 +264,7 @@ public class ShieldClient : MonoBehaviour
                 };
                 byte[] sendBuffer = MessageOps.GetBytes(mess);
                 sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_STATE);
-                NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+                NetworkTransport.Send(hostID, connectionID, unreliableChannel, sendBuffer, sendBuffer.Length, out error);
                 Debug.Log("L" + error);
             }
 
@@ -270,9 +273,10 @@ public class ShieldClient : MonoBehaviour
 
     public void UpdateLocalAI()
     {
-        for (int i = 0; i < AIDictionary.Count; i++)
+        List<GameObject> coll = AIDictionary.Values.ToList();
+        for (int i = 0; i < coll.Count; i++)
         {
-            if (AIDictionary[i].GetComponent<AIScript>().isControlledLocally)
+            if (coll[i] != null && coll[i].GetComponent<AIScript>().isControlledLocally)
             {
                 AIStateMessage mess = new AIStateMessage
                 {
@@ -282,28 +286,22 @@ public class ShieldClient : MonoBehaviour
                 };
                 byte[] sendBuffer = MessageOps.GetBytes(mess);
                 sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_STATE);
-                NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+                NetworkTransport.Send(hostID, connectionID, unreliableChannel, sendBuffer, sendBuffer.Length, out error);
             }
         }
     }
 
-    public void DestroyLocalAI(GameObject gameObject)
+    public void DestroyLocalAI(AIScript ai)
     {
-        
-        for (int i = 0; i < AIDictionary.Count; i++)
+
+        AIDestroyMessage mess = new AIDestroyMessage
         {
-            if (AIDictionary[i] == gameObject)
-            {
-                AIDestroyMessage mess = new AIDestroyMessage
-                {
-                    id = i
-                };
-                byte[] sendBuffer = MessageOps.GetBytes(mess);
-                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_DESTROY);
-                NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
-                AIDictionary.Remove(i);
-            }
-        }
+            id = ai.id
+        };
+        byte[] sendBuffer = MessageOps.GetBytes(mess);
+        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_DESTROY);
+        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+        AIDictionary.Remove(ai.id);
     }
 }
 

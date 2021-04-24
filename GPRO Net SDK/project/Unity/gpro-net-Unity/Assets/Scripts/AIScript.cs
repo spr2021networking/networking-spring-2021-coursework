@@ -9,6 +9,7 @@ public class AIScript : MonoBehaviour
     public GameObject pillar;
     public bool isControlledLocally;
     public Rigidbody rb;
+    public int id;
     // Start is called before the first frame update
     void Start()
     {
@@ -26,9 +27,9 @@ public class AIScript : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.tag == "Bullet" && isControlledLocally)
+        if (collision.gameObject.CompareTag("Bullet") && isControlledLocally)
         {
-            client.DestroyLocalAI(gameObject);
+            client.DestroyLocalAI(this);
             Destroy(gameObject);
         }
     }

@@ -102,7 +102,7 @@ public struct BulletDestroyMessage
     public long ticks;
 }
 
-public struct AICreateMessge
+public struct AICreateMessage
 {
     public MessageOps.MessageType MessageType => MessageOps.MessageType.AI_CREATE;
     public Vector3 position;
