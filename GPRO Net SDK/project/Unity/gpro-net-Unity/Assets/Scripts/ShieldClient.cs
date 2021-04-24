@@ -39,6 +39,8 @@ public class ShieldClient : MonoBehaviour
     public PlayerInput localPlayer;
     public GameObject bullet;
 
+    public bool enteringGame; //set to true by server, turned back off when waiting menu sees it
+
     public GameObject[] remoteBullets;
     public GameObject[] localBullets;
 
@@ -150,6 +152,9 @@ public class ShieldClient : MonoBehaviour
                             //remoteBullets.Remove(remoteBullets[bulletDestroy.bulletIndex]);
 
                             break;
+                        case MessageOps.MessageType.GAME_START:
+                            enteringGame = true;
+                            break;
 
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
@@ -237,6 +242,13 @@ public class ShieldClient : MonoBehaviour
             }
 
         }
+    }
+    internal void RequestStart()
+    {
+        StartGameMessage mess = new StartGameMessage();
+        byte[] sendBuffer = MessageOps.GetBytes(mess);
+        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.GAME_START);
+        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
     }
 }
 

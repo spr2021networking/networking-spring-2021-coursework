@@ -126,6 +126,12 @@ public class ShieldServer : MonoBehaviour
                                 }
                             }
                             break;
+                        case MessageOps.MessageType.GAME_START:
+                            for (int i = 0; i < connections.Count; i++)
+                            {
+                                NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                            }
+                            break;
                     }
                     break;
                 case NetworkEventType.DisconnectEvent:
@@ -149,7 +155,7 @@ public class ShieldServer : MonoBehaviour
                 case NetworkEventType.BroadcastEvent: break;
             }
         }
-       
+
     }
 }
 #pragma warning restore CS0618 // Type or member is obsolete
