@@ -45,7 +45,7 @@ public class PlayerInput : MonoBehaviour
             fireDirection = new Vector3(dirX, 0, dirZ).normalized; //update our fire position if we have nonzero input
         }
 
-        rb.MovePosition(transform.position + input * Time.deltaTime * movementSpeed);
+        rb.velocity = input * movementSpeed;
         if (Input.GetKey(KeyCode.Space) && canShoot)
         {
             FireBullet();
