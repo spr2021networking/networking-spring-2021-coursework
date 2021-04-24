@@ -33,6 +33,10 @@ public class BulletScript : MonoBehaviour
         {
             if (other.CompareTag("Shield") && !hasHitShield)
             {
+                if (other.transform.parent.gameObject == owner.gameObject) //don't collide with our own shield
+                {
+                    return;
+                }
                 Debug.Log("Other: " + other.transform.eulerAngles.y);
                 Vector2 angleVec = new Vector2()
                 {
@@ -61,23 +65,16 @@ public class BulletScript : MonoBehaviour
                     {
                         bool diffGreaterThan180 = angleDiff > 180;
                         bool selfGreaterThanShield = angle > other.transform.eulerAngles.y;
-                        if (diffGreaterThan180 == selfGreaterThanShield)
-                        {
-                            Vector2 newDir = new Vector2(
-                                angleVec.x * Mathf.Cos(-90 * Mathf.Deg2Rad) - angleVec.y * Mathf.Sin(-90 * Mathf.Deg2Rad),
-                                angleVec.x * Mathf.Sin(-90 * Mathf.Deg2Rad) + angleVec.y * Mathf.Cos(-90 * Mathf.Deg2Rad));
-                            rb.velocity = new Vector3(newDir.x, 0, newDir.y);
-                            //cw
-                        }
-                        else
-                        {
-                            Vector2 newDir = new Vector2(
-                                angleVec.x * Mathf.Cos(90 * Mathf.Deg2Rad) - angleVec.y * Mathf.Sin(90 * Mathf.Deg2Rad),
-                                angleVec.x * Mathf.Sin(90 * Mathf.Deg2Rad) + angleVec.y * Mathf.Cos(90 * Mathf.Deg2Rad));
-                            rb.velocity = new Vector3(newDir.x, 0, newDir.y);
-                            //ccw
-                        }
-                        //this is a reflection
+
+                        float rot = (diffGreaterThan180 == selfGreaterThanShield ? -90 : 90) * Mathf.Deg2Rad;
+
+                        float cosRot = Mathf.Cos(rot), sinRot = Mathf.Sin(rot);
+
+                        //slightly faster than building a matrix out
+                        Vector2 newDir = new Vector2(
+                            angleVec.x * cosRot - angleVec.y * sinRot,
+                            angleVec.x * sinRot + angleVec.y * cosRot);
+                        rb.velocity = new Vector3(newDir.x, 0, newDir.y);
                     }
                 }
             }

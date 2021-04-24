@@ -83,7 +83,7 @@ public class ShieldClient : MonoBehaviour
         //SendPosition();
         for (int i = 0; i < 20; i++)
         {
-            NetworkEventType recData = NetworkTransport.Receive(out hostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
+            NetworkEventType recData = NetworkTransport.Receive(out recHostID, out connectionID, out channelID, recBuffer, bufferSize, out dataSize, out error);
             switch (recData)
             {
                 case NetworkEventType.Nothing:
