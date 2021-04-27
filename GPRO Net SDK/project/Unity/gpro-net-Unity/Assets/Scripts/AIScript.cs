@@ -13,12 +13,17 @@ public class AIScript : MonoBehaviour
 
     private float timeBetweenHits = 1.5f;
     private float _timer = 0;
+
+    bool firstFrame = true;
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         pillar = GameObject.FindGameObjectWithTag("Pillar");
-        Vector3 direction = (pillar.transform.position - transform.position).normalized * speed;
+        Vector3 direction = (pillar.transform.position - transform.position);
+        direction.y = 0;
+        direction.Normalize();
+        direction *= speed;
         rb.velocity = direction;
     }
 

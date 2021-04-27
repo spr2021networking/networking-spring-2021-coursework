@@ -30,6 +30,8 @@ public class ShieldServer : MonoBehaviour
     private float timerStorage = 5.0f;
     private int AItoSpawn = 3;
     private int AICounter = 0;
+
+    public bool gameStart;
     // Start is called before the first frame update
     void Start()
     {
@@ -103,6 +105,7 @@ public class ShieldServer : MonoBehaviour
                                     NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
                                 }
                             }
+                            Debug.Log(channelID);
 
                             if (connMess.playerIndex > 0) //this is a new joining player, they don't know who else is here
                             {
@@ -134,6 +137,12 @@ public class ShieldServer : MonoBehaviour
                             }
                             break;
                         case MessageOps.MessageType.GAME_START:
+                            gameStart = true;
+                            for (int i = 0; i < connections.Count; i++)
+                            {
+                                NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                            }
+                            break;
                         case MessageOps.MessageType.PILLAR_DAMAGE:
                             for (int i = 0; i < connections.Count; i++)
                             {
@@ -170,27 +179,33 @@ public class ShieldServer : MonoBehaviour
         //cos of x (degtorad value)
         //sin of z (degtorad value)
         //multiply the vector by radius 45
-        timer -= Time.deltaTime;
-        if (timer <= 0.0f)
+        if (gameStart)
         {
-            for (int i = 0; i < AItoSpawn; i++)
+            timer -= Time.deltaTime;
+            if (timer <= 0.0f)
             {
-                float random = Random.Range(0.0f, 360.0f) * Mathf.Deg2Rad;
-                Vector3 position = new Vector3(Mathf.Cos(random), 1.5f, Mathf.Sin(random));
-                AICreateMessage message = new AICreateMessage
+                for (int i = 0; i < AItoSpawn; i++)
                 {
-                    position = position,
-                    id = AICounter,
-                };
-                sendBuffer = MessageOps.GetBytes(message);
-                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_CREATE);
-                for (int j = 0; j < connections.Count; j++)
-                {
-                    NetworkTransport.Send(hostID, connections[j], reliableChannelID, buffer, sendBuffer.Length, out error);
+                    float random = Random.Range(0.0f, 360.0f) * Mathf.Deg2Rad;
+                    Vector3 position = new Vector3(Mathf.Cos(random), 0, Mathf.Sin(random));
+                    position *= 45;
+                    position.y = 1.5f;
+                    AICreateMessage message = new AICreateMessage
+                    {
+                        position = position,
+                        id = AICounter,
+                    };
+                    sendBuffer = MessageOps.GetBytes(message);
+                    sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_CREATE);
+                    for (int j = 0; j < connections.Count; j++)
+                    {
+                        NetworkTransport.Send(hostID, connections[j], reliableChannelID, sendBuffer, sendBuffer.Length, out error);
+                        Debug.Log("A: " + (int)error);
+                    }
+                    AICounter++;
                 }
-                AICounter++;
+                timer = timerStorage;
             }
-            timer = timerStorage;
         }
     }
 }

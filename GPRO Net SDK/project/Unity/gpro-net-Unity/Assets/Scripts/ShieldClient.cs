@@ -44,6 +44,9 @@ public class ShieldClient : MonoBehaviour
     public bool enteringGame; //set to true by server, turned back off when waiting menu sees it
 
     public GameObject[] remoteBullets;
+
+
+
     public GameObject[] localBullets;
     Dictionary<int, GameObject> AIDictionary;
     public PillarHealth pillarHealth;
@@ -98,7 +101,8 @@ public class ShieldClient : MonoBehaviour
                     NetworkTransport.Send(hostID, connectionID, reliableChannel, new byte[] { (byte)MessageOps.MessageType.CONNECT_REQUEST }, 1, out error);
                     break;
                 case NetworkEventType.DataEvent:
-                    switch (MessageOps.ExtractMessageID(ref recBuffer, bufferSize, out byte[] subArr))
+                    MessageOps.MessageType type = MessageOps.ExtractMessageID(ref recBuffer, bufferSize, out byte[] subArr);
+                    switch (type)
                     {
                         case MessageOps.MessageType.CONNECT_RESPONSE:
 
@@ -161,6 +165,7 @@ public class ShieldClient : MonoBehaviour
                             break;
 
                         case MessageOps.MessageType.AI_CREATE:
+                            Debug.Log("Received AI Message");
                             AICreateMessage aICreate = MessageOps.FromBytes<AICreateMessage>(subArr);
                             GameObject AIToSpawn = Instantiate(AI, aICreate.position, Quaternion.identity);
                             AIDictionary.Add(aICreate.id, AIToSpawn);
@@ -170,10 +175,12 @@ public class ShieldClient : MonoBehaviour
                             {
                                 ai.client = this;
                                 ai.isControlledLocally = true;
+                                Debug.Log("Local");
                             }
                             else
                             {
                                 ai.isControlledLocally = false;
+                                Debug.Log("Remote");
                             }
                             break;
                         case MessageOps.MessageType.AI_STATE:
