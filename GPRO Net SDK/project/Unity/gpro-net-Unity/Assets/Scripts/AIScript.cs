@@ -36,7 +36,7 @@ public class AIScript : MonoBehaviour
         }
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider collision)
     {
         if (collision.gameObject.CompareTag("Bullet") && isControlledLocally)
         {

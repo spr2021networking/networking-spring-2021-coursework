@@ -304,7 +304,7 @@ public class ShieldClient : MonoBehaviour
                 {
                     position = AIDictionary[i].transform.position,
                     velocity = AIDictionary[i].GetComponent<Rigidbody>().velocity,
-                    id = i
+                    id = AIDictionary[i].GetComponent<AIScript>().id
                 };
                 byte[] sendBuffer = MessageOps.GetBytes(mess);
                 sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_STATE);

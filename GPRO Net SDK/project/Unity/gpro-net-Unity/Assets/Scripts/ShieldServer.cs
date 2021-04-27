@@ -27,8 +27,8 @@ public class ShieldServer : MonoBehaviour
     private bool running = false;
 
     private float timer = 5.0f;
-    private float timerStorage = 5.0f;
-    private int AItoSpawn = 3;
+    private float timerStorage = 20.0f;
+    private int AItoSpawn = 1;
     private int AICounter = 0;
 
     public bool gameStart;
