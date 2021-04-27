@@ -46,6 +46,7 @@ public class ShieldClient : MonoBehaviour
     public GameObject[] remoteBullets;
     public GameObject[] localBullets;
     Dictionary<int, GameObject> AIDictionary;
+    public PillarHealth pillarHealth;
 
     private void Start()
     {
@@ -189,6 +190,14 @@ public class ShieldClient : MonoBehaviour
                             Destroy(AIDictionary[aIDestroy.id]);
                             AIDictionary.Remove(aIDestroy.id);
                             break;
+                        case MessageOps.MessageType.PILLAR_DAMAGE:
+                            PillarDamageMessage pillarDamage = MessageOps.FromBytes<PillarDamageMessage>(subArr);
+                            pillarHealth.CurrentHealth = pillarDamage.newHealth;
+                            break;
+                        //case MessageOps.MessageType.PILLAR_DESTROY:
+                        //    PillarDestroyMessage pillarDestroy = MessageOps.FromBytes<PillarDestroyMessage>(subArr);
+                        //    Destroy(pillarHealth.gameObject);
+                        //    //display text: Game Over! Time Survived: X Seconds
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                     //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
@@ -274,7 +283,6 @@ public class ShieldClient : MonoBehaviour
                 NetworkTransport.Send(hostID, connectionID, unreliableChannel, sendBuffer, sendBuffer.Length, out error);
                 Debug.Log("L" + error);
             }
-
         }
     }
 
@@ -311,9 +319,20 @@ public class ShieldClient : MonoBehaviour
         AIDictionary.Remove(ai.id);
     }
         
-    internal void RequestStart()
+    public void RequestStart()
     {
         StartGameMessage mess = new StartGameMessage();
+        byte[] sendBuffer = MessageOps.GetBytes(mess);
+        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.GAME_START);
+        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+    }
+
+    public void SendPillarDamage()
+    {
+        PillarDamageMessage mess = new PillarDamageMessage
+        {
+            newHealth = pillarHealth.CurrentHealth - 1
+        };
         byte[] sendBuffer = MessageOps.GetBytes(mess);
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.GAME_START);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);

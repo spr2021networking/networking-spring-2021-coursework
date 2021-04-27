@@ -6,6 +6,7 @@ public class PlayerReference : MonoBehaviour
 {
     public GameObject cube;
     public GameObject sphere;
+    public PillarHealth pillarHealth;
     // Start is called before the first frame update
     void Start()
     {
@@ -16,6 +17,7 @@ public class PlayerReference : MonoBehaviour
         s.remotePlayer = (!isPlayerZero ? cube : sphere).AddComponent<RemoteInput>();
         s.remotePlayer.client = s;
         s.localPlayer.client = s;
+        s.pillarHealth = pillarHealth;
     }
 
     // Update is called once per frame

@@ -584,6 +584,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cube: {fileID: 805094817}
   sphere: {fileID: 1149243268}
+  pillarHealth: {fileID: 0}
 --- !u!4 &1680512756
 Transform:
   m_ObjectHideFlags: 0
@@ -655,6 +656,7 @@ GameObject:
   - component: {fileID: 1942521494}
   - component: {fileID: 1942521493}
   - component: {fileID: 1942521492}
+  - component: {fileID: 1942521496}
   m_Layer: 0
   m_Name: Cylinder
   m_TagString: Pillar
@@ -739,6 +741,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1942521496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1942521491}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f410c2bf98229241a0bbb8d90dfc63d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 10
+  damageMaterial: {fileID: 2100000, guid: 0d95e183a5805404a8634147e42247d9, type: 2}
+  defaultMaterial: {fileID: 2100000, guid: e029656f7358bac4aaf029dca85c0e9d, type: 2}
 --- !u!1 &1995248152
 GameObject:
   m_ObjectHideFlags: 0

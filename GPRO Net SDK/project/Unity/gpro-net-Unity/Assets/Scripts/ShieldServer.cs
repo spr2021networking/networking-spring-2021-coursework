@@ -134,6 +134,7 @@ public class ShieldServer : MonoBehaviour
                             }
                             break;
                         case MessageOps.MessageType.GAME_START:
+                        case MessageOps.MessageType.PILLAR_DAMAGE:
                             for (int i = 0; i < connections.Count; i++)
                             {
                                 NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);

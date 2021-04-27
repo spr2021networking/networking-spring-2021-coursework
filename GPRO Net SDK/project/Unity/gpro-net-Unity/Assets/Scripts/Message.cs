@@ -10,7 +10,9 @@ public static class MessageOps
         PLAYER_ID, PLAYER_STATE,
         BULLET_CREATE, BULLET_STATE, BULLET_DESTROY,
         AI_CREATE, AI_STATE, AI_DESTROY,
-        GAME_START, GAME_DC
+        GAME_START, GAME_DC,
+        PILLAR_DAMAGE, PILLAR_DESTROY,
+        GAME_TIME
     }
 
     //inspired by https://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
@@ -131,4 +133,10 @@ public struct AIDestroyMessage
 {
     public MessageOps.MessageType MessageType => MessageOps.MessageType.AI_DESTROY;
     public int id;
+}
+
+public struct PillarDamageMessage
+{
+    public MessageOps.MessageType MessageType => MessageOps.MessageType.PILLAR_DAMAGE;
+    public int newHealth;
 }

@@ -10,6 +10,9 @@ public class AIScript : MonoBehaviour
     public bool isControlledLocally;
     public Rigidbody rb;
     public int id;
+
+    private float timeBetweenHits = 1.5f;
+    private float _timer = 0;
     // Start is called before the first frame update
     void Start()
     {
@@ -22,7 +25,10 @@ public class AIScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (isControlledLocally)
+        {
+            _timer -= Time.deltaTime;
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -31,6 +37,15 @@ public class AIScript : MonoBehaviour
         {
             client.DestroyLocalAI(this);
             Destroy(gameObject);
+        }
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Pillar") && isControlledLocally && _timer <= 0)
+        {
+            client.SendPillarDamage();
+            _timer = timeBetweenHits;
         }
     }
 }
