@@ -158,8 +158,6 @@ MonoBehaviour:
   bullet: {fileID: 8824745959098266758, guid: 1d9b9c8ee1efbf34aabcce78b025c988, type: 3}
   AI: {fileID: 8390456392689031141, guid: 45450396f91a5b743b4f43541aa222f7, type: 3}
   enteringGame: 0
-  remoteBullets: []
-  localBullets: []
   pillarHealth: {fileID: 0}
 --- !u!4 &22414772
 Transform:

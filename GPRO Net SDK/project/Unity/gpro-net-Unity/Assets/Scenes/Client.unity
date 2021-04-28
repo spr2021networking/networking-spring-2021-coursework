@@ -584,7 +584,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cube: {fileID: 805094817}
   sphere: {fileID: 1149243268}
-  pillarHealth: {fileID: 0}
+  pillarHealth: {fileID: 1942521496}
 --- !u!4 &1680512756
 Transform:
   m_ObjectHideFlags: 0

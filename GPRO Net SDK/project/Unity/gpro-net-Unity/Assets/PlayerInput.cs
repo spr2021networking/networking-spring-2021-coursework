@@ -114,14 +114,14 @@ public class PlayerInput : MonoBehaviour
             bulletScript.id = availableBulletIndex;
             bulletScript.owner = this;
             bulletScript.bulletPlayerIndex = client.PlayerIndex;
-            client.localBullets[availableBulletIndex] = spawnedBullet;
+            client.localBullets[availableBulletIndex] = bulletScript;
             client.SendBulletCreate(bulletScript, spawnedBullet.GetComponent<Rigidbody>().velocity);
         }
 
 
     }
 
-    private int FirstAvailableBullet(GameObject[] bullets)
+    private int FirstAvailableBullet(BulletScript[] bullets)
     {
         for (int i = 0; i < bullets.Length; i++)
         {
@@ -141,16 +141,23 @@ public class PlayerInput : MonoBehaviour
 
     public void DestroyBullet(int bulletID)
     {
-        //here we send a message to the server to destroy the bullet
-        client.localBullets[bulletID] = null;
-        client.DestroyBulletEvent(bulletID);
+        BulletScript bullet = client.localBullets[bulletID];
+        if (bullet != null)
+        {
+            client.localBullets[bulletID] = null;
+            client.SendBulletDestroy(bulletID);
+            Destroy(bullet.gameObject);
+        }
+
     }
 
     public void DestroyRemoteBullet(int bulletIndex)
     {
-
-        GameObject obj = client.remoteBullets[bulletIndex];
-        Destroy(obj);
-        client.remoteBullets[bulletIndex] = null;
+        BulletScript bullet = client.remoteBullets[bulletIndex];
+        if (bullet != null)
+        {
+            Destroy(bullet.gameObject);
+            client.remoteBullets[bulletIndex] = null;
+        }
     }
 }

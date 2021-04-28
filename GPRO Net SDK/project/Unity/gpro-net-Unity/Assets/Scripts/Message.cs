@@ -1,6 +1,8 @@
-﻿using System;
+﻿#pragma warning disable CS0618 // Type or member is obsolete
+using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public static class MessageOps
 {
@@ -55,6 +57,13 @@ public static class MessageOps
         outArr = new byte[arrSize - 1];
         Array.Copy(inArr, 1, outArr, 0, arrSize - 1);
         return (MessageType)inArr[0];
+    }
+
+    public static void SendMessageToServer<T>(T data, MessageType type, int hostID, int connectionID, int channelID, out byte error)
+    {
+        byte[] sendBuffer = GetBytes(data);
+        sendBuffer = PackMessageID(sendBuffer, type);
+        NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
     }
 }
 
@@ -140,3 +149,4 @@ public struct PillarDamageMessage
     public MessageOps.MessageType MessageType => MessageOps.MessageType.PILLAR_DAMAGE;
     public int newHealth;
 }
+#pragma warning restore CS0618 // Type or member is obsolete

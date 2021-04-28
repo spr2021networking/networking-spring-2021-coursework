@@ -43,20 +43,16 @@ public class ShieldClient : MonoBehaviour
 
     public bool enteringGame; //set to true by server, turned back off when waiting menu sees it
 
-    public GameObject[] remoteBullets;
+    internal BulletScript[] remoteBullets = new BulletScript[5];
 
+    internal BulletScript[] localBullets = new BulletScript[5];
 
-
-    public GameObject[] localBullets;
-    Dictionary<int, GameObject> AIDictionary;
+    public Dictionary<int, AIScript> AIDictionary = new Dictionary<int, AIScript>();
     public PillarHealth pillarHealth;
 
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
-        remoteBullets = new GameObject[5];
-        localBullets = new GameObject[5];
-        AIDictionary = new Dictionary<int, GameObject>();
     }
 
     public void Connect(string ip)
@@ -132,24 +128,31 @@ public class ShieldClient : MonoBehaviour
                             }
                             break;
                         case MessageOps.MessageType.BULLET_CREATE:
-                            BulletCreateMessage bulletCreation = MessageOps.FromBytes<BulletCreateMessage>(subArr);
-                            if (remotePlayer != null && bulletCreation.playerIndex != PlayerIndex)
+                            BulletCreateMessage bulletCreate = MessageOps.FromBytes<BulletCreateMessage>(subArr);
+                            if (remotePlayer != null && bulletCreate.playerIndex != PlayerIndex)
                             {
-                                GameObject bulletToSpawn = Instantiate(bullet, bulletCreation.position, Quaternion.identity);
-                                bulletToSpawn.GetComponent<Rigidbody>().velocity = bulletCreation.velocity;
-                                BulletScript bulletInstance = bulletToSpawn.GetComponent<BulletScript>();
-                                bulletInstance.bulletPlayerIndex = bulletCreation.playerIndex;
-                                bulletInstance.id = bulletCreation.id;
-                                remoteBullets[bulletInstance.id] = bulletToSpawn;
+                                GameObject spawnedBullet = Instantiate(this.bullet, bulletCreate.position, Quaternion.identity);
+                                spawnedBullet.GetComponent<Rigidbody>().velocity = bulletCreate.velocity;
+                                BulletScript bullet = spawnedBullet.GetComponent<BulletScript>();
+                                bullet.bulletPlayerIndex = bulletCreate.playerIndex;
+                                bullet.id = bulletCreate.id;
+                                remoteBullets[bullet.id] = bullet;
                                 //remotePlayer.ProccessBullet(bulletState);
                             }
                             break;
                         case MessageOps.MessageType.BULLET_STATE:
 
                             BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
-                            GameObject remoteBullet = remoteBullets[bulletState.bulletIndex];
-                            remoteBullet.transform.position = bulletState.position;
-                            remoteBullet.GetComponent<Rigidbody>().velocity = bulletState.velocity;
+                            BulletScript remoteBullet = remoteBullets[bulletState.bulletIndex];
+                            if (remoteBullet != null)
+                            {
+                                remoteBullet.transform.position = bulletState.position;
+                                remoteBullet.GetComponent<Rigidbody>().velocity = bulletState.velocity;
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"Bullet with id {bulletState.bulletIndex} from the other player is null");
+                            }
 
                             break;
                         case MessageOps.MessageType.BULLET_DESTROY:
@@ -166,12 +169,14 @@ public class ShieldClient : MonoBehaviour
 
                         case MessageOps.MessageType.AI_CREATE:
                             Debug.Log("Received AI Message");
-                            AICreateMessage aICreate = MessageOps.FromBytes<AICreateMessage>(subArr);
-                            GameObject AIToSpawn = Instantiate(AI, aICreate.position, Quaternion.identity);
-                            AIDictionary.Add(aICreate.id, AIToSpawn);
-                            AIScript ai = AIToSpawn.GetComponent<AIScript>();
-                            ai.id = aICreate.id;
-                            if (aICreate.id % 2 == PlayerIndex % 2)
+                            AICreateMessage aiCreate = MessageOps.FromBytes<AICreateMessage>(subArr);
+                            GameObject spawnedAI = Instantiate(AI, aiCreate.position, Quaternion.identity);
+                            AIScript ai = spawnedAI.GetComponent<AIScript>();
+                            ai.id = aiCreate.id;
+                            ai.pillar = pillarHealth;
+                            ai.InitVelocity();
+                            AIDictionary.Add(ai.id, ai);
+                            if (ai.id % 2 == PlayerIndex % 2)
                             {
                                 ai.client = this;
                                 ai.isControlledLocally = true;
@@ -184,27 +189,33 @@ public class ShieldClient : MonoBehaviour
                             }
                             break;
                         case MessageOps.MessageType.AI_STATE:
-                            AIStateMessage aIState = MessageOps.FromBytes<AIStateMessage>(subArr);
-                            if (aIState.id % 2 != PlayerIndex % 2)
+                            AIStateMessage aiState = MessageOps.FromBytes<AIStateMessage>(subArr);
+                            if (aiState.id % 2 != PlayerIndex % 2)
                             {
-                                GameObject AIToUpdate = AIDictionary[aIState.id];
-                                AIToUpdate.transform.position = aIState.position;
-                                AIToUpdate.GetComponent<Rigidbody>().velocity = aIState.velocity;
+                                AIScript AIToUpdate = AIDictionary[aiState.id];
+                                if (AIToUpdate != null)
+                                {
+                                    AIToUpdate.transform.position = aiState.position;
+                                    AIToUpdate.rb.velocity = aiState.velocity;
+                                }
                             }
                             break;
                         case MessageOps.MessageType.AI_DESTROY:
-                            AIDestroyMessage aIDestroy = MessageOps.FromBytes<AIDestroyMessage>(subArr);
-                            Destroy(AIDictionary[aIDestroy.id]);
-                            AIDictionary.Remove(aIDestroy.id);
+                            AIDestroyMessage aiDestroy = MessageOps.FromBytes<AIDestroyMessage>(subArr);
+                            if (AIDictionary[aiDestroy.id] != null)
+                            {
+                                AIDictionary.Remove(aiDestroy.id);
+                                Destroy(AIDictionary[aiDestroy.id].gameObject);
+                            }
                             break;
                         case MessageOps.MessageType.PILLAR_DAMAGE:
                             PillarDamageMessage pillarDamage = MessageOps.FromBytes<PillarDamageMessage>(subArr);
                             pillarHealth.CurrentHealth = pillarDamage.newHealth;
                             break;
-                        //case MessageOps.MessageType.PILLAR_DESTROY:
-                        //    PillarDestroyMessage pillarDestroy = MessageOps.FromBytes<PillarDestroyMessage>(subArr);
-                        //    Destroy(pillarHealth.gameObject);
-                        //    //display text: Game Over! Time Survived: X Seconds
+                            //case MessageOps.MessageType.PILLAR_DESTROY:
+                            //    PillarDestroyMessage pillarDestroy = MessageOps.FromBytes<PillarDestroyMessage>(subArr);
+                            //    Destroy(pillarHealth.gameObject);
+                            //    //display text: Game Over! Time Survived: X Seconds
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                     //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
@@ -218,131 +229,140 @@ public class ShieldClient : MonoBehaviour
 
         if (localPlayer && PlayerIndex >= 0)
         {
-            SendPosition();
+            SendPlayerState();
             UpdateLocalBullets();
             UpdateLocalAI();
         }
     }
 
-    private void SendPosition()
+    /// <summary>
+    /// Generate a PlayerStateMessage and send it.
+    /// </summary>
+    private void SendPlayerState()
     {
-        PlayerStateMessage mess = new PlayerStateMessage
+        if (localPlayer && PlayerIndex >= 0)
         {
-            playerIndex = PlayerIndex,
-            position = localPlayer.transform.position,
-            velocity = localPlayer.rb.velocity,
-            rotation = localPlayer.transform.rotation.eulerAngles.y,
-            angVel = localPlayer.rb.angularVelocity.y,
-            currentShieldRot = localPlayer.shieldHolder.transform.eulerAngles.y,
-            targetShieldRot = localPlayer.targetRot,
-            ticks = DateTime.UtcNow.Ticks
-        };
-        byte[] sendBuffer = MessageOps.GetBytes(mess);
-        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.PLAYER_STATE);
-        NetworkTransport.Send(hostID, connectionID, unreliableChannel, sendBuffer, sendBuffer.Length, out error);
-        Debug.Log("P" + error);
+            PlayerStateMessage mess = new PlayerStateMessage();
+            mess.playerIndex = PlayerIndex;
+            mess.position = localPlayer.transform.position;
+            mess.velocity = localPlayer.rb.velocity;
+            mess.rotation = localPlayer.transform.rotation.eulerAngles.y;
+            mess.angVel = localPlayer.rb.angularVelocity.y;
+            mess.currentShieldRot = localPlayer.shieldHolder.transform.eulerAngles.y;
+            mess.targetShieldRot = localPlayer.targetRot;
+            mess.ticks = DateTime.UtcNow.Ticks;
+
+            MessageOps.SendMessageToServer(mess, MessageOps.MessageType.PLAYER_STATE, hostID, connectionID, unreliableChannel, out error);
+            Debug.Log("P" + error);
+        }
+        else
+        {
+            Debug.LogError("Either Local Player does not exist or PlayerIndex < 0");
+        }
     }
 
+    /// <summary>
+    /// Generate a BulletCreateMessage and send it
+    /// </summary>
+    /// <param name="bullet"></param>
+    /// <param name="bVelocity"></param>
     public void SendBulletCreate(BulletScript bullet, Vector3 bVelocity)
     {
-        BulletCreateMessage mess = new BulletCreateMessage
-        {
-            playerIndex = PlayerIndex,
-            position = bullet.transform.position,
-            velocity = bVelocity,
-            ticks = DateTime.UtcNow.Ticks,
-            id = bullet.id
-        };
-        byte[] sendBuffer = MessageOps.GetBytes(mess);
-        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_CREATE);
-        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+        BulletCreateMessage mess = new BulletCreateMessage();
+        mess.playerIndex = PlayerIndex;
+        mess.position = bullet.transform.position;
+        mess.velocity = bVelocity;
+        mess.ticks = DateTime.UtcNow.Ticks;
+        mess.id = bullet.id;
+
+        MessageOps.SendMessageToServer(mess, MessageOps.MessageType.BULLET_CREATE, hostID, connectionID, reliableChannel, out error);
         Debug.Log("B" + error);
     }
 
-    public void DestroyBulletEvent(int bulletIndex)
+    /// <summary>
+    /// Genreate a BulletDestroyMessage and send it. Runs before the bullet object is locally destroyed
+    /// </summary>
+    /// <param name="bulletIndex"></param>
+    public void SendBulletDestroy(int bulletIndex)
     {
-        BulletDestroyMessage mess = new BulletDestroyMessage
+        if (localBullets[bulletIndex] != null)
         {
-            bulletIndex = bulletIndex,
-            ticks = DateTime.UtcNow.Ticks
-        };
-        byte[] sendBuffer = MessageOps.GetBytes(mess);
-        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_DESTROY);
-        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
-        Debug.Log("D" + error);
+            BulletDestroyMessage mess = new BulletDestroyMessage();
+            mess.bulletIndex = bulletIndex;
+            mess.ticks = DateTime.UtcNow.Ticks;
+
+            MessageOps.SendMessageToServer(mess, MessageOps.MessageType.BULLET_DESTROY, hostID, connectionID, reliableChannel, out error);
+            Debug.Log("D" + error);
+        }
     }
 
+    /// <summary>
+    /// Loop through all local bullets and send messages to server.
+    /// </summary>
     public void UpdateLocalBullets()
     {
         for (int i = 0; i < localBullets.Length; i++)
         {
             if (localBullets[i] != null)
             {
-                BulletStateMessage mess = new BulletStateMessage
-                {
-                    bulletIndex = localBullets[i].GetComponent<BulletScript>().id,
-                    position = localBullets[i].transform.position,
-                    velocity = localBullets[i].GetComponent<Rigidbody>().velocity,
-                    ticks = DateTime.UtcNow.Ticks
-                };
-                byte[] sendBuffer = MessageOps.GetBytes(mess);
-                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.BULLET_STATE);
-                NetworkTransport.Send(hostID, connectionID, unreliableChannel, sendBuffer, sendBuffer.Length, out error);
+                BulletStateMessage mess = new BulletStateMessage();
+                mess.bulletIndex = localBullets[i].GetComponent<BulletScript>().id;
+                mess.position = localBullets[i].transform.position;
+                mess.velocity = localBullets[i].GetComponent<Rigidbody>().velocity;
+                mess.ticks = DateTime.UtcNow.Ticks;
+
+                MessageOps.SendMessageToServer(mess, MessageOps.MessageType.BULLET_STATE, hostID, connectionID, unreliableChannel, out error);
                 Debug.Log("L" + error);
             }
         }
     }
 
+    /// <summary>
+    /// Update all player-owned AI and send messages to server
+    /// </summary>
     public void UpdateLocalAI()
     {
-        List<GameObject> coll = AIDictionary.Values.ToList();
-        for (int i = 0; i < coll.Count; i++)
+        List<AIScript> ais = AIDictionary.Values.ToList();
+        for (int i = 0; i < ais.Count; i++)
         {
-            if (coll[i] != null && coll[i].GetComponent<AIScript>().isControlledLocally)
+            if (ais[i] != null && ais[i].isControlledLocally)
             {
-                AIStateMessage mess = new AIStateMessage
-                {
-                    position = AIDictionary[i].transform.position,
-                    velocity = AIDictionary[i].GetComponent<Rigidbody>().velocity,
-                    id = AIDictionary[i].GetComponent<AIScript>().id
-                };
-                byte[] sendBuffer = MessageOps.GetBytes(mess);
-                sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_STATE);
-                NetworkTransport.Send(hostID, connectionID, unreliableChannel, sendBuffer, sendBuffer.Length, out error);
+                AIStateMessage mess = new AIStateMessage();
+                mess.position = AIDictionary[i].transform.position;
+                mess.velocity = AIDictionary[i].GetComponent<Rigidbody>().velocity;
+                mess.id = AIDictionary[i].id;
+
+                MessageOps.SendMessageToServer(mess, MessageOps.MessageType.AI_STATE, hostID, connectionID, unreliableChannel, out error);
+                Debug.Log("A" + error);
             }
         }
     }
 
-    public void DestroyLocalAI(AIScript ai)
+    public void DestroyLocalAI(int id)
     {
-
-        AIDestroyMessage mess = new AIDestroyMessage
+        AIScript ai = AIDictionary[id];
+        if (ai != null && ai.isControlledLocally)
         {
-            id = ai.id
-        };
-        byte[] sendBuffer = MessageOps.GetBytes(mess);
-        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_DESTROY);
-        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
-        AIDictionary.Remove(ai.id);
+            AIDestroyMessage mess = new AIDestroyMessage();
+            mess.id = id;
+
+            MessageOps.SendMessageToServer(mess, MessageOps.MessageType.AI_DESTROY, hostID, connectionID, reliableChannel, out error);
+            AIDictionary.Remove(id);
+            Destroy(ai.gameObject);
+        }
     }
-        
-    public void RequestStart()
+
+    public void SendStartRequest()
     {
         StartGameMessage mess = new StartGameMessage();
-        byte[] sendBuffer = MessageOps.GetBytes(mess);
-        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.GAME_START);
-        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+        MessageOps.SendMessageToServer(mess, MessageOps.MessageType.GAME_START, hostID, connectionID, reliableChannel, out error);
     }
 
     public void SendPillarDamage()
     {
-        PillarDamageMessage mess = new PillarDamageMessage
-        {
-            newHealth = pillarHealth.CurrentHealth - 1
-        };
-        byte[] sendBuffer = MessageOps.GetBytes(mess);
-        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.GAME_START);
-        NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+        PillarDamageMessage mess = new PillarDamageMessage();
+        mess.newHealth = pillarHealth.CurrentHealth - 1;
+        MessageOps.SendMessageToServer(mess, MessageOps.MessageType.PILLAR_DAMAGE, hostID, connectionID, reliableChannel, out error);
     }
 }
 

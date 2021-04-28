@@ -23,7 +23,6 @@ public class BulletScript : MonoBehaviour
         if (timeUntilDeath <= 0.0f && owner != null)
         {
             owner.DestroyBullet(id);
-            Destroy(gameObject);
         }
     }
 
@@ -78,10 +77,9 @@ public class BulletScript : MonoBehaviour
                     }
                 }
             }
-            else
+            else if (other.transform.parent != null && owner.gameObject != other.transform.parent.gameObject)
             {
                 owner.DestroyBullet(id);
-                Destroy(gameObject);
             }
         }
     }
@@ -91,7 +89,6 @@ public class BulletScript : MonoBehaviour
         if (owner != null)
         {
             owner.DestroyBullet(id);
-            Destroy(gameObject);
         }
     }
 }

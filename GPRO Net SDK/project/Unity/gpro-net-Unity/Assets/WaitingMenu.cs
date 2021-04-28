@@ -40,7 +40,7 @@ public class WaitingMenu : MonoBehaviour
 
     public void RequestLoadGame()
     {
-        client.RequestStart();
+        client.SendStartRequest();
     }
 
     public void LoadGame()
