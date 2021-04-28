@@ -202,10 +202,11 @@ public class ShieldClient : MonoBehaviour
                             break;
                         case MessageOps.MessageType.AI_DESTROY:
                             AIDestroyMessage aiDestroy = MessageOps.FromBytes<AIDestroyMessage>(subArr);
-                            if (AIDictionary[aiDestroy.id] != null)
+                            AIScript AIToDestroy = AIDictionary[aiDestroy.id];
+                            if (AIToDestroy != null)
                             {
                                 AIDictionary.Remove(aiDestroy.id);
-                                Destroy(AIDictionary[aiDestroy.id].gameObject);
+                                Destroy(AIToDestroy.gameObject);
                             }
                             break;
                         case MessageOps.MessageType.PILLAR_DAMAGE:
@@ -245,9 +246,10 @@ public class ShieldClient : MonoBehaviour
             PlayerStateMessage mess = new PlayerStateMessage();
             mess.playerIndex = PlayerIndex;
             mess.position = localPlayer.transform.position;
-            mess.velocity = localPlayer.rb.velocity;
+            Rigidbody rb = localPlayer.rb;
+            mess.velocity = rb ? rb.velocity : Vector3.zero;
             mess.rotation = localPlayer.transform.rotation.eulerAngles.y;
-            mess.angVel = localPlayer.rb.angularVelocity.y;
+            mess.angVel = rb ? rb.angularVelocity.y : 0;
             mess.currentShieldRot = localPlayer.shieldHolder.transform.eulerAngles.y;
             mess.targetShieldRot = localPlayer.targetRot;
             mess.ticks = DateTime.UtcNow.Ticks;
@@ -328,9 +330,9 @@ public class ShieldClient : MonoBehaviour
             if (ais[i] != null && ais[i].isControlledLocally)
             {
                 AIStateMessage mess = new AIStateMessage();
-                mess.position = AIDictionary[i].transform.position;
-                mess.velocity = AIDictionary[i].GetComponent<Rigidbody>().velocity;
-                mess.id = AIDictionary[i].id;
+                mess.position = ais[i].transform.position;
+                mess.velocity = ais[i].GetComponent<Rigidbody>().velocity;
+                mess.id = ais[i].id;
 
                 MessageOps.SendMessageToServer(mess, MessageOps.MessageType.AI_STATE, hostID, connectionID, unreliableChannel, out error);
                 Debug.Log("A" + error);

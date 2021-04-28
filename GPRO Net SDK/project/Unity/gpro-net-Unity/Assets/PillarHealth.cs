@@ -16,10 +16,10 @@ public class PillarHealth : MonoBehaviour
         {
             if (_currentHealth > value)
             {
-                _rend.material = damageMaterial;
+                _rend.sharedMaterial = damageMaterial;
+                _damageTime = 0.2f;
             }
             _currentHealth = value;
-            _damageTime = 0.2f;
         }
     }
 
@@ -38,7 +38,7 @@ public class PillarHealth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (_rend.material == damageMaterial)
+        if (_rend.sharedMaterial == damageMaterial)
         {
             _damageTime -= Time.deltaTime;
             if (_damageTime < 0)
