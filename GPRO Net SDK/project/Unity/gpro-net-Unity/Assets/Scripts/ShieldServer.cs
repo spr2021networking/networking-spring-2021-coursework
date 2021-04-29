@@ -26,6 +26,7 @@ public class ShieldServer : MonoBehaviour
 
     private bool running = false;
 
+    private float totalTime = 0;
     private float timer = 5.0f;
     private float timerStorage = 10.0f;
     private int AItoSpawn = 1;
@@ -60,7 +61,6 @@ public class ShieldServer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log("Update");
         byte[] buffer = new byte[1024];
         byte[] sendBuffer;
         for (int j = 0; j < 20; j++)
@@ -190,6 +190,7 @@ public class ShieldServer : MonoBehaviour
                         gameStart = false;
                         timer = 5.0f;
                         AICounter = 0;
+                        totalTime = 0;
                     }
                     break;
 
@@ -230,7 +231,22 @@ public class ShieldServer : MonoBehaviour
                 }
                 timer = timerStorage;
             }
+
+            float tmp = totalTime + Time.deltaTime;
+            if (Mathf.FloorToInt(totalTime) == Mathf.FloorToInt(tmp) - 1)
+            {
+                GameTimeMessage mess = new GameTimeMessage();
+                mess.time = Mathf.FloorToInt(tmp);
+                sendBuffer = MessageOps.GetBytes(mess);
+                sendBuffer = MessageOps.PackMessageID(sendBuffer, mess.MessageType());
+                for (int i = 0; i < connections.Count; i++)
+                {
+                    NetworkTransport.Send(hostID, connections[i], reliableChannelID, sendBuffer, sendBuffer.Length, out error);
+                }
+            }
+            totalTime = tmp;
         }
+        
     }
 }
 #pragma warning restore CS0618 // Type or member is obsolete

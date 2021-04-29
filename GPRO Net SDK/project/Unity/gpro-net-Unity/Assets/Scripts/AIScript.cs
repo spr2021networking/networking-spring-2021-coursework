@@ -55,10 +55,13 @@ public class AIScript : MonoBehaviour
         {
             rb = GetComponent<Rigidbody>();
         }
-        Vector3 direction = pillar.transform.position - transform.position;
-        direction.y = 0;
-        direction.Normalize();
-        direction *= speed;
-        rb.velocity = direction;
+        if (pillar)
+        {
+            Vector3 direction = pillar.transform.position - transform.position;
+            direction.y = 0;
+            direction.Normalize();
+            direction *= speed;
+            rb.velocity = direction;
+        }
     }
 }

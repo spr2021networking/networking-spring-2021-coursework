@@ -160,4 +160,10 @@ public struct GameOverMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.GAME_OVER;
 }
+
+public struct GameTimeMessage : IMessage
+{
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.GAME_TIME;
+    public int time;
+}
 #pragma warning restore CS0618 // Type or member is obsolete

@@ -49,6 +49,9 @@ public class ShieldClient : MonoBehaviour
 
     public Dictionary<int, AIScript> AIDictionary = new Dictionary<int, AIScript>();
     public PillarHealth pillarHealth;
+    public int timer;
+
+    public bool gameOver;
 
     private void Start()
     {
@@ -215,8 +218,13 @@ public class ShieldClient : MonoBehaviour
                             break;
                         case MessageOps.MessageType.GAME_OVER:
                             Destroy(pillarHealth.gameObject);
-                            text.SetText($"Game Over! Time Survived: {1} Seconds");
+                            gameOver = true;
+                            FindObjectOfType<PlayerReference>().gameOver.text = $"Game Over! Time Survived: {timer} Seconds";
                             Invoke("resetClient", 5.0f);
+                            break;
+                        case MessageOps.MessageType.GAME_TIME:
+                            GameTimeMessage time = MessageOps.FromBytes<GameTimeMessage>(subArr);
+                            timer = time.time;
                             break;
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
