@@ -27,11 +27,12 @@ public class ShieldServer : MonoBehaviour
     private bool running = false;
 
     private float timer = 5.0f;
-    private float timerStorage = 20.0f;
+    private float timerStorage = 10.0f;
     private int AItoSpawn = 1;
     private int AICounter = 0;
 
     public bool gameStart;
+    public bool gameOver;
     // Start is called before the first frame update
     void Start()
     {
@@ -144,10 +145,26 @@ public class ShieldServer : MonoBehaviour
                             }
                             break;
                         case MessageOps.MessageType.PILLAR_DAMAGE:
-                            for (int i = 0; i < connections.Count; i++)
+                            PillarDamageMessage pillarDamage = MessageOps.FromBytes<PillarDamageMessage>(buffer);
+                            if (pillarDamage.newHealth > 0)
                             {
-                                NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                                for (int i = 0; i < connections.Count; i++)
+                                {
+                                    NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                                }
                             }
+                            else
+                            {
+                                GameOverMessage gameOverMess = new GameOverMessage();
+                                sendBuffer = MessageOps.GetBytes(gameOverMess);
+                                sendBuffer = MessageOps.PackMessageID(sendBuffer, gameOverMess.MessageType());
+                                for (int i = 0; i < connections.Count; i++)
+                                {
+                                    NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, receivedSize, out error);
+                                }
+                                gameOver = true;
+                            }
+
                             break;
                     }
                     break;
@@ -167,6 +184,13 @@ public class ShieldServer : MonoBehaviour
                     {
                         NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
                     }
+                    if (connections.Count == 0)
+                    {
+                        gameOver = false;
+                        gameStart = false;
+                        timer = 5.0f;
+                        AICounter = 0;
+                    }
                     break;
 
                 case NetworkEventType.BroadcastEvent: break;
@@ -179,7 +203,7 @@ public class ShieldServer : MonoBehaviour
         //cos of x (degtorad value)
         //sin of z (degtorad value)
         //multiply the vector by radius 45
-        if (gameStart)
+        if (gameStart && !gameOver)
         {
             timer -= Time.deltaTime;
             if (timer <= 0.0f)

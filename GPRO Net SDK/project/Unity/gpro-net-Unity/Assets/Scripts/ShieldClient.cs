@@ -213,10 +213,11 @@ public class ShieldClient : MonoBehaviour
                             PillarDamageMessage pillarDamage = MessageOps.FromBytes<PillarDamageMessage>(subArr);
                             pillarHealth.CurrentHealth = pillarDamage.newHealth;
                             break;
-                            //case MessageOps.MessageType.PILLAR_DESTROY:
-                            //    PillarDestroyMessage pillarDestroy = MessageOps.FromBytes<PillarDestroyMessage>(subArr);
-                            //    Destroy(pillarHealth.gameObject);
-                            //    //display text: Game Over! Time Survived: X Seconds
+                        case MessageOps.MessageType.GAME_OVER:
+                            Destroy(pillarHealth.gameObject);
+                            text.SetText($"Game Over! Time Survived: {1} Seconds");
+                            Invoke("resetClient", 5.0f);
+                            break;
                     }
                     //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
                     //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
@@ -254,7 +255,7 @@ public class ShieldClient : MonoBehaviour
             mess.targetShieldRot = localPlayer.targetRot;
             mess.ticks = DateTime.UtcNow.Ticks;
 
-            MessageOps.SendMessageToServer(mess, MessageOps.MessageType.PLAYER_STATE, hostID, connectionID, unreliableChannel, out error);
+            MessageOps.SendMessageToServer(mess, hostID, connectionID, unreliableChannel, out error);
             Debug.Log("P" + error);
         }
         else
@@ -277,7 +278,7 @@ public class ShieldClient : MonoBehaviour
         mess.ticks = DateTime.UtcNow.Ticks;
         mess.id = bullet.id;
 
-        MessageOps.SendMessageToServer(mess, MessageOps.MessageType.BULLET_CREATE, hostID, connectionID, reliableChannel, out error);
+        MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
         Debug.Log("B" + error);
     }
 
@@ -293,7 +294,7 @@ public class ShieldClient : MonoBehaviour
             mess.bulletIndex = bulletIndex;
             mess.ticks = DateTime.UtcNow.Ticks;
 
-            MessageOps.SendMessageToServer(mess, MessageOps.MessageType.BULLET_DESTROY, hostID, connectionID, reliableChannel, out error);
+            MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
             Debug.Log("D" + error);
         }
     }
@@ -313,7 +314,7 @@ public class ShieldClient : MonoBehaviour
                 mess.velocity = localBullets[i].GetComponent<Rigidbody>().velocity;
                 mess.ticks = DateTime.UtcNow.Ticks;
 
-                MessageOps.SendMessageToServer(mess, MessageOps.MessageType.BULLET_STATE, hostID, connectionID, unreliableChannel, out error);
+                MessageOps.SendMessageToServer(mess, hostID, connectionID, unreliableChannel, out error);
                 Debug.Log("L" + error);
             }
         }
@@ -334,7 +335,7 @@ public class ShieldClient : MonoBehaviour
                 mess.velocity = ais[i].GetComponent<Rigidbody>().velocity;
                 mess.id = ais[i].id;
 
-                MessageOps.SendMessageToServer(mess, MessageOps.MessageType.AI_STATE, hostID, connectionID, unreliableChannel, out error);
+                MessageOps.SendMessageToServer(mess, hostID, connectionID, unreliableChannel, out error);
                 Debug.Log("A" + error);
             }
         }
@@ -348,7 +349,7 @@ public class ShieldClient : MonoBehaviour
             AIDestroyMessage mess = new AIDestroyMessage();
             mess.id = id;
 
-            MessageOps.SendMessageToServer(mess, MessageOps.MessageType.AI_DESTROY, hostID, connectionID, reliableChannel, out error);
+            MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
             AIDictionary.Remove(id);
             Destroy(ai.gameObject);
         }
@@ -357,14 +358,14 @@ public class ShieldClient : MonoBehaviour
     public void SendStartRequest()
     {
         StartGameMessage mess = new StartGameMessage();
-        MessageOps.SendMessageToServer(mess, MessageOps.MessageType.GAME_START, hostID, connectionID, reliableChannel, out error);
+        MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
     }
 
     public void SendPillarDamage()
     {
         PillarDamageMessage mess = new PillarDamageMessage();
         mess.newHealth = pillarHealth.CurrentHealth - 1;
-        MessageOps.SendMessageToServer(mess, MessageOps.MessageType.PILLAR_DAMAGE, hostID, connectionID, reliableChannel, out error);
+        MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
     }
 }
 

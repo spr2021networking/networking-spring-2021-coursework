@@ -13,7 +13,7 @@ public static class MessageOps
         BULLET_CREATE, BULLET_STATE, BULLET_DESTROY,
         AI_CREATE, AI_STATE, AI_DESTROY,
         GAME_START, GAME_DC,
-        PILLAR_DAMAGE, PILLAR_DESTROY,
+        PILLAR_DAMAGE, GAME_OVER,
         GAME_TIME
     }
 
@@ -59,25 +59,31 @@ public static class MessageOps
         return (MessageType)inArr[0];
     }
 
-    public static void SendMessageToServer<T>(T data, MessageType type, int hostID, int connectionID, int channelID, out byte error)
+    public static void SendMessageToServer<T>(T data, int hostID, int connectionID, int channelID, out byte error) where T : IMessage
     {
         byte[] sendBuffer = GetBytes(data);
-        sendBuffer = PackMessageID(sendBuffer, type);
+        sendBuffer = PackMessageID(sendBuffer, data.MessageType());
         NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
     }
 }
 
-public struct ConnectResponseMessage
+public interface IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.CONNECT_RESPONSE;
+    public MessageOps.MessageType MessageType();
+}
+
+
+public struct ConnectResponseMessage : IMessage
+{
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.CONNECT_RESPONSE;
     public int playerIndex;
     public bool self;
     public bool connecting;
 }
 
-public struct PlayerStateMessage
+public struct PlayerStateMessage : IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.PLAYER_STATE;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.PLAYER_STATE;
     public int playerIndex;
     public Vector3 position;
     public Vector3 velocity;
@@ -90,9 +96,9 @@ public struct PlayerStateMessage
     public long ticks;
 }
 
-public struct BulletCreateMessage
+public struct BulletCreateMessage : IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.BULLET_CREATE;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.BULLET_CREATE;
     public int playerIndex;
     public Vector3 position;
     public Vector3 velocity;
@@ -100,9 +106,9 @@ public struct BulletCreateMessage
     public long ticks;
 }
 
-public struct BulletStateMessage
+public struct BulletStateMessage : IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.BULLET_STATE;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.BULLET_STATE;
     public int bulletIndex;
     public Vector3 position;
     public Vector3 velocity;
@@ -110,43 +116,48 @@ public struct BulletStateMessage
     public long ticks;
 }
 
-public struct BulletDestroyMessage
+public struct BulletDestroyMessage : IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.BULLET_DESTROY;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.BULLET_DESTROY;
     public int bulletIndex;
     public long ticks;
 }
 
 
-public struct StartGameMessage
+public struct StartGameMessage : IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.GAME_START;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.GAME_START;
 }
 
-public struct AICreateMessage
+public struct AICreateMessage : IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.AI_CREATE;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.AI_CREATE;
     public Vector3 position;
     public int id;
 }
 
-public struct AIStateMessage
+public struct AIStateMessage : IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.AI_STATE;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.AI_STATE;
     public Vector3 position;
     public Vector3 velocity;
     public int id;
 }
 
-public struct AIDestroyMessage
+public struct AIDestroyMessage : IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.AI_DESTROY;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.AI_DESTROY;
     public int id;
 }
 
-public struct PillarDamageMessage
+public struct PillarDamageMessage : IMessage
 {
-    public MessageOps.MessageType MessageType => MessageOps.MessageType.PILLAR_DAMAGE;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.PILLAR_DAMAGE;
     public int newHealth;
+}
+
+public struct GameOverMessage : IMessage
+{
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.GAME_OVER;
 }
 #pragma warning restore CS0618 // Type or member is obsolete
