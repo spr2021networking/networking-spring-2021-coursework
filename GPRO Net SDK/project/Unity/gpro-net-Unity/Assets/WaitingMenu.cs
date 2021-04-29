@@ -45,6 +45,7 @@ public class WaitingMenu : MonoBehaviour
 
     public void LoadGame()
     {
+        client.isStarted = true;
         SceneManager.LoadScene("Client");
     }
 }

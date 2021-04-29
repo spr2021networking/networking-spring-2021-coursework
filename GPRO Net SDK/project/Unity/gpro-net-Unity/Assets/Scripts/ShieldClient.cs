@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using System.Linq;
-
+using UnityEngine.SceneManagement;
 #pragma warning disable CS0618
 public class ShieldClient : MonoBehaviour
 {
@@ -27,7 +27,7 @@ public class ShieldClient : MonoBehaviour
     private int connectionID;
 
     private float connectionTime;
-    private bool isStarted = false;
+    public bool isStarted = false;
     private bool isConnected = false;
     private byte error;
 
@@ -114,9 +114,14 @@ public class ShieldClient : MonoBehaviour
                     switch (MessageOps.ExtractMessageID(ref recBuffer, bufferSize, out byte[] subArr))
                     {
                         case MessageOps.MessageType.CONNECT_RESPONSE:
-
                             ConnectResponseMessage mess = MessageOps.FromBytes<ConnectResponseMessage>(subArr);
-                            if (mess.self)
+                            if (isStarted && !mess.self)
+                            {
+                                NetworkTransport.Disconnect(hostID, connectionID, out error);
+                                resetClient();
+                                SceneManager.LoadScene("ClientMenu");
+                            }
+                            else if (mess.self)
                             {
                                 _playerIndex = mess.playerIndex;
                             }
