@@ -12,6 +12,8 @@ using System.Linq;
 #pragma warning disable CS0618
 public class ShieldClient : MonoBehaviour
 {
+    private static ShieldClient _instance;
+
     private const int MAX_CONNECTION = 100;
 
     private int port = 7777;
@@ -47,7 +49,18 @@ public class ShieldClient : MonoBehaviour
     public GameObject[] localBullets;
     Dictionary<int, GameObject> AIDictionary;
     public PillarHealth pillarHealth;
-
+    public static ShieldClient Instance { get{ return _instance; } }
+    private void Awake()
+    {
+        if (_instance != null && _instance != this)
+        {
+            Destroy(this.gameObject);
+        }
+        else
+        {
+            _instance = this;
+        }
+    }
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
@@ -204,6 +217,10 @@ public class ShieldClient : MonoBehaviour
                     //text.text = str;
                     break;
                 case NetworkEventType.DisconnectEvent:
+                        //make disconnect case
+                        //call reset
+                        //then load the menu scene
+
                     break;
             }
         }
@@ -336,6 +353,29 @@ public class ShieldClient : MonoBehaviour
         byte[] sendBuffer = MessageOps.GetBytes(mess);
         sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.GAME_START);
         NetworkTransport.Send(hostID, connectionID, reliableChannel, sendBuffer, sendBuffer.Length, out error);
+    }
+
+    void resetClient()
+    {
+        hostID = 0;
+        webHostID = 0;
+
+        reliableChannel = 0;
+        unreliableChannel = 0;
+
+        connectionID = 0;
+
+        connectionTime = 0.0f;
+        isStarted = false;
+        isConnected = false;
+        _playerIndex = -1;
+        enteringGame = false;
+        remotePlayer = null;
+        Array.Clear(localBullets, 0, localBullets.Length);
+        Array.Clear(remoteBullets, 0, remoteBullets.Length);
+        AIDictionary.Clear();
+        pillarHealth = null;
+        error = 0;
     }
 }
 
