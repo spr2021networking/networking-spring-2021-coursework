@@ -8,10 +8,12 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using System.Linq;
-
+using UnityEngine.SceneManagement;
 #pragma warning disable CS0618
 public class ShieldClient : MonoBehaviour
 {
+    private static ShieldClient _instance;
+
     private const int MAX_CONNECTION = 100;
 
     private int port = 7777;
@@ -25,7 +27,7 @@ public class ShieldClient : MonoBehaviour
     private int connectionID;
 
     private float connectionTime;
-    private bool isStarted = false;
+    public bool isStarted = false;
     private bool isConnected = false;
     private byte error;
 
@@ -53,6 +55,18 @@ public class ShieldClient : MonoBehaviour
 
     public bool gameOver;
 
+    public static ShieldClient Instance { get{ return _instance; } }
+    private void Awake()
+    {
+        if (_instance != null && _instance != this)
+        {
+            Destroy(this.gameObject);
+        }
+        else
+        {
+            _instance = this;
+        }
+    }
     private void Start()
     {
         DontDestroyOnLoad(gameObject);
@@ -104,9 +118,14 @@ public class ShieldClient : MonoBehaviour
                     switch (type)
                     {
                         case MessageOps.MessageType.CONNECT_RESPONSE:
-
                             ConnectResponseMessage mess = MessageOps.FromBytes<ConnectResponseMessage>(subArr);
-                            if (mess.self)
+                            if (isStarted && !mess.self)
+                            {
+                                NetworkTransport.Disconnect(hostID, connectionID, out error);
+                                resetClient();
+                                SceneManager.LoadScene("ClientMenu");
+                            }
+                            else if (mess.self)
                             {
                                 _playerIndex = mess.playerIndex;
                             }
@@ -232,6 +251,10 @@ public class ShieldClient : MonoBehaviour
                     //text.text = str;
                     break;
                 case NetworkEventType.DisconnectEvent:
+                        //make disconnect case
+                        //call reset
+                        //then load the menu scene
+
                     break;
             }
         }
@@ -374,6 +397,29 @@ public class ShieldClient : MonoBehaviour
         PillarDamageMessage mess = new PillarDamageMessage();
         mess.newHealth = pillarHealth.CurrentHealth - 1;
         MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
+    }
+
+    void resetClient()
+    {
+        hostID = 0;
+        webHostID = 0;
+
+        reliableChannel = 0;
+        unreliableChannel = 0;
+
+        connectionID = 0;
+
+        connectionTime = 0.0f;
+        isStarted = false;
+        isConnected = false;
+        _playerIndex = -1;
+        enteringGame = false;
+        remotePlayer = null;
+        Array.Clear(localBullets, 0, localBullets.Length);
+        Array.Clear(remoteBullets, 0, remoteBullets.Length);
+        AIDictionary.Clear();
+        pillarHealth = null;
+        error = 0;
     }
 }
 
