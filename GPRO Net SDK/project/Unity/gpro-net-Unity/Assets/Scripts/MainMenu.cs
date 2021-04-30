@@ -8,10 +8,9 @@ public class MainMenu : MonoBehaviour
     public TMP_InputField ip;
     public Button button;
 
-    public ShieldClient client;
     public WaitingMenu waiting;
 
-    private bool _lobbyShown;
+    public bool lobbyShown;
     // Use this for initialization
     void Start()
     {
@@ -21,9 +20,9 @@ public class MainMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (client.PlayerIndex >= 0 && !_lobbyShown)
+        if (ShieldClient.Instance.PlayerIndex >= 0 && !lobbyShown)
         {
-            _lobbyShown = true;
+            lobbyShown = true;
             ShowLobby();
         }
     }
@@ -36,7 +35,7 @@ public class MainMenu : MonoBehaviour
 
     public void Connect()
     {
-        client.Connect(ip.text);
+        ShieldClient.Instance.Connect(ip.text);
     }
 
 }

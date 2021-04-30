@@ -81,6 +81,10 @@ public class BulletScript : MonoBehaviour
             {
                 owner.DestroyBullet(id);
             }
+            else if (other.CompareTag("Enemy") && !hasHitShield)
+            {
+                owner.DestroyBullet(id);
+            }
         }
     }
 

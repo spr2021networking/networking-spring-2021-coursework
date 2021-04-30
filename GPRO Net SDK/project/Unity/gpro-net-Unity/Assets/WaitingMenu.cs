@@ -8,7 +8,6 @@ using UnityEngine.UI;
 public class WaitingMenu : MonoBehaviour
 {
     public MainMenu main;
-    public ShieldClient client;
 
     public TextMeshProUGUI player1Conn, player2Conn;
     public Button confirmButton;
@@ -21,17 +20,17 @@ public class WaitingMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (client.PlayerIndex >= 0)
+        if (ShieldClient.Instance.PlayerIndex >= 0)
         {
-            (client.PlayerIndex == 1 ? player2Conn : player1Conn).text = "Connected";
+            (ShieldClient.Instance.PlayerIndex == 1 ? player2Conn : player1Conn).text = "Connected";
         }
-        (client.PlayerIndex == 1 ? player1Conn : player2Conn).text = (client.OtherPlayerConnected ? "" : "Not ") + "Connected";
+        (ShieldClient.Instance.PlayerIndex == 1 ? player1Conn : player2Conn).text = (ShieldClient.Instance.OtherPlayerConnected ? "" : "Not ") + "Connected";
 
-        confirmButton.interactable = client.OtherPlayerConnected;
+        confirmButton.interactable = ShieldClient.Instance.OtherPlayerConnected;
 
-        if (client.enteringGame)
+        if (ShieldClient.Instance.enteringGame)
         {
-            client.enteringGame = false;
+            ShieldClient.Instance.enteringGame = false;
             LoadGame();
         }
 
@@ -40,12 +39,12 @@ public class WaitingMenu : MonoBehaviour
 
     public void RequestLoadGame()
     {
-        client.SendStartRequest();
+        ShieldClient.Instance.SendStartRequest();
     }
 
     public void LoadGame()
     {
-        client.isStarted = true;
+        ShieldClient.Instance.isStarted = true;
         SceneManager.LoadScene("Client");
     }
 }

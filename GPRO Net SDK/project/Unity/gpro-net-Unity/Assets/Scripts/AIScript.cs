@@ -36,7 +36,10 @@ public class AIScript : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Bullet") && isControlledLocally)
         {
-            client.DestroyLocalAI(id);
+            if (collision.GetComponent<BulletScript>().hasHitShield)
+            {
+                client.DestroyLocalAI(id);
+            }
         }
     }
 

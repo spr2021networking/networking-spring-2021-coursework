@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 7124947258493029318}
   m_Layer: 0
   m_Name: Enemy
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -131,3 +131,4 @@ MonoBehaviour:
   isControlledLocally: 0
   rb: {fileID: 4184882838884427549}
   id: 0
+  firstFrame: 1

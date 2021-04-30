@@ -12,8 +12,6 @@ using UnityEngine.SceneManagement;
 #pragma warning disable CS0618
 public class ShieldClient : MonoBehaviour
 {
-    private static ShieldClient _instance;
-
     private const int MAX_CONNECTION = 100;
 
     private int port = 7777;
@@ -55,16 +53,16 @@ public class ShieldClient : MonoBehaviour
 
     public bool gameOver;
 
-    public static ShieldClient Instance { get{ return _instance; } }
+    public static ShieldClient Instance { get; private set; }
     private void Awake()
     {
-        if (_instance != null && _instance != this)
+        if (Instance != null && Instance != this)
         {
             Destroy(this.gameObject);
         }
         else
         {
-            _instance = this;
+            Instance = this;
         }
     }
     private void Start()
@@ -87,6 +85,7 @@ public class ShieldClient : MonoBehaviour
 
         connectionTime = Time.time;
         isConnected = true;
+        FindObjectOfType<MainMenu>().lobbyShown = false;
     }
 
     private void Update()
@@ -122,8 +121,7 @@ public class ShieldClient : MonoBehaviour
                             if (isStarted && !mess.self)
                             {
                                 NetworkTransport.Disconnect(hostID, connectionID, out error);
-                                resetClient();
-                                SceneManager.LoadScene("ClientMenu");
+                                ResetClient();
                             }
                             else if (mess.self)
                             {
@@ -239,7 +237,7 @@ public class ShieldClient : MonoBehaviour
                             Destroy(pillarHealth.gameObject);
                             gameOver = true;
                             FindObjectOfType<PlayerReference>().gameOver.text = $"Game Over! Time Survived: {timer} Seconds";
-                            Invoke("resetClient", 5.0f);
+                            Invoke(nameof(ResetClient), 5.0f);
                             break;
                         case MessageOps.MessageType.GAME_TIME:
                             GameTimeMessage time = MessageOps.FromBytes<GameTimeMessage>(subArr);
@@ -374,15 +372,17 @@ public class ShieldClient : MonoBehaviour
 
     public void DestroyLocalAI(int id)
     {
-        AIScript ai = AIDictionary[id];
-        if (ai != null && ai.isControlledLocally)
+        if (AIDictionary.TryGetValue(id, out AIScript ai))
         {
-            AIDestroyMessage mess = new AIDestroyMessage();
-            mess.id = id;
+            if (ai != null && ai.isControlledLocally)
+            {
+                AIDestroyMessage mess = new AIDestroyMessage();
+                mess.id = id;
 
-            MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
-            AIDictionary.Remove(id);
-            Destroy(ai.gameObject);
+                MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
+                AIDictionary.Remove(id);
+                Destroy(ai.gameObject);
+            }
         }
     }
 
@@ -399,7 +399,7 @@ public class ShieldClient : MonoBehaviour
         MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
     }
 
-    void resetClient()
+    public void ResetClient()
     {
         hostID = 0;
         webHostID = 0;
@@ -408,6 +408,7 @@ public class ShieldClient : MonoBehaviour
         unreliableChannel = 0;
 
         connectionID = 0;
+        OtherPlayerConnected = false;
 
         connectionTime = 0.0f;
         isStarted = false;
@@ -420,6 +421,7 @@ public class ShieldClient : MonoBehaviour
         AIDictionary.Clear();
         pillarHealth = null;
         error = 0;
+        SceneManager.LoadScene("ClientMenu");
     }
 }
 
