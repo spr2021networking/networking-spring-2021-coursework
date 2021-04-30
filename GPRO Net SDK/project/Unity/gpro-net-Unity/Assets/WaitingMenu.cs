@@ -52,4 +52,9 @@ public class WaitingMenu : MonoBehaviour
         ShieldClient.Instance.isStarted = true;
         SceneManager.LoadScene("Client");
     }
+
+    public void Back()
+    {
+        ShieldClient.Instance.ResetClient();
+    }
 }

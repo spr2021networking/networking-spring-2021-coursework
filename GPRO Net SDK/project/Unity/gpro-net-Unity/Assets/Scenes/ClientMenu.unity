@@ -152,6 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 606b3c6db1b6c314da48645bd4b99c36, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isStarted: 0
   text: {fileID: 0}
   remotePlayer: {fileID: 0}
   localPlayer: {fileID: 0}
@@ -159,6 +160,8 @@ MonoBehaviour:
   AI: {fileID: 8390456392689031141, guid: 45450396f91a5b743b4f43541aa222f7, type: 3}
   enteringGame: 0
   pillarHealth: {fileID: 0}
+  timer: 0
+  gameOver: 0
 --- !u!4 &22414772
 Transform:
   m_ObjectHideFlags: 0
@@ -1648,7 +1651,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1170567295}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1805366735}
+        m_TargetAssemblyTypeName: WaitingMenu, Assembly-CSharp
+        m_MethodName: Back
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1170567295
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1739,8 +1754,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ip: {fileID: 595255309}
   button: {fileID: 2133627955}
-  client: {fileID: 22414771}
   waiting: {fileID: 1805366735}
+  lobbyShown: 0
 --- !u!1 &1614206354
 GameObject:
   m_ObjectHideFlags: 0
@@ -2064,7 +2079,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   main: {fileID: 1225220780}
-  client: {fileID: 22414771}
   player1Conn: {fileID: 1614206356}
   player2Conn: {fileID: 136523326}
   confirmButton: {fileID: 855550526}
