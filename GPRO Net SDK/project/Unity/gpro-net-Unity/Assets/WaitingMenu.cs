@@ -20,9 +20,14 @@ public class WaitingMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         if (ShieldClient.Instance.PlayerIndex >= 0)
         {
             (ShieldClient.Instance.PlayerIndex == 1 ? player2Conn : player1Conn).text = "Connected";
+        }
+        else
+        {
+            player2Conn.text = player1Conn.text = "Not Connected";
         }
         (ShieldClient.Instance.PlayerIndex == 1 ? player1Conn : player2Conn).text = (ShieldClient.Instance.OtherPlayerConnected ? "" : "Not ") + "Connected";
 

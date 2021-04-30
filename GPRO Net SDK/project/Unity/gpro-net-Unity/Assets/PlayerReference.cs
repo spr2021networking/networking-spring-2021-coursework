@@ -12,27 +12,25 @@ public class PlayerReference : MonoBehaviour
 
     public TextMeshProUGUI timer, health, gameOver;
 
-    ShieldClient s;
     // Start is called before the first frame update
     void Start()
     {
-        s = FindObjectOfType<ShieldClient>();
-        bool isPlayerZero = s.PlayerIndex == 0;
+        bool isPlayerZero = ShieldClient.Instance.PlayerIndex == 0;
 
-        s.localPlayer = (isPlayerZero ? cube : sphere).AddComponent<PlayerInput>();
-        s.remotePlayer = (!isPlayerZero ? cube : sphere).AddComponent<RemoteInput>();
-        s.remotePlayer.client = s;
-        s.localPlayer.client = s;
-        s.pillarHealth = pillarHealth;
-        viewCamera.transform.parent = s.localPlayer.transform;
+        ShieldClient.Instance.localPlayer = (isPlayerZero ? cube : sphere).AddComponent<PlayerInput>();
+        ShieldClient.Instance.remotePlayer = (!isPlayerZero ? cube : sphere).AddComponent<RemoteInput>();
+        ShieldClient.Instance.remotePlayer.client = ShieldClient.Instance;
+        ShieldClient.Instance.localPlayer.client = ShieldClient.Instance;
+        ShieldClient.Instance.pillarHealth = pillarHealth;
+        viewCamera.transform.parent = ShieldClient.Instance.localPlayer.transform;
         viewCamera.transform.localPosition = new Vector3(0, viewCamera.transform.localPosition.y, viewCamera.transform.localPosition.z);
     }
 
     // Update is called once per frame
     void Update()
     {
-        timer.text = "Game Timer: " + s.timer;
+        timer.text = "Game Timer: " + ShieldClient.Instance.timer;
         health.text = "" + pillarHealth.CurrentHealth;
-        gameOver.enabled = s.gameOver;
+        gameOver.enabled = ShieldClient.Instance.gameOver;
     }
 }

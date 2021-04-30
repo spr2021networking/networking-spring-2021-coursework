@@ -77,11 +77,10 @@ public class BulletScript : MonoBehaviour
                     }
                 }
             }
-            else if (other.transform.parent != null && owner.gameObject != other.transform.parent.gameObject)
+            else if (other.transform.parent != null && owner.gameObject == other.transform.parent.gameObject)
             {
-                owner.DestroyBullet(id);
             }
-            else if (other.CompareTag("Enemy") && !hasHitShield)
+            else
             {
                 owner.DestroyBullet(id);
             }

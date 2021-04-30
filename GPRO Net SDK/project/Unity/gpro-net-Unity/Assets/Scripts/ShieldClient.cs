@@ -212,11 +212,13 @@ public class ShieldClient : MonoBehaviour
                             AIStateMessage aiState = MessageOps.FromBytes<AIStateMessage>(subArr);
                             if (aiState.id % 2 != PlayerIndex % 2)
                             {
-                                AIScript AIToUpdate = AIDictionary[aiState.id];
-                                if (AIToUpdate != null)
+                                if (AIDictionary.TryGetValue(aiState.id, out AIScript AIToUpdate))
                                 {
-                                    AIToUpdate.transform.position = aiState.position;
-                                    AIToUpdate.rb.velocity = aiState.velocity;
+                                    if (AIToUpdate != null)
+                                    {
+                                        AIToUpdate.transform.position = aiState.position;
+                                        AIToUpdate.rb.velocity = aiState.velocity;
+                                    }
                                 }
                             }
                             break;
@@ -249,9 +251,9 @@ public class ShieldClient : MonoBehaviour
                     //text.text = str;
                     break;
                 case NetworkEventType.DisconnectEvent:
-                        //make disconnect case
-                        //call reset
-                        //then load the menu scene
+                    //make disconnect case
+                    //call reset
+                    //then load the menu scene
 
                     break;
             }
