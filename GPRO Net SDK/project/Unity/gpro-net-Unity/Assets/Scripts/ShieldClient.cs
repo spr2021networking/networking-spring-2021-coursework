@@ -120,7 +120,6 @@ public class ShieldClient : MonoBehaviour
                             ConnectResponseMessage mess = MessageOps.FromBytes<ConnectResponseMessage>(subArr);
                             if (isStarted && !mess.self)
                             {
-                                NetworkTransport.Disconnect(hostID, connectionID, out error);
                                 ResetClient();
                             }
                             else if (mess.self)
@@ -403,6 +402,7 @@ public class ShieldClient : MonoBehaviour
 
     public void ResetClient()
     {
+        NetworkTransport.Disconnect(hostID, connectionID, out error);
         hostID = 0;
         webHostID = 0;
 
@@ -417,6 +417,8 @@ public class ShieldClient : MonoBehaviour
         isConnected = false;
         _playerIndex = -1;
         enteringGame = false;
+        gameOver = false;
+        timer = 0;
         remotePlayer = null;
         Array.Clear(localBullets, 0, localBullets.Length);
         Array.Clear(remoteBullets, 0, remoteBullets.Length);
