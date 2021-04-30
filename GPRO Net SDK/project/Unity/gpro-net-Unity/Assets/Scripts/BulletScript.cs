@@ -11,6 +11,10 @@ public class BulletScript : MonoBehaviour
     public int id;
     public int bulletPlayerIndex;
     public bool hasHitShield;
+
+    [SerializeField]
+    float maxOffset = 2.0f;
+    Vector3 tmpPos;
     // Start is called before the first frame update
     void Start()
     {
@@ -19,6 +23,19 @@ public class BulletScript : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+        Vector3 intendedPos = tmpPos;
+
+        //dot prod of normalized direction, if less than 30 degrees
+        if ((transform.position - tmpPos).magnitude > maxOffset)
+        {
+            transform.position = tmpPos;
+        }
+        else
+        {
+            intendedPos += rb.velocity * Time.fixedDeltaTime;
+            transform.position = Vector3.Lerp(transform.position, intendedPos, 0.5f);
+            tmpPos = intendedPos;
+        }
         timeUntilDeath -= Time.deltaTime;
         if (timeUntilDeath <= 0.0f && owner != null)
         {
@@ -93,5 +110,10 @@ public class BulletScript : MonoBehaviour
         {
             owner.DestroyBullet(id);
         }
+    }
+    public void SetNewPositionAndVelocity(Vector3 pos, Vector3 vel)
+    {
+        tmpPos = pos;
+        rb.velocity = vel;
     }
 }

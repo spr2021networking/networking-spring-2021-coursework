@@ -53,6 +53,7 @@ public class ShieldClient : MonoBehaviour
 
     public bool gameOver;
 
+
     public static ShieldClient Instance { get; private set; }
     private void Awake()
     {
@@ -165,8 +166,8 @@ public class ShieldClient : MonoBehaviour
                             BulletScript remoteBullet = remoteBullets[bulletState.bulletIndex];
                             if (remoteBullet != null)
                             {
-                                remoteBullet.transform.position = bulletState.position;
-                                remoteBullet.GetComponent<Rigidbody>().velocity = bulletState.velocity;
+                                
+                                remoteBullet.SetNewPositionAndVelocity(bulletState.position, bulletState.velocity);
                             }
                             else
                             {
@@ -215,8 +216,7 @@ public class ShieldClient : MonoBehaviour
                                 {
                                     if (AIToUpdate != null)
                                     {
-                                        AIToUpdate.transform.position = aiState.position;
-                                        AIToUpdate.rb.velocity = aiState.velocity;
+                                        AIToUpdate.SetNewPositionAndVelocity(aiState.position, aiState.velocity);
                                     }
                                 }
                             }
@@ -427,6 +427,12 @@ public class ShieldClient : MonoBehaviour
         error = 0;
         SceneManager.LoadScene("ClientMenu");
     }
+
+    void playerDataStorage()
+    {
+        
+    }
+
 }
 
 #pragma warning restore CS0618

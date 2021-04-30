@@ -16,6 +16,12 @@ public class AIScript : MonoBehaviour
     private float _timer = 0;
 
     public bool firstFrame = true;
+    [SerializeField]
+    float maxOffset = 2.0f;
+    Vector3 tmpPos;
+    Vector3 tmpVel;
+
+    static float COSTHIRTY = Mathf.Cos(30 * Mathf.Deg2Rad);
     // Start is called before the first frame update
     void Start()
     {
@@ -31,7 +37,30 @@ public class AIScript : MonoBehaviour
             InitVelocity();
         }
     }
+    private void FixedUpdate()
+    {
+        Vector3 intendedPos = tmpPos;
+        Vector3 intendedVel = tmpVel;
+        float dotProd = Vector3.Dot(rb.velocity, tmpVel);
 
+        //dot prod of normalized direction, if less than 30 degrees
+        if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset)
+        {
+            rb.velocity = tmpVel;
+            transform.position = tmpPos;
+        }
+        else
+        {
+
+            intendedVel = Vector3.Slerp(rb.velocity, tmpVel, 0.5f);
+            intendedVel.y = 0;
+            rb.velocity = intendedVel;
+
+            intendedPos += tmpVel * Time.fixedDeltaTime;
+            transform.position = Vector3.Lerp(transform.position, intendedPos, 0.5f);
+            tmpPos = intendedPos;
+        }
+    }
     private void OnTriggerEnter(Collider collision)
     {
         if (collision.gameObject.CompareTag("Bullet") && isControlledLocally)
@@ -66,5 +95,11 @@ public class AIScript : MonoBehaviour
             direction *= speed;
             rb.velocity = direction;
         }
+    }
+
+    public void SetNewPositionAndVelocity(Vector3 pos, Vector3 vel)
+    {
+        tmpPos = pos;
+        tmpVel = vel;
     }
 }
