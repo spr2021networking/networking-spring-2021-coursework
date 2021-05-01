@@ -13,6 +13,12 @@ public class RemoteInput : MonoBehaviour
     public float rotSpeed = 180.0f;
 
     private float CloseEnough => 2 * rotSpeed / 60f;
+    [SerializeField]
+    float maxOffset = 2.0f;
+    Vector3 tmpPos;
+    Vector3 tmpVel;
+
+    static float COSTHIRTY = Mathf.Cos(30 * Mathf.Deg2Rad);
     // Start is called before the first frame update
     void Start()
     {
@@ -28,6 +34,28 @@ public class RemoteInput : MonoBehaviour
 
     private void FixedUpdate()
     {
+        Vector3 intendedPos = tmpPos;
+        Vector3 intendedVel = tmpVel;
+        float dotProd = Vector3.Dot(_rb.velocity, tmpVel);
+
+        //dot prod of normalized direction, if less than 30 degrees
+        if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset)
+        {
+            _rb.velocity = tmpVel;
+            transform.position = tmpPos;
+        }
+        else
+        {
+
+            intendedVel = Vector3.Slerp(_rb.velocity, tmpVel, 0.5f);
+            intendedVel.y = 0;
+            _rb.velocity = intendedVel;
+
+            intendedPos += tmpVel * Time.fixedDeltaTime;
+            transform.position = Vector3.Lerp(transform.position, intendedPos, 0.5f);
+            tmpPos = intendedPos;
+        }
+
         RemoteRotateShield(); //used between packets
     }
     private void RemoteRotateShield()
@@ -53,8 +81,8 @@ public class RemoteInput : MonoBehaviour
 
     internal void ProcessInput(PlayerStateMessage playerState)
     {
-        transform.position = playerState.position;
-        _rb.velocity = playerState.velocity;
+        tmpPos = playerState.position;
+        tmpVel = playerState.velocity;
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, playerState.rotation, transform.rotation.eulerAngles.z);
         _rb.angularVelocity = new Vector3(_rb.angularVelocity.x, playerState.angVel, _rb.angularVelocity.z);
 
@@ -62,5 +90,11 @@ public class RemoteInput : MonoBehaviour
         targetRot = playerState.targetShieldRot;
         //need shield rotation
         //time shenanigans?
+    }
+
+    public void SetNewPositionAndVelocity(Vector3 pos, Vector3 vel)
+    {
+        tmpPos = pos;
+        _rb.velocity = vel;
     }
 }

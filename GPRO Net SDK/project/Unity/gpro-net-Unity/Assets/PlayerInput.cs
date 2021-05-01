@@ -21,6 +21,8 @@ public class PlayerInput : MonoBehaviour
     private float bulletSpawnOffset = 7;
 
     private Vector3 fireDirection = Vector3.forward;
+
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -32,6 +34,7 @@ public class PlayerInput : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+
         float horizontalInput = Input.GetAxis("Horizontal");
         float verticalInput = Input.GetAxis("Vertical");
         Vector3 input = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
