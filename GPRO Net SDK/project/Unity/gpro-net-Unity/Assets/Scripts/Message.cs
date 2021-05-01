@@ -30,6 +30,21 @@ public static class MessageOps
         return arr;
     }
 
+    public static byte[] PackMessageID(byte[] inArr, MessageType type)
+    {
+        byte[] ret = new byte[inArr.Length + 1];
+        ret[0] = (byte)type;
+        Array.Copy(inArr, 0, ret, 1, inArr.Length);
+        return ret;
+    }
+
+    public static byte[] ToMessageArray<T>(T data) where T : IMessage
+    {
+        byte[] bytes = GetBytes(data);
+        bytes = PackMessageID(bytes, data.MessageType());
+        return bytes;
+    }
+
     //inspired by https://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
     public static T FromBytes<T>(byte[] arr)
     {
@@ -43,13 +58,6 @@ public static class MessageOps
         Marshal.FreeHGlobal(ptr);
 
         return val;
-    }
-    public static byte[] PackMessageID(byte[] inArr, MessageType type)
-    {
-        byte[] ret = new byte[inArr.Length + 1];
-        ret[0] = (byte)type;
-        Array.Copy(inArr, 0, ret, 1, inArr.Length);
-        return ret;
     }
 
     public static MessageType ExtractMessageID(ref byte[] inArr, int arrSize, out byte[] outArr)
@@ -76,6 +84,7 @@ public interface IMessage
 public struct ConnectResponseMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.CONNECT_RESPONSE;
+
     public int playerIndex;
     public bool self;
     public bool connecting;
@@ -87,13 +96,9 @@ public struct PlayerStateMessage : IMessage
     public int playerIndex;
     public Vector3 position;
     public Vector3 velocity;
-    public float rotation;
-    public float angVel;
 
     public float currentShieldRot;
     public float targetShieldRot;
-
-    public long ticks;
 }
 
 public struct BulletCreateMessage : IMessage
@@ -103,7 +108,6 @@ public struct BulletCreateMessage : IMessage
     public Vector3 position;
     public Vector3 velocity;
     public int id; //id within the array
-    public long ticks;
 }
 
 public struct BulletStateMessage : IMessage
@@ -112,15 +116,12 @@ public struct BulletStateMessage : IMessage
     public int bulletIndex;
     public Vector3 position;
     public Vector3 velocity;
-
-    public long ticks;
 }
 
 public struct BulletDestroyMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.BULLET_DESTROY;
     public int bulletIndex;
-    public long ticks;
 }
 
 

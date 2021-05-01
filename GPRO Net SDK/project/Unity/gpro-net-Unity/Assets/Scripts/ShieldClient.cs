@@ -279,11 +279,8 @@ public class ShieldClient : MonoBehaviour
             mess.position = localPlayer.transform.position;
             Rigidbody rb = localPlayer.rb;
             mess.velocity = rb ? rb.velocity : Vector3.zero;
-            mess.rotation = localPlayer.transform.rotation.eulerAngles.y;
-            mess.angVel = rb ? rb.angularVelocity.y : 0;
             mess.currentShieldRot = localPlayer.shieldHolder.transform.eulerAngles.y;
             mess.targetShieldRot = localPlayer.targetRot;
-            mess.ticks = DateTime.UtcNow.Ticks;
 
             MessageOps.SendMessageToServer(mess, hostID, connectionID, unreliableChannel, out error);
             Debug.Log("P" + error);
@@ -305,7 +302,6 @@ public class ShieldClient : MonoBehaviour
         mess.playerIndex = PlayerIndex;
         mess.position = bullet.transform.position;
         mess.velocity = bVelocity;
-        mess.ticks = DateTime.UtcNow.Ticks;
         mess.id = bullet.id;
 
         MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
@@ -322,7 +318,6 @@ public class ShieldClient : MonoBehaviour
         {
             BulletDestroyMessage mess = new BulletDestroyMessage();
             mess.bulletIndex = bulletIndex;
-            mess.ticks = DateTime.UtcNow.Ticks;
 
             MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
             Debug.Log("D" + error);
@@ -342,7 +337,6 @@ public class ShieldClient : MonoBehaviour
                 mess.bulletIndex = localBullets[i].GetComponent<BulletScript>().id;
                 mess.position = localBullets[i].transform.position;
                 mess.velocity = localBullets[i].GetComponent<Rigidbody>().velocity;
-                mess.ticks = DateTime.UtcNow.Ticks;
 
                 MessageOps.SendMessageToServer(mess, hostID, connectionID, unreliableChannel, out error);
                 Debug.Log("L" + error);

@@ -83,18 +83,10 @@ public class RemoteInput : MonoBehaviour
     {
         tmpPos = playerState.position;
         tmpVel = playerState.velocity;
-        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, playerState.rotation, transform.rotation.eulerAngles.z);
-        _rb.angularVelocity = new Vector3(_rb.angularVelocity.x, playerState.angVel, _rb.angularVelocity.z);
 
         shieldHolder.transform.rotation = Quaternion.Euler(0, playerState.currentShieldRot, 0);
         targetRot = playerState.targetShieldRot;
         //need shield rotation
         //time shenanigans?
-    }
-
-    public void SetNewPositionAndVelocity(Vector3 pos, Vector3 vel)
-    {
-        tmpPos = pos;
-        _rb.velocity = vel;
     }
 }
