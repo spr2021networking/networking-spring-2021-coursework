@@ -34,6 +34,9 @@ public class ShieldClient : MonoBehaviour
     private int _playerIndex = -1;
     public int PlayerIndex => _playerIndex;
 
+    public bool receivedLobbyInfo;
+    public bool[] lobbyStates = new bool[4];
+
     public bool OtherPlayerConnected { get; internal set; }
 
     public RemoteInput remotePlayer;
@@ -53,13 +56,14 @@ public class ShieldClient : MonoBehaviour
 
     public bool gameOver;
 
+    public int roomID = 0;
 
     public static ShieldClient Instance { get; private set; }
     private void Awake()
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
         }
         else
         {
@@ -111,28 +115,44 @@ public class ShieldClient : MonoBehaviour
                 case NetworkEventType.Nothing:
                     break;
                 case NetworkEventType.ConnectEvent:
-                    NetworkTransport.Send(hostID, connectionID, reliableChannel, new byte[] { (byte)MessageOps.MessageType.CONNECT_REQUEST }, 1, out error);
+                    NetworkTransport.Send(hostID, connectionID, reliableChannel, new byte[] { (byte)MessageOps.MessageType.SERVER_CONNECT_REQUEST }, 1, out error);
                     break;
                 case NetworkEventType.DataEvent:
                     MessageOps.MessageType type = MessageOps.ExtractMessageID(ref recBuffer, bufferSize, out byte[] subArr);
                     switch (type)
                     {
-                        case MessageOps.MessageType.CONNECT_RESPONSE:
-                            ConnectResponseMessage mess = MessageOps.FromBytes<ConnectResponseMessage>(subArr);
-                            if (isStarted && !mess.self)
+                        case MessageOps.MessageType.LOBBY_INFO:
+                            LobbyInfoMessage mess = MessageOps.FromBytes<LobbyInfoMessage>(subArr);
+                            receivedLobbyInfo = true;
+                            lobbyStates[0] = mess.room0;
+                            lobbyStates[1] = mess.room1;
+                            lobbyStates[2] = mess.room2;
+                            lobbyStates[3] = mess.room3;
+                            break;
+                        case MessageOps.MessageType.ROOM_CONNECT_RESPONSE:
+                            RoomConnectResponseMessage connectResponse = MessageOps.FromBytes<RoomConnectResponseMessage>(subArr);
+
+                            //someone disconnected from the room, kick to main menu
+                            if (isStarted && !connectResponse.self)
                             {
                                 ResetClient();
                             }
-                            else if (mess.self)
+                            
+                            //we're joining a room, we literally can't receive this if the room has already started
+                            //similarly, we can't receive self not connecting because we've already DCed
+                            else if (connectResponse.self)
                             {
-                                _playerIndex = mess.playerIndex;
+                                _playerIndex = connectResponse.playerIndex;
+                                roomID = connectResponse.roomID;
                             }
+
+                            //room hasn't started, someone either joined or disconnected and it wasn't you so we update IDs.
                             else
                             {
-                                OtherPlayerConnected = mess.connecting;
+                                OtherPlayerConnected = connectResponse.connecting;
                                 if (!OtherPlayerConnected)
                                 {
-                                    if (mess.playerIndex < _playerIndex)
+                                    if (connectResponse.playerIndex < _playerIndex)
                                     {
                                         _playerIndex--;
                                     }
@@ -157,7 +177,6 @@ public class ShieldClient : MonoBehaviour
                                 bullet.bulletPlayerIndex = bulletCreate.playerIndex;
                                 bullet.id = bulletCreate.id;
                                 remoteBullets[bullet.id] = bullet;
-                                //remotePlayer.ProccessBullet(bulletState);
                             }
                             break;
                         case MessageOps.MessageType.BULLET_STATE:
@@ -281,6 +300,7 @@ public class ShieldClient : MonoBehaviour
             mess.velocity = rb ? rb.velocity : Vector3.zero;
             mess.currentShieldRot = localPlayer.shieldHolder.transform.eulerAngles.y;
             mess.targetShieldRot = localPlayer.targetRot;
+            mess.roomID = roomID;
 
             MessageOps.SendMessageToServer(mess, hostID, connectionID, unreliableChannel, out error);
             Debug.Log("P" + error);
@@ -303,6 +323,7 @@ public class ShieldClient : MonoBehaviour
         mess.position = bullet.transform.position;
         mess.velocity = bVelocity;
         mess.id = bullet.id;
+        mess.roomID = roomID;
 
         MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
         Debug.Log("B" + error);
@@ -318,6 +339,7 @@ public class ShieldClient : MonoBehaviour
         {
             BulletDestroyMessage mess = new BulletDestroyMessage();
             mess.bulletIndex = bulletIndex;
+            mess.roomID = roomID;
 
             MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
             Debug.Log("D" + error);
@@ -337,6 +359,7 @@ public class ShieldClient : MonoBehaviour
                 mess.bulletIndex = localBullets[i].GetComponent<BulletScript>().id;
                 mess.position = localBullets[i].transform.position;
                 mess.velocity = localBullets[i].GetComponent<Rigidbody>().velocity;
+                mess.roomID = roomID;
 
                 MessageOps.SendMessageToServer(mess, hostID, connectionID, unreliableChannel, out error);
                 Debug.Log("L" + error);
@@ -358,6 +381,7 @@ public class ShieldClient : MonoBehaviour
                 mess.position = ais[i].transform.position;
                 mess.velocity = ais[i].GetComponent<Rigidbody>().velocity;
                 mess.id = ais[i].id;
+                mess.roomID = roomID;
 
                 MessageOps.SendMessageToServer(mess, hostID, connectionID, unreliableChannel, out error);
                 Debug.Log("A" + error);
@@ -373,6 +397,7 @@ public class ShieldClient : MonoBehaviour
             {
                 AIDestroyMessage mess = new AIDestroyMessage();
                 mess.id = id;
+                mess.roomID = roomID;
 
                 MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
                 AIDictionary.Remove(id);
@@ -383,7 +408,8 @@ public class ShieldClient : MonoBehaviour
 
     public void SendStartRequest()
     {
-        StartGameMessage mess = new StartGameMessage();
+        GameStartMessage mess = new GameStartMessage();
+        mess.roomID = roomID;
         MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
     }
 
@@ -391,6 +417,7 @@ public class ShieldClient : MonoBehaviour
     {
         PillarDamageMessage mess = new PillarDamageMessage();
         mess.newHealth = pillarHealth.CurrentHealth - 1;
+        mess.roomID = roomID;
         MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
     }
 
@@ -419,12 +446,20 @@ public class ShieldClient : MonoBehaviour
         AIDictionary.Clear();
         pillarHealth = null;
         error = 0;
+        roomID = -1;
+        receivedLobbyInfo = false;
+        lobbyStates = new bool[4];
         SceneManager.LoadScene("ClientMenu");
     }
 
-    void playerDataStorage()
+    internal void SendRoomJoinRequest(int index)
     {
-        
+        if (lobbyStates[index])
+        {
+            RoomJoinRequestMessage mess = new RoomJoinRequestMessage();
+            mess.roomID = index;
+            MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
+        }
     }
 
 }

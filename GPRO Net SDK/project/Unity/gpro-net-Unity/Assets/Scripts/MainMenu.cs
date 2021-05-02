@@ -8,7 +8,7 @@ public class MainMenu : MonoBehaviour
     public TMP_InputField ip;
     public Button button;
 
-    public WaitingMenu waiting;
+    public LobbyMenu lobby;
 
     public bool lobbyShown;
     // Use this for initialization
@@ -20,7 +20,7 @@ public class MainMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (ShieldClient.Instance.PlayerIndex >= 0 && !lobbyShown)
+        if (ShieldClient.Instance.receivedLobbyInfo)
         {
             lobbyShown = true;
             ShowLobby();
@@ -29,7 +29,7 @@ public class MainMenu : MonoBehaviour
 
     private void ShowLobby()
     {
-        waiting.gameObject.SetActive(true);
+        lobby.gameObject.SetActive(true);
         gameObject.SetActive(false);
     }
 
