@@ -8,12 +8,14 @@ public class BulletScript : MonoBehaviour
     public Rigidbody rb;
     [SerializeField]
     float timeUntilDeath = 5.0f;
+    //bullet id, used to make sure there aren't too many bullets
     public int id;
+    //player index
     public int bulletPlayerIndex;
     public bool hasHitShield;
 
     [SerializeField]
-    float maxOffset = 2.0f;
+    float maxOffset = 2.0f;//how far the Bullet can be before we snap
     Vector3 tmpPos;
     // Start is called before the first frame update
     void Start()
@@ -23,7 +25,7 @@ public class BulletScript : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (owner == null)
+        if (owner == null)//only run on remote bullets
         {
             Vector3 intendedPos = tmpPos;
 

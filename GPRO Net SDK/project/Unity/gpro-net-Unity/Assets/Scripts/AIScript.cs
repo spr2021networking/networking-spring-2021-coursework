@@ -6,18 +6,24 @@ using UnityEngine;
 public class AIScript : MonoBehaviour
 {
     public float speed;
+    //client reference
     public ShieldClient client;
+    //pillar reference
     public PillarHealth pillar;
+    //determine if the AI is local or remote
     public bool isControlledLocally;
     public Rigidbody rb;
+    //id of the AI, used for handling if the AI is remote or not
     public int id;
 
+    //how long before the AI can hit the pillar again
     private float timeBetweenHits = 1.5f;
     private float _timer = 0;
 
     public bool firstFrame = true;
+
     [SerializeField]
-    float maxOffset = 2.0f;
+    float maxOffset = 2.0f; //how far the AI can be before we snap
     Vector3 tmpPos;
     Vector3 tmpVel;
 
@@ -39,7 +45,7 @@ public class AIScript : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if (!isControlledLocally)
+        if (!isControlledLocally) //dead reckoning, only used on AI that are not locally controlled
         {
             Vector3 intendedPos = tmpPos;
             Vector3 intendedVel = tmpVel;

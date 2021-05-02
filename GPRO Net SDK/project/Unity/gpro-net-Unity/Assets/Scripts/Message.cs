@@ -80,7 +80,9 @@ public interface IMessage
     public MessageOps.MessageType MessageType();
 }
 
-
+/// <summary>
+/// All of our different message structs. Used for gameplay, connection, and more
+/// </summary>
 public struct ConnectResponseMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.CONNECT_RESPONSE;

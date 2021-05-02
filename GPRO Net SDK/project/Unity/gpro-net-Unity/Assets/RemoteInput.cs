@@ -34,6 +34,7 @@ public class RemoteInput : MonoBehaviour
 
     private void FixedUpdate()
     {
+        //dead reckoning
         Vector3 intendedPos = tmpPos;
         Vector3 intendedVel = tmpVel;
         float dotProd = Vector3.Dot(_rb.velocity, tmpVel);
