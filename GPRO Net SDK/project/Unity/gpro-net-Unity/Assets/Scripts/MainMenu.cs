@@ -20,7 +20,7 @@ public class MainMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (ShieldClient.Instance.PlayerIndex >= 0 && !lobbyShown)
+        if (ShieldClient.Instance.receivedLobbyInfo)
         {
             lobbyShown = true;
             ShowLobby();

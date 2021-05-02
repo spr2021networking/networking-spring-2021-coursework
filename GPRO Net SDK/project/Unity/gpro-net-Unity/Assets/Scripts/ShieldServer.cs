@@ -63,6 +63,7 @@ public class ShieldServer : MonoBehaviour
     {
         for (int i = 0; i < 4; i++)
         {
+            rooms[i] = new Room();
             rooms[i].roomID = i;
         }
         //start of adapted code
