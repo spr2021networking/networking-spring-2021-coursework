@@ -203,9 +203,8 @@ public class ShieldServer : MonoBehaviour
                             {
                                 GameOverMessage gameOverMess = new GameOverMessage();
                                 gameOverMess.roomID = pillarDamage.roomID;
-                                sendBuffer = MessageOps.GetBytes(gameOverMess);
-                                sendBuffer = MessageOps.PackMessageID(sendBuffer, gameOverMess.MessageType());
-                                MessageOps.SendDataToRoom(rooms[gameOverMess.roomID], recBuffer, false, hostID, connectionID, reliableChannelID, out error);
+                                sendBuffer = MessageOps.ToMessageArray(gameOverMess);
+                                MessageOps.SendDataToRoom(rooms[gameOverMess.roomID], sendBuffer, false, hostID, connectionID, reliableChannelID, out error);
                                 rooms[gameOverMess.roomID].gameOver = true;
                             }
 
