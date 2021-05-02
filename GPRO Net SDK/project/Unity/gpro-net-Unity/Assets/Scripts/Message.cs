@@ -82,7 +82,8 @@ public static class MessageOps
         {
             if (!ignoreSender || room.connections[i] != connectionID)
             {
-                NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out err);
+                NetworkTransport.Send(hostID, room.connections[i], channelID, sendBuffer, sendBuffer.Length, out err);
+                Debug.Log(err);
                 sent = true;
             }
         }
