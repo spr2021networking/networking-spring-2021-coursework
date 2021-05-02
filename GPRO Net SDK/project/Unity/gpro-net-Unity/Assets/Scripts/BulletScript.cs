@@ -23,24 +23,29 @@ public class BulletScript : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        Vector3 intendedPos = tmpPos;
+        if (owner == null)
+        {
+            Vector3 intendedPos = tmpPos;
 
-        //dot prod of normalized direction, if less than 30 degrees
-        if ((transform.position - tmpPos).magnitude > maxOffset)
-        {
-            transform.position = tmpPos;
-        }
-        else
-        {
-            intendedPos += rb.velocity * Time.fixedDeltaTime;
-            transform.position = Vector3.Lerp(transform.position, intendedPos, 0.5f);
-            tmpPos = intendedPos;
+            //dot prod of normalized direction, if less than 30 degrees
+            if ((transform.position - tmpPos).magnitude > maxOffset)
+            {
+                transform.position = tmpPos;
+            }
+            else
+            {
+                intendedPos += rb.velocity * Time.fixedDeltaTime;
+                transform.position = Vector3.Lerp(transform.position, intendedPos, 0.5f);
+                tmpPos = intendedPos;
+            }
+           
         }
         timeUntilDeath -= Time.deltaTime;
         if (timeUntilDeath <= 0.0f && owner != null)
         {
             owner.DestroyBullet(id);
         }
+
     }
 
     private void OnTriggerEnter(Collider other)

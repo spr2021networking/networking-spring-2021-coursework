@@ -39,27 +39,31 @@ public class AIScript : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        Vector3 intendedPos = tmpPos;
-        Vector3 intendedVel = tmpVel;
-        float dotProd = Vector3.Dot(rb.velocity, tmpVel);
-
-        //dot prod of normalized direction, if less than 30 degrees
-        if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset)
+        if (!isControlledLocally)
         {
-            rb.velocity = tmpVel;
-            transform.position = tmpPos;
-        }
-        else
-        {
+            Vector3 intendedPos = tmpPos;
+            Vector3 intendedVel = tmpVel;
+            float dotProd = Vector3.Dot(rb.velocity, tmpVel);
 
-            intendedVel = Vector3.Slerp(rb.velocity, tmpVel, 0.5f);
-            intendedVel.y = 0;
-            rb.velocity = intendedVel;
+            //dot prod of normalized direction, if less than 30 degrees
+            if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset)
+            {
+                rb.velocity = tmpVel;
+                transform.position = tmpPos;
+            }
+            else
+            {
 
-            intendedPos += tmpVel * Time.fixedDeltaTime;
-            transform.position = Vector3.Lerp(transform.position, intendedPos, 0.5f);
-            tmpPos = intendedPos;
+                intendedVel = Vector3.Slerp(rb.velocity, tmpVel, 0.5f);
+                intendedVel.y = 0;
+                rb.velocity = intendedVel;
+
+                intendedPos += tmpVel * Time.fixedDeltaTime;
+                transform.position = Vector3.Lerp(transform.position, intendedPos, 0.5f);
+                tmpPos = intendedPos;
+            }
         }
+        
     }
     private void OnTriggerEnter(Collider collision)
     {
