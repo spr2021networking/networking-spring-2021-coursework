@@ -142,6 +142,7 @@ public struct BulletStateMessage : IMessage
     public int bulletIndex;
     public Vector3 position;
     public Vector3 velocity;
+    public bool hasHitShield;
     public int roomID;
 }
 

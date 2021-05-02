@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -114,9 +115,11 @@ public class BulletScript : MonoBehaviour
             owner.DestroyBullet(id);
         }
     }
-    public void SetNewPositionAndVelocity(Vector3 pos, Vector3 vel)
+
+    internal void SetState(BulletStateMessage bulletState)
     {
-        tmpPos = pos;
-        rb.velocity = vel;
+        tmpPos = bulletState.position;
+        rb.velocity = bulletState.velocity;
+        hasHitShield = bulletState.hasHitShield;
     }
 }
