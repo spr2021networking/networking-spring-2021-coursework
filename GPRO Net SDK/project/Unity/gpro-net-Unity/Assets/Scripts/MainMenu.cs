@@ -8,7 +8,6 @@ public class MainMenu : MonoBehaviour
     public TMP_InputField ip;
     public Button button;
 
-    public WaitingMenu waiting;
     public LobbyMenu lobby;
 
     public bool lobbyShown;
@@ -30,7 +29,7 @@ public class MainMenu : MonoBehaviour
 
     private void ShowLobby()
     {
-        waiting.gameObject.SetActive(true);
+        lobby.gameObject.SetActive(true);
         gameObject.SetActive(false);
     }
 

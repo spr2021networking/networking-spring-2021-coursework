@@ -70,9 +70,27 @@ public static class MessageOps
 
     public static void SendMessageToServer<T>(T data, int hostID, int connectionID, int channelID, out byte error) where T : IMessage
     {
-        byte[] sendBuffer = GetBytes(data);
-        sendBuffer = PackMessageID(sendBuffer, data.MessageType());
+        byte[] sendBuffer = ToMessageArray(data);
         NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
+    }
+
+    public static void SendDataToRoom(ShieldServer.Room room, byte[] sendBuffer, bool ignoreSender, int hostID, int connectionID, int channelID, out byte error)
+    {
+        bool sent = false;
+        byte err = 0;
+        for (int i = 0; i < room.connections.Count; i++)
+        {
+            if (!ignoreSender || room.connections[i] != connectionID)
+            {
+                NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out err);
+                sent = true;
+            }
+        }
+        error = err;
+        if (!sent)
+        {
+            error = (byte)NetworkError.BadMessage;
+        }
     }
 }
 
@@ -131,7 +149,7 @@ public struct BulletDestroyMessage : IMessage
 }
 
 
-public struct StartGameMessage : IMessage
+public struct GameStartMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.GAME_START;
     public int roomID;
@@ -181,7 +199,7 @@ public struct GameTimeMessage : IMessage
     public int roomID;
 }
 
-public struct LobbyInfoMessage :IMessage
+public struct LobbyInfoMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.LOBBY_INFO;
     public bool room0;
@@ -189,4 +207,11 @@ public struct LobbyInfoMessage :IMessage
     public bool room2;
     public bool room3;
 }
+
+public struct RoomJoinRequestMessage : IMessage
+{
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.ROOM_CONNECT_REQUEST;
+    public int roomID;
+}
+
 #pragma warning restore CS0618 // Type or member is obsolete
