@@ -337,6 +337,7 @@ public class ShieldClient : MonoBehaviour
     {
         if (localBullets[bulletIndex] != null)
         {
+            localBullets[bulletIndex] = null;
             BulletDestroyMessage mess = new BulletDestroyMessage();
             mess.bulletIndex = bulletIndex;
             mess.roomID = roomID;

@@ -117,8 +117,8 @@ public class PlayerInput : MonoBehaviour
             bulletScript.id = availableBulletIndex;
             bulletScript.owner = this;
             bulletScript.bulletPlayerIndex = client.PlayerIndex;
-            client.localBullets[availableBulletIndex] = bulletScript;
             client.SendBulletCreate(bulletScript, spawnedBullet.GetComponent<Rigidbody>().velocity);
+            client.localBullets[availableBulletIndex] = bulletScript;
         }
 
 
@@ -147,7 +147,6 @@ public class PlayerInput : MonoBehaviour
         BulletScript bullet = client.localBullets[bulletID];
         if (bullet != null)
         {
-            client.localBullets[bulletID] = null;
             client.SendBulletDestroy(bulletID);
             Destroy(bullet.gameObject);
         }
