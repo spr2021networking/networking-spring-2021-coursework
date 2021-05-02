@@ -264,7 +264,7 @@ public class ShieldServer : MonoBehaviour
                 //if we're ready to spawn enemies
                 if (room.timer <= 0.0f)
                 {
-                    for (int j = 0; i < room.AItoSpawn; j++)
+                    for (int j = 0; j < room.AItoSpawn; j++)
                     {
                         //calculate AI position
                         float random = UnityEngine.Random.Range(0.0f, 360.0f) * Mathf.Deg2Rad;
