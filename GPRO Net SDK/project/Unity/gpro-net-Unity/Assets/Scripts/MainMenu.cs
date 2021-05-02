@@ -9,6 +9,7 @@ public class MainMenu : MonoBehaviour
     public Button button;
 
     public WaitingMenu waiting;
+    public LobbyMenu lobby;
 
     public bool lobbyShown;
     // Use this for initialization

@@ -14,7 +14,33 @@ using UnityEngine.Networking;
 /// </summary>
 public class ShieldServer : MonoBehaviour
 {
+    public class Room
+    {
+        public int roomID;
+        public float totalTime;
+        public float timer = 5.0f;
+        public float timerStorage = 10.0f;
+        public int AItoSpawn = 1;
+        public int AICounter = 0;
 
+        public bool gameStart;
+        public bool gameOver;
+
+        public List<int> connections = new List<int>();
+
+        public void Reset()
+        {
+            totalTime = 0;
+            timer = 5.0f;
+            timerStorage = 10.0f;
+            AItoSpawn = 1;
+            AICounter = 0;
+            gameStart = false;
+            gameOver = false;
+            connections.Clear();
+        }
+
+    }
     private int reliableChannelID;
     private int unreliableChannelID;
 
@@ -26,17 +52,16 @@ public class ShieldServer : MonoBehaviour
 
     private bool running = false;
 
-    private float totalTime = 0;
-    private float timer = 5.0f;
-    private float timerStorage = 10.0f;
-    private int AItoSpawn = 1;
-    private int AICounter = 0;
+    public Room[] rooms = new Room[4];
 
-    public bool gameStart;
-    public bool gameOver;
+
     // Start is called before the first frame update
     void Start()
     {
+        for (int i = 0; i < 4; i++)
+        {
+            rooms[i].roomID = i;
+        }
         //start of adapted code
         NetworkTransport.Init();
 
@@ -54,8 +79,8 @@ public class ShieldServer : MonoBehaviour
         //end of adapted code
     }
 
+    public List<int> allConnections = new List<int>();
 
-    List<int> connections = new List<int>();
 
     private int positionLength = Encoding.UTF8.GetBytes(new Vector3(0, 0, 0).ToString("0.00")).Length;
     // Update is called once per frame
@@ -70,53 +95,59 @@ public class ShieldServer : MonoBehaviour
             {
                 case NetworkEventType.Nothing: break;
                 case NetworkEventType.ConnectEvent:
-                    if (!connections.Contains(connectionID))
+                    if (!allConnections.Contains(connectionID))
                     {
-                        connections.Add(connectionID);
+                        allConnections.Add(connectionID);
                     }
                     break;
                 case NetworkEventType.DataEvent:
                     switch (MessageOps.ExtractMessageID(ref buffer, receivedSize, out byte[] subArr))
                     {
-                        case MessageOps.MessageType.CONNECT_REQUEST:
+                        case MessageOps.MessageType.SERVER_CONNECT_REQUEST:
+                            //send the connecting client data on lobbies
+                            SendLobbyInfo(hostID, connectionID, out error);
 
-                            //create a ConnectResponseMessage saying that we have connected.
-                            ConnectResponseMessage connMess = new ConnectResponseMessage
+                            break;
+                        case MessageOps.MessageType.ROOM_CONNECT_REQUEST:
+
+                            //create a ConnectResponseMessage saying that we have connected to the lobby
+                            RoomConnectResponseMessage connMess = new RoomConnectResponseMessage
                             {
-                                playerIndex = connections.IndexOf(connectionID),
+                                playerIndex = allConnections.IndexOf(connectionID),
                                 self = true,
-                                connecting = true
+                                connecting = true,
                             };
                             Debug.Log(connMess.self + " " + connMess.playerIndex + " " + connMess.connecting);
                             //pack as message
                             sendBuffer = MessageOps.GetBytes(connMess);
-                            sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+                            sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.ROOM_CONNECT_RESPONSE);
                             NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
 
                             //reformat the message so it can be sent to other players
                             connMess.self = false;
                             sendBuffer = MessageOps.GetBytes(connMess);
-                            sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+                            sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.ROOM_CONNECT_RESPONSE);
 
                             //send message to other players.
-                            for (int i = 0; i < connections.Count; i++)
+                            for (int i = 0; i < allConnections.Count; i++)
                             {
-                                if (connections[i] != connectionID)
+                                if (allConnections[i] != connectionID)
                                 {
-                                    NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
+                                    SendLobbyInfo(hostID, connectionID, channelID, out error);
+                                    NetworkTransport.Send(hostID, allConnections[i], channelID, sendBuffer, sendBuffer.Length, out error);
                                 }
                             }
                             Debug.Log(channelID);
 
                             if (connMess.playerIndex > 0) //this is a new joining player, they don't know who else is here
                             {
-                                for (int i = 0; i < connections.Count; i++)
+                                for (int i = 0; i < allConnections.Count; i++)
                                 {
-                                    if (connections[i] != connectionID) //if this isn't our index
+                                    if (allConnections[i] != connectionID) //if this isn't our index
                                     {
                                         connMess.playerIndex = i; //set the player index to i and send to the new player
                                         sendBuffer = MessageOps.GetBytes(connMess);
-                                        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+                                        sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.ROOM_CONNECT_RESPONSE);
                                         NetworkTransport.Send(hostID, connectionID, channelID, sendBuffer, sendBuffer.Length, out error);
                                     }
                                 }
@@ -129,28 +160,28 @@ public class ShieldServer : MonoBehaviour
                         case MessageOps.MessageType.BULLET_DESTROY:
                         case MessageOps.MessageType.AI_STATE:
                         case MessageOps.MessageType.AI_DESTROY:
-                            for (int i = 0; i < connections.Count; i++)
+                            for (int i = 0; i < allConnections.Count; i++)
                             {
-                                if (connections[i] != connectionID)
+                                if (allConnections[i] != connectionID)
                                 {
-                                    NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                                    NetworkTransport.Send(hostID, allConnections[i], channelID, buffer, receivedSize, out error);
                                 }
                             }
                             break;
                         case MessageOps.MessageType.GAME_START:
                             gameStart = true;
-                            for (int i = 0; i < connections.Count; i++)
+                            for (int i = 0; i < allConnections.Count; i++)
                             {
-                                NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                                NetworkTransport.Send(hostID, allConnections[i], channelID, buffer, receivedSize, out error);
                             }
                             break;
                         case MessageOps.MessageType.PILLAR_DAMAGE:
                             PillarDamageMessage pillarDamage = MessageOps.FromBytes<PillarDamageMessage>(buffer);
                             if (pillarDamage.newHealth > 0)
                             {
-                                for (int i = 0; i < connections.Count; i++)
+                                for (int i = 0; i < allConnections.Count; i++)
                                 {
-                                    NetworkTransport.Send(hostID, connections[i], channelID, buffer, receivedSize, out error);
+                                    NetworkTransport.Send(hostID, allConnections[i], channelID, buffer, receivedSize, out error);
                                 }
                             }
                             else
@@ -158,9 +189,9 @@ public class ShieldServer : MonoBehaviour
                                 GameOverMessage gameOverMess = new GameOverMessage();
                                 sendBuffer = MessageOps.GetBytes(gameOverMess);
                                 sendBuffer = MessageOps.PackMessageID(sendBuffer, gameOverMess.MessageType());
-                                for (int i = 0; i < connections.Count; i++)
+                                for (int i = 0; i < allConnections.Count; i++)
                                 {
-                                    NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, receivedSize, out error);
+                                    NetworkTransport.Send(hostID, allConnections[i], channelID, sendBuffer, receivedSize, out error);
                                 }
                                 gameOver = true;
                             }
@@ -171,20 +202,20 @@ public class ShieldServer : MonoBehaviour
                 case NetworkEventType.DisconnectEvent:
 
                     ConnectResponseMessage dcMess = new ConnectResponseMessage();
-                    dcMess.playerIndex = connections.IndexOf(connectionID);
+                    dcMess.playerIndex = allConnections.IndexOf(connectionID);
                     dcMess.self = false;
                     dcMess.connecting = false;
 
-                    connections.Remove(connectionID);
+                    allConnections.Remove(connectionID);
 
                     sendBuffer = MessageOps.GetBytes(dcMess);
-                    sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.CONNECT_RESPONSE);
+                    sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.ROOM_CONNECT_RESPONSE);
 
-                    for (int i = 0; i < connections.Count; i++)
+                    for (int i = 0; i < allConnections.Count; i++)
                     {
-                        NetworkTransport.Send(hostID, connections[i], channelID, sendBuffer, sendBuffer.Length, out error);
+                        NetworkTransport.Send(hostID, allConnections[i], channelID, sendBuffer, sendBuffer.Length, out error);
                     }
-                    if (connections.Count == 0)
+                    if (allConnections.Count == 0)
                     {
                         gameOver = false;
                         gameStart = false;
@@ -222,9 +253,9 @@ public class ShieldServer : MonoBehaviour
                     };
                     sendBuffer = MessageOps.GetBytes(message);
                     sendBuffer = MessageOps.PackMessageID(sendBuffer, MessageOps.MessageType.AI_CREATE);
-                    for (int j = 0; j < connections.Count; j++)
+                    for (int j = 0; j < allConnections.Count; j++)
                     {
-                        NetworkTransport.Send(hostID, connections[j], reliableChannelID, sendBuffer, sendBuffer.Length, out error);
+                        NetworkTransport.Send(hostID, allConnections[j], reliableChannelID, sendBuffer, sendBuffer.Length, out error);
                         Debug.Log("A: " + (int)error);
                     }
                     AICounter++;
@@ -239,14 +270,25 @@ public class ShieldServer : MonoBehaviour
                 mess.time = Mathf.FloorToInt(tmp);
                 sendBuffer = MessageOps.GetBytes(mess);
                 sendBuffer = MessageOps.PackMessageID(sendBuffer, mess.MessageType());
-                for (int i = 0; i < connections.Count; i++)
+                for (int i = 0; i < allConnections.Count; i++)
                 {
-                    NetworkTransport.Send(hostID, connections[i], reliableChannelID, sendBuffer, sendBuffer.Length, out error);
+                    NetworkTransport.Send(hostID, allConnections[i], reliableChannelID, sendBuffer, sendBuffer.Length, out error);
                 }
             }
             totalTime = tmp;
         }
         
+    }
+
+    private void SendLobbyInfo(int hostID, int connectionID, out byte error)
+    {
+        LobbyInfoMessage lobbyMess = new LobbyInfoMessage();
+        lobbyMess.room0 = rooms[0].connections.Count < 2 && !rooms[0].gameStart;
+        lobbyMess.room1 = rooms[1].connections.Count < 2 && !rooms[1].gameStart;
+        lobbyMess.room2 = rooms[2].connections.Count < 2 && !rooms[2].gameStart;
+        lobbyMess.room3 = rooms[3].connections.Count < 2 && !rooms[3].gameStart;
+        byte[] sendBuffer = MessageOps.ToMessageArray(lobbyMess);
+        NetworkTransport.Send(hostID, connectionID, reliableChannelID, sendBuffer, sendBuffer.Length, out error);
     }
 }
 #pragma warning restore CS0618 // Type or member is obsolete

@@ -8,13 +8,14 @@ public static class MessageOps
 {
     public enum MessageType
     {
-        CONNECT_REQUEST, CONNECT_RESPONSE,
+        SERVER_CONNECT_REQUEST, ROOM_CONNECT_REQUEST, ROOM_CONNECT_RESPONSE,
         PLAYER_ID, PLAYER_STATE,
         BULLET_CREATE, BULLET_STATE, BULLET_DESTROY,
         AI_CREATE, AI_STATE, AI_DESTROY,
         GAME_START, GAME_DC,
         PILLAR_DAMAGE, GAME_OVER,
-        GAME_TIME
+        GAME_TIME,
+        LOBBY_INFO, LOBBY_JOIN
     }
 
     //inspired by https://stackoverflow.com/questions/3278827/how-to-convert-a-structure-to-a-byte-array-in-c
@@ -81,13 +82,14 @@ public interface IMessage
 }
 
 
-public struct ConnectResponseMessage : IMessage
+public struct RoomConnectResponseMessage : IMessage
 {
-    public MessageOps.MessageType MessageType() => MessageOps.MessageType.CONNECT_RESPONSE;
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.ROOM_CONNECT_RESPONSE;
 
     public int playerIndex;
     public bool self;
     public bool connecting;
+    public int roomID;
 }
 
 public struct PlayerStateMessage : IMessage
@@ -99,6 +101,7 @@ public struct PlayerStateMessage : IMessage
 
     public float currentShieldRot;
     public float targetShieldRot;
+    public int roomID;
 }
 
 public struct BulletCreateMessage : IMessage
@@ -108,6 +111,7 @@ public struct BulletCreateMessage : IMessage
     public Vector3 position;
     public Vector3 velocity;
     public int id; //id within the array
+    public int roomID;
 }
 
 public struct BulletStateMessage : IMessage
@@ -116,18 +120,21 @@ public struct BulletStateMessage : IMessage
     public int bulletIndex;
     public Vector3 position;
     public Vector3 velocity;
+    public int roomID;
 }
 
 public struct BulletDestroyMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.BULLET_DESTROY;
     public int bulletIndex;
+    public int roomID;
 }
 
 
 public struct StartGameMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.GAME_START;
+    public int roomID;
 }
 
 public struct AICreateMessage : IMessage
@@ -135,6 +142,7 @@ public struct AICreateMessage : IMessage
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.AI_CREATE;
     public Vector3 position;
     public int id;
+    public int roomID;
 }
 
 public struct AIStateMessage : IMessage
@@ -143,28 +151,42 @@ public struct AIStateMessage : IMessage
     public Vector3 position;
     public Vector3 velocity;
     public int id;
+    public int roomID;
 }
 
 public struct AIDestroyMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.AI_DESTROY;
     public int id;
+    public int roomID;
 }
 
 public struct PillarDamageMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.PILLAR_DAMAGE;
     public int newHealth;
+    public int roomID;
 }
 
 public struct GameOverMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.GAME_OVER;
+    public int roomID;
 }
 
 public struct GameTimeMessage : IMessage
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.GAME_TIME;
     public int time;
+    public int roomID;
+}
+
+public struct LobbyInfoMessage :IMessage
+{
+    public MessageOps.MessageType MessageType() => MessageOps.MessageType.LOBBY_INFO;
+    public bool room0;
+    public bool room1;
+    public bool room2;
+    public bool room3;
 }
 #pragma warning restore CS0618 // Type or member is obsolete

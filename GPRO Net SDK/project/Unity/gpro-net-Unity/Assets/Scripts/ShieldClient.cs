@@ -34,6 +34,9 @@ public class ShieldClient : MonoBehaviour
     private int _playerIndex = -1;
     public int PlayerIndex => _playerIndex;
 
+    public bool receivedLobbyInfo;
+    public bool[] lobbyStates = new bool[4];
+
     public bool OtherPlayerConnected { get; internal set; }
 
     public RemoteInput remotePlayer;
@@ -53,13 +56,14 @@ public class ShieldClient : MonoBehaviour
 
     public bool gameOver;
 
+    public int roomID = 0;
 
     public static ShieldClient Instance { get; private set; }
     private void Awake()
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
         }
         else
         {
@@ -111,28 +115,37 @@ public class ShieldClient : MonoBehaviour
                 case NetworkEventType.Nothing:
                     break;
                 case NetworkEventType.ConnectEvent:
-                    NetworkTransport.Send(hostID, connectionID, reliableChannel, new byte[] { (byte)MessageOps.MessageType.CONNECT_REQUEST }, 1, out error);
+                    NetworkTransport.Send(hostID, connectionID, reliableChannel, new byte[] { (byte)MessageOps.MessageType.SERVER_CONNECT_REQUEST }, 1, out error);
                     break;
                 case NetworkEventType.DataEvent:
                     MessageOps.MessageType type = MessageOps.ExtractMessageID(ref recBuffer, bufferSize, out byte[] subArr);
                     switch (type)
                     {
-                        case MessageOps.MessageType.CONNECT_RESPONSE:
-                            ConnectResponseMessage mess = MessageOps.FromBytes<ConnectResponseMessage>(subArr);
-                            if (isStarted && !mess.self)
+                        case MessageOps.MessageType.LOBBY_INFO:
+                            LobbyInfoMessage mess = MessageOps.FromBytes<LobbyInfoMessage>(subArr);
+                            receivedLobbyInfo = true;
+                            lobbyStates[0] = mess.room0;
+                            lobbyStates[1] = mess.room1;
+                            lobbyStates[2] = mess.room2;
+                            lobbyStates[3] = mess.room3;
+                            break;
+                        case MessageOps.MessageType.ROOM_CONNECT_RESPONSE:
+                            RoomConnectResponseMessage connectResponse = MessageOps.FromBytes<RoomConnectResponseMessage>(subArr);
+                            if (isStarted && !connectResponse.self)
                             {
                                 ResetClient();
                             }
-                            else if (mess.self)
+                            else if (connectResponse.self)
                             {
-                                _playerIndex = mess.playerIndex;
+                                _playerIndex = connectResponse.playerIndex;
+                                roomID = connectResponse.roomID;
                             }
                             else
                             {
-                                OtherPlayerConnected = mess.connecting;
+                                OtherPlayerConnected = connectResponse.connecting;
                                 if (!OtherPlayerConnected)
                                 {
-                                    if (mess.playerIndex < _playerIndex)
+                                    if (connectResponse.playerIndex < _playerIndex)
                                     {
                                         _playerIndex--;
                                     }
@@ -419,6 +432,9 @@ public class ShieldClient : MonoBehaviour
         AIDictionary.Clear();
         pillarHealth = null;
         error = 0;
+        roomID = 0;
+        receivedLobbyInfo = false;
+        lobbyStates = new bool[4];
         SceneManager.LoadScene("ClientMenu");
     }
 
