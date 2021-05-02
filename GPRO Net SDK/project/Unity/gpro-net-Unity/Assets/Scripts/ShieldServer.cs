@@ -277,6 +277,7 @@ public class ShieldServer : MonoBehaviour
                         {
                             position = position,
                             id = room.AICounter,
+                            roomID = room.roomID
                         };
                         sendBuffer = MessageOps.ToMessageArray(aiCreateMessage);
                         MessageOps.SendDataToRoom(room, sendBuffer, false, hostID, -1, reliableChannelID, out error);
