@@ -42,7 +42,7 @@ public class BulletScript : MonoBehaviour
             }
            
         }
-        timeUntilDeath -= Time.deltaTime;
+        timeUntilDeath -= Time.fixedDeltaTime;
         if (timeUntilDeath <= 0.0f && owner != null)
         {
             owner.DestroyBullet(id);
@@ -75,7 +75,6 @@ public class BulletScript : MonoBehaviour
                 if (diffFrom180 > 67.5f)
                 {
                     owner.DestroyBullet(id);
-                    Destroy(gameObject);
                 }
                 else
                 {
@@ -100,9 +99,6 @@ public class BulletScript : MonoBehaviour
                         rb.velocity = new Vector3(newDir.x, 0, newDir.y);
                     }
                 }
-            }
-            else if (other.transform.parent != null && owner.gameObject == other.transform.parent.gameObject)
-            {
             }
             else
             {

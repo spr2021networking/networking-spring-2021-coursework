@@ -169,7 +169,7 @@ public class ShieldClient : MonoBehaviour
                             break;
                         case MessageOps.MessageType.BULLET_CREATE:
                             BulletCreateMessage bulletCreate = MessageOps.FromBytes<BulletCreateMessage>(subArr);
-                            if (remotePlayer != null && bulletCreate.playerIndex != PlayerIndex)
+                            if (remotePlayer != null && bulletCreate.playerIndex != PlayerIndex && remoteBullets[bulletCreate.id] == null)
                             {
                                 GameObject spawnedBullet = Instantiate(this.bullet, bulletCreate.position, Quaternion.identity);
                                 spawnedBullet.GetComponent<Rigidbody>().velocity = bulletCreate.velocity;
