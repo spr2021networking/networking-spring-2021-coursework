@@ -22,13 +22,17 @@ public class PlayerInput : MonoBehaviour
 
     private Vector3 fireDirection = Vector3.forward;
 
+    void Awake()
+    {
+        shieldHolder = transform.GetChild(0).gameObject;
+        rb = GetComponent<Rigidbody>();
+        canShoot = true;
+    }
     
     // Start is called before the first frame update
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        canShoot = true;
-        shieldHolder = transform.GetChild(0).gameObject;
+
     }
 
     // Update is called once per frame
