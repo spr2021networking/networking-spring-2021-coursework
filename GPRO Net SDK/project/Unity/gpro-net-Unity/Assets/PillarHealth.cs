@@ -1,12 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+/// <summary>
+/// Authors: Scott Dagen & Ben Cooper
+/// Handles the pillar, which the AI are trying to attack
+/// </summary>
 public class PillarHealth : MonoBehaviour
 {
     public int maxHealth = 10;
     private int _currentHealth = 10;
-    public int CurrentHealth
+    public int CurrentHealth //get or set the current health of the pillar
     {
         get
         {
@@ -16,7 +19,7 @@ public class PillarHealth : MonoBehaviour
         {
             if (_currentHealth > value)
             {
-                _rend.sharedMaterial = damageMaterial;
+                _rend.sharedMaterial = damageMaterial; //change the material when damaged
                 _damageTime = 0.2f;
             }
             _currentHealth = value;
@@ -41,7 +44,7 @@ public class PillarHealth : MonoBehaviour
         if (_rend.sharedMaterial == damageMaterial)
         {
             _damageTime -= Time.deltaTime;
-            if (_damageTime < 0)
+            if (_damageTime < 0) //after a set time, change the material back
             {
                 _rend.material = defaultMaterial;
             }

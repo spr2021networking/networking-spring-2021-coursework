@@ -1,8 +1,9 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Authors: Ben Cooper & Scott Dagen
+/// Handles the game's AI, mainly the movement and damage
+/// </summary>
 public class AIScript : MonoBehaviour
 {
     public float speed;
@@ -28,16 +29,11 @@ public class AIScript : MonoBehaviour
     Vector3 tmpVel;
 
     static float COSTHIRTY = Mathf.Cos(30 * Mathf.Deg2Rad);
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
 
     // Update is called once per frame
     void Update()
     {
-        if (isControlledLocally)
+        if (isControlledLocally) //if the AI is controlled by the client
         {
             _timer -= Time.deltaTime;
             InitVelocity();
@@ -52,12 +48,12 @@ public class AIScript : MonoBehaviour
             float dotProd = Vector3.Dot(rb.velocity, tmpVel);
 
             //dot prod of normalized direction, if less than 30 degrees
-            if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset)
+            if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset) //snap position
             {
                 rb.velocity = tmpVel;
                 transform.position = tmpPos;
             }
-            else
+            else //we slerp and lerp to the new values
             {
 
                 intendedVel = Vector3.Slerp(rb.velocity, tmpVel, 0.5f);
@@ -91,7 +87,7 @@ public class AIScript : MonoBehaviour
         }
     }
 
-    internal void InitVelocity()
+    internal void InitVelocity() //set the initial velocity
     {
         if (!rb)
         {
@@ -109,6 +105,7 @@ public class AIScript : MonoBehaviour
 
     public void SetNewPositionAndVelocity(Vector3 pos, Vector3 vel)
     {
+        //dead reckoning prep
         tmpPos = pos;
         tmpVel = vel;
     }

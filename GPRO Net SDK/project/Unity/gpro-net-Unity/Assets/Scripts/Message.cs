@@ -95,6 +95,7 @@ public static class MessageOps
     }
 }
 
+//public interface that lets us access MessageType from all structs
 public interface IMessage
 {
     public MessageOps.MessageType MessageType();
@@ -114,7 +115,7 @@ public struct RoomConnectResponseMessage : IMessage
     public int roomID;
 }
 
-public struct PlayerStateMessage : IMessage
+public struct PlayerStateMessage : IMessage //Player update message, updates the player of the corresponding index in the corresponding room
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.PLAYER_STATE;
     public int playerIndex;
@@ -126,7 +127,7 @@ public struct PlayerStateMessage : IMessage
     public int roomID;
 }
 
-public struct BulletCreateMessage : IMessage
+public struct BulletCreateMessage : IMessage //Bullet create message, creates a bullet with the corresponding id in the corresponding room
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.BULLET_CREATE;
     public int playerIndex;
@@ -136,7 +137,7 @@ public struct BulletCreateMessage : IMessage
     public int roomID;
 }
 
-public struct BulletStateMessage : IMessage
+public struct BulletStateMessage : IMessage //Bullet update message, update a bullet with the corresponding id in the corresponding room
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.BULLET_STATE;
     public int bulletIndex;
@@ -146,7 +147,7 @@ public struct BulletStateMessage : IMessage
     public int roomID;
 }
 
-public struct BulletDestroyMessage : IMessage
+public struct BulletDestroyMessage : IMessage //Bullet destroy message, destroy a bullet with the corresponding id in the corresponding room
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.BULLET_DESTROY;
     public int bulletIndex;
@@ -160,7 +161,7 @@ public struct GameStartMessage : IMessage
     public int roomID;
 }
 
-public struct AICreateMessage : IMessage
+public struct AICreateMessage : IMessage //AI create message, creates an AI with the corresponding id in the corresponding room
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.AI_CREATE;
     public Vector3 position;
@@ -168,7 +169,7 @@ public struct AICreateMessage : IMessage
     public int roomID;
 }
 
-public struct AIStateMessage : IMessage
+public struct AIStateMessage : IMessage //AI update message, updates the AI with the corresponding id in the corresponding room
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.AI_STATE;
     public Vector3 position;
@@ -177,14 +178,14 @@ public struct AIStateMessage : IMessage
     public int roomID;
 }
 
-public struct AIDestroyMessage : IMessage
+public struct AIDestroyMessage : IMessage  //AI destroy message, destroys the AI with the corresponding id in the corresponding room
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.AI_DESTROY;
     public int id;
     public int roomID;
 }
 
-public struct PillarDamageMessage : IMessage
+public struct PillarDamageMessage : IMessage //pillar damage message, sends the pillar damage event to the correct room
 {
     public MessageOps.MessageType MessageType() => MessageOps.MessageType.PILLAR_DAMAGE;
     public int newHealth;

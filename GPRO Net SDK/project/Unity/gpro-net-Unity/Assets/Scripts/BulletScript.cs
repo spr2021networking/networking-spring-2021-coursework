@@ -1,7 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Authors: Scott Dagen & Ben Cooper
+/// Handles the bullet fired by players
+/// </summary>
 public class BulletScript : MonoBehaviour
 {
     public PlayerInput owner; //only set in playerInput, if null then remote bullet
@@ -17,10 +19,6 @@ public class BulletScript : MonoBehaviour
     [SerializeField]
     float maxOffset = 2.0f;//how far the Bullet can be before we snap
     Vector3 tmpPos;
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
 
     // Update is called once per frame
     void FixedUpdate()
@@ -30,11 +28,11 @@ public class BulletScript : MonoBehaviour
             Vector3 intendedPos = tmpPos;
 
             //dot prod of normalized direction, if less than 30 degrees
-            if ((transform.position - tmpPos).magnitude > maxOffset)
+            if ((transform.position - tmpPos).magnitude > maxOffset) //snap position
             {
                 transform.position = tmpPos;
             }
-            else
+            else //we slerp and lerp to the new values
             {
                 intendedPos += rb.velocity * Time.fixedDeltaTime;
                 transform.position = Vector3.Lerp(transform.position, intendedPos, 0.5f);
@@ -116,6 +114,7 @@ public class BulletScript : MonoBehaviour
     }
     public void SetNewPositionAndVelocity(Vector3 pos, Vector3 vel)
     {
+        //dead reckoning prep
         tmpPos = pos;
         rb.velocity = vel;
     }
