@@ -226,7 +226,7 @@ public class ShieldServer : MonoBehaviour
                         sendBuffer = MessageOps.ToMessageArray(dcMess);
                         MessageOps.SendDataToRoom(room, sendBuffer, true, hostID, connectionID, reliableChannelID, out error);
 
-                        if (room.connections.Count == 0)
+                        if (room.connections.Count == 0 || room.started)
                         {
                             room.Reset();
                         }
