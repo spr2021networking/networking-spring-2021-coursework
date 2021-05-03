@@ -190,8 +190,11 @@ public class ShieldServer : MonoBehaviour
                             break;
                         case MessageOps.MessageType.GAME_START:
                             GameStartMessage gameStart = MessageOps.FromBytes<GameStartMessage>(messageBuffer);
-                            rooms[gameStart.roomID].started = true;
-                            MessageOps.SendDataToRoom(rooms[gameStart.roomID], recBuffer, false, hostID, connectionID, reliableChannelID, out error);
+                            if (rooms[gameStart.roomID].connections.Count == 2)
+                            {
+                                rooms[gameStart.roomID].started = true;
+                                MessageOps.SendDataToRoom(rooms[gameStart.roomID], recBuffer, false, hostID, connectionID, reliableChannelID, out error);
+                            }
                             break;
                         case MessageOps.MessageType.PILLAR_DAMAGE:
                             PillarDamageMessage pillarDamage = MessageOps.FromBytes<PillarDamageMessage>(messageBuffer);
