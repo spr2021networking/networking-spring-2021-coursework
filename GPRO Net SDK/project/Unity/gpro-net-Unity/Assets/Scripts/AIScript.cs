@@ -23,7 +23,6 @@ public class AIScript : MonoBehaviour
 
     public bool firstFrame = true;
 
-    [SerializeField]
     float maxOffset = 2.0f; //how far the AI can be before we snap
     Vector3 tmpPos;
     Vector3 tmpVel;
@@ -47,8 +46,8 @@ public class AIScript : MonoBehaviour
             Vector3 intendedVel = tmpVel;
             float dotProd = Vector3.Dot(rb.velocity, tmpVel);
 
-            //dot prod of normalized direction, if less than 30 degrees
-            if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset) //snap position
+            //dot prod of direction, if less than 30 degrees
+            if (dotProd < COSTHIRTY * speed || (transform.position - tmpPos).magnitude > maxOffset) //snap position
             {
                 rb.velocity = tmpVel;
                 transform.position = tmpPos;

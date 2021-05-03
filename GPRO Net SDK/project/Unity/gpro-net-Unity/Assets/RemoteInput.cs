@@ -12,6 +12,7 @@ public class RemoteInput : MonoBehaviour
     public GameObject shieldHolder;
     public float targetRot = 0;
     public float rotSpeed = 180.0f;
+    public float movementSpeed = 10.0f;
     //2 frame buffer for rotation checking
     private float CloseEnough => 2 * rotSpeed / 60f;
 
@@ -33,8 +34,8 @@ public class RemoteInput : MonoBehaviour
         Vector3 intendedPos = tmpPos;
         float dotProd = Vector3.Dot(_rb.velocity, tmpVel);
 
-        //dot prod of normalized direction, if less than 30 degrees, snap position and assign velocity
-        if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset)
+        //dot prod of direction, if less than 30 degrees, snap position and assign velocity
+        if (dotProd < COSTHIRTY * movementSpeed || (transform.position - tmpPos).magnitude > maxOffset)
         {
             _rb.velocity = tmpVel;
             transform.position = tmpPos;
