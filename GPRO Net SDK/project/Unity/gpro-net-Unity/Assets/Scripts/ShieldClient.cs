@@ -186,7 +186,7 @@ public class ShieldClient : MonoBehaviour
                             if (remoteBullet != null)
                             {
                                 remoteBullet.SetNewPositionAndVelocity(bulletState.position, bulletState.velocity);
-                                remoteBullet.hasHitShield = bulletState.hasHitShield;
+                                //remoteBullet.hasHitShield = bulletState.hasHitShield;
                             }
                             else
                             {

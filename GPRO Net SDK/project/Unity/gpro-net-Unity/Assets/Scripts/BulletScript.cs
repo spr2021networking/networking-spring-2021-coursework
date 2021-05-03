@@ -40,7 +40,7 @@ public class BulletScript : MonoBehaviour
                 transform.position = Vector3.Lerp(transform.position, intendedPos, 0.5f);
                 tmpPos = intendedPos;
             }
-           
+
         }
         timeUntilDeath -= Time.fixedDeltaTime;
         if (timeUntilDeath <= 0.0f && owner != null)
@@ -79,7 +79,7 @@ public class BulletScript : MonoBehaviour
                 else
                 {
                     hasHitShield = true;
-                    if (diffFrom180 < 22.5) //it's 'opposite'
+                    if (diffFrom180 < 22.5) //its 'opposite'
                     {
                         rb.velocity = -rb.velocity;
                     }
