@@ -1,13 +1,15 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Authors: Scott Dagen & Ben Cooper
+/// Handles all player behavior for the local player (client)
+/// </summary>
 public class PlayerInput : MonoBehaviour
 {
     public Rigidbody rb;
     float movementSpeed = 10.0f;
-    GameObject bullet;
     float fireDelay = 1.0f;
     float bulletSpeed = 20.0f;
     bool canShoot;
@@ -27,12 +29,6 @@ public class PlayerInput : MonoBehaviour
         shieldHolder = transform.GetChild(0).gameObject;
         rb = GetComponent<Rigidbody>();
         canShoot = true;
-    }
-    
-    // Start is called before the first frame update
-    void Start()
-    {
-
     }
 
     // Update is called once per frame
@@ -95,7 +91,7 @@ public class PlayerInput : MonoBehaviour
 
         if (Mathf.Abs(y - targetRot) <= CloseEnough)
         {
-            shieldHolder.transform.rotation = Quaternion.Euler(0, targetRot, 0);
+            shieldHolder.transform.rotation = Quaternion.Euler(0, targetRot, 0); //if we are within 2 frames of facing the correct direction (near zero check)
             return;
         }
 
@@ -104,22 +100,22 @@ public class PlayerInput : MonoBehaviour
             y += 1;
         }
         float diff = Mathf.Abs(y - targetRot);
-        int sign = y > targetRot == diff > 180.0f ? 1 : -1;
+        int sign = y > targetRot == diff > 180.0f ? 1 : -1; //determine if it is negative or positive rotation
         y += Time.fixedDeltaTime * sign * rotSpeed;
         shieldHolder.transform.rotation = Quaternion.Euler(0, y, 0);
     }
 
     void FireBullet()
     {
-        int availableBulletIndex = FirstAvailableBullet(client.localBullets);
+        int availableBulletIndex = FirstAvailableBullet(client.localBullets); //get the first available bullet index
         if (availableBulletIndex < 5)
         {
             GameObject spawnedBullet = Instantiate(client.bullet, transform.position + fireDirection * bulletSpawnOffset, Quaternion.identity);
             BulletScript bulletScript = spawnedBullet.GetComponent<BulletScript>();
-            Vector3 vel = fireDirection * bulletSpeed;
+            Vector3 vel = fireDirection * bulletSpeed; //set the velocity based on the direction we shoot
             spawnedBullet.GetComponent<Rigidbody>().velocity = vel;
             bulletScript.id = availableBulletIndex;
-            bulletScript.owner = this;
+            bulletScript.owner = this; //set the bullets owner
             bulletScript.bulletPlayerIndex = client.PlayerIndex;
             client.SendBulletCreate(bulletScript, spawnedBullet.GetComponent<Rigidbody>().velocity);
             client.localBullets[availableBulletIndex] = bulletScript;
@@ -140,13 +136,13 @@ public class PlayerInput : MonoBehaviour
         return bullets.Length;
     }
 
-    private IEnumerator FireLimit()
+    private IEnumerator FireLimit() //limit the fire rate
     {
         yield return new WaitForSeconds(fireDelay);
         canShoot = true;
     }
 
-    public void DestroyBullet(int bulletID)
+    public void DestroyBullet(int bulletID) //this is only done on local bullets
     {
         BulletScript bullet = client.localBullets[bulletID];
         if (bullet != null)
@@ -157,7 +153,7 @@ public class PlayerInput : MonoBehaviour
 
     }
 
-    public void DestroyRemoteBullet(int bulletIndex)
+    public void DestroyRemoteBullet(int bulletIndex) //destroy remote bullets
     {
         BulletScript bullet = client.remoteBullets[bulletIndex];
         if (bullet != null)

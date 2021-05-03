@@ -1,8 +1,9 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Authors: Scott Dagen & Ben Cooper
+/// Handles all player behavior for the the remote player
+/// </summary>
 public class RemoteInput : MonoBehaviour
 {
     Rigidbody _rb;
@@ -26,12 +27,6 @@ public class RemoteInput : MonoBehaviour
         shieldHolder = transform.GetChild(0).gameObject;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     private void FixedUpdate()
     {
         //dead reckoning
@@ -40,12 +35,12 @@ public class RemoteInput : MonoBehaviour
         float dotProd = Vector3.Dot(_rb.velocity, tmpVel);
 
         //dot prod of normalized direction, if less than 30 degrees
-        if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset)
+        if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset) //snap position
         {
             _rb.velocity = tmpVel;
             transform.position = tmpPos;
         }
-        else
+        else //we slerp and lerp to the new values
         {
 
             intendedVel = Vector3.Slerp(_rb.velocity, tmpVel, 0.5f);
@@ -63,7 +58,7 @@ public class RemoteInput : MonoBehaviour
     {
         float y = shieldHolder.transform.eulerAngles.y;
 
-        if (Mathf.Abs(y - targetRot) <= CloseEnough)
+        if (Mathf.Abs(y - targetRot) <= CloseEnough) //if we are within 2 frames of facing the correct direction (near zero check)
         {
             shieldHolder.transform.rotation = Quaternion.Euler(0, targetRot, 0);
             return;
@@ -74,7 +69,7 @@ public class RemoteInput : MonoBehaviour
             y += 1;
         }
         float diff = Mathf.Abs(y - targetRot);
-        int sign = y > targetRot == diff > 180.0f ? 1 : -1;
+        int sign = y > targetRot == diff > 180.0f ? 1 : -1; //determine if it is negative or positive rotation
         y += Time.fixedDeltaTime * sign * rotSpeed;
         shieldHolder.transform.rotation = Quaternion.Euler(0, y, 0);
     }
@@ -82,6 +77,7 @@ public class RemoteInput : MonoBehaviour
 
     internal void ProcessInput(PlayerStateMessage playerState)
     {
+        //dead reckoning prep
         tmpPos = playerState.position;
         tmpVel = playerState.velocity;
 
