@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 /// <summary>
 /// Authors: Scott Dagen & Ben Cooper
 /// Handles the pillar, which the AI are trying to attack

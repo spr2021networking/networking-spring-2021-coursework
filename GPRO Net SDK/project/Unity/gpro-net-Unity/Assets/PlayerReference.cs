@@ -1,8 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+/// <summary>
+/// Authors: Scott Dagen & Ben Cooper
+/// Player Reference: Contains references to the players, the pillar, and some UI elements
+/// </summary>
 public class PlayerReference : MonoBehaviour
 {
     public GameObject cube;
@@ -17,9 +19,9 @@ public class PlayerReference : MonoBehaviour
     {
         bool isPlayerZero = ShieldClient.Instance.PlayerIndex == 0;
 
+        //initialization calls upon game start. Binds the local and remote player, as well as the pillar
         ShieldClient.Instance.localPlayer = (isPlayerZero ? cube : sphere).AddComponent<PlayerInput>();
         ShieldClient.Instance.remotePlayer = (!isPlayerZero ? cube : sphere).AddComponent<RemoteInput>();
-        ShieldClient.Instance.remotePlayer.client = ShieldClient.Instance;
         ShieldClient.Instance.localPlayer.client = ShieldClient.Instance;
         ShieldClient.Instance.pillarHealth = pillarHealth;
         viewCamera.transform.parent = ShieldClient.Instance.localPlayer.transform;
@@ -29,7 +31,8 @@ public class PlayerReference : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        timer.text = "Game Timer: " + ShieldClient.Instance.timer;
+        //updates the UI to show the timer and health, and toggles the game over screen.
+        timer.text = "Game Timer: " + ShieldClient.Instance.gameTimer;
         health.text = "" + pillarHealth.CurrentHealth;
         gameOver.enabled = ShieldClient.Instance.gameOver;
     }

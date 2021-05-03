@@ -36,7 +36,7 @@ public class AIScript : MonoBehaviour
         if (isControlledLocally) //if the AI is controlled by the client
         {
             _timer -= Time.deltaTime;
-            InitVelocity();
+            SetVelocity();
         }
     }
     private void FixedUpdate()
@@ -73,7 +73,7 @@ public class AIScript : MonoBehaviour
         {
             if (collision.GetComponent<BulletScript>().hasHitShield)
             {
-                client.DestroyLocalAI(id);
+                client.DestroyLocalAI(id); //kill AI if the bullet that hit it is able to do damage
             }
         }
     }
@@ -82,18 +82,18 @@ public class AIScript : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Pillar") && isControlledLocally && _timer <= 0)
         {
-            client.SendPillarDamage();
+            client.SendPillarDamage(); //hit the pillar and reset timer if able to
             _timer = timeBetweenHits;
         }
     }
 
-    internal void InitVelocity() //set the initial velocity
+    internal void SetVelocity()
     {
         if (!rb)
         {
             rb = GetComponent<Rigidbody>();
         }
-        if (pillar)
+        if (pillar) //if the pillar exists, set velocity, otherwise do nothing
         {
             Vector3 direction = pillar.transform.position - transform.position;
             direction.y = 0;

@@ -50,9 +50,9 @@ public class BulletScript : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (owner != null)
+        if (owner != null) //if it has an owner, it's a local bullet
         {
-            if (other.CompareTag("Shield") && !hasHitShield)
+            if (other.CompareTag("Shield") && !hasHitShield) //check if we're hitting a shield
             {
                 if (other.transform.parent.gameObject == owner.gameObject) //don't collide with our own shield
                 {
@@ -64,12 +64,13 @@ public class BulletScript : MonoBehaviour
                     x = rb.velocity.x,
                     y = rb.velocity.z
                 };
-                float angle = (Vector2.SignedAngle(angleVec, Vector3.right) + 360) % 360;
+                float angle = (Vector2.SignedAngle(angleVec, Vector3.right) + 360) % 360; //find our angle
                 Debug.Log("Self: " + angle);
 
-                float angleDiff = Mathf.Abs(angle - other.transform.eulerAngles.y); //looking for 180 +- 67.5
+                float angleDiff = Mathf.Abs(angle - other.transform.eulerAngles.y); //looking for 180 +- 67.5. Technically +- 45, with a 22.5 degree window of error
 
                 float diffFrom180 = Mathf.Abs(angleDiff - 180);
+                //if the difference is greater than 67.5, then the shield is closer to facing perpendicular to the bullet or away from it
                 if (diffFrom180 > 67.5f)
                 {
                     owner.DestroyBullet(id);
@@ -77,7 +78,7 @@ public class BulletScript : MonoBehaviour
                 else
                 {
                     hasHitShield = true;
-                    if (diffFrom180 < 22.5) //its 'opposite'
+                    if (diffFrom180 < 22.5) //the shield is close to facing the bullet
                     {
                         rb.velocity = -rb.velocity;
                     }
@@ -86,6 +87,8 @@ public class BulletScript : MonoBehaviour
                         bool diffGreaterThan180 = angleDiff > 180;
                         bool selfGreaterThanShield = angle > other.transform.eulerAngles.y;
 
+                        //this has been tested, it's a bit esoteric, but if both of these are true OR both of these are false,
+                        //then our velocity should rotate by -90 degrees, otherwise it's 90 degrees
                         float rot = (diffGreaterThan180 == selfGreaterThanShield ? -90 : 90) * Mathf.Deg2Rad;
 
                         float cosRot = Mathf.Cos(rot), sinRot = Mathf.Sin(rot);
@@ -100,7 +103,7 @@ public class BulletScript : MonoBehaviour
             }
             else
             {
-                owner.DestroyBullet(id);
+                owner.DestroyBullet(id); //if we hit something other than our own shield (even if that's ourselves), destroy the bullet
             }
         }
     }
@@ -109,7 +112,7 @@ public class BulletScript : MonoBehaviour
     {
         if (owner != null)
         {
-            owner.DestroyBullet(id);
+            owner.DestroyBullet(id); //destroy the bullet if this gets called. I'm not sure if this runs
         }
     }
     public void SetNewPositionAndVelocity(Vector3 pos, Vector3 vel)

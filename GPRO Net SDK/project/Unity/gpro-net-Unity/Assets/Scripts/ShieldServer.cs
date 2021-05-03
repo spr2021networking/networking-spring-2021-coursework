@@ -1,23 +1,25 @@
 #pragma warning disable CS0618 // Type or member is obsolete
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
+
 /// <summary>
-/// Network Server for game. The start function is adapted from
+/// Authors: Scott Dagen & Ben Cooper
+/// Shield Client: Network Server for game. The start function is adapted from
 /// https://docs.unity3d.com/Manual/UNetUsingTransport.html (UNet docs)
 /// https://www.youtube.com/watch?v=qGkkaNkq8co (N3K EN video)
-/// 
-/// Authors: Scott Dagen, Ben Cooper
 /// </summary>
 public class ShieldServer : MonoBehaviour
 {
+    /// <summary>
+    /// Stores all the data for a single room, allowing for up to 4 sessions at once
+    /// </summary>
     public class Room
     {
         public int roomID;
+        //how many seconds have elapsed in-game
         public float totalTime;
         public float timer = 5.0f;
         public float timerStorage = 10.0f;
@@ -41,21 +43,20 @@ public class ShieldServer : MonoBehaviour
             connections.Clear();
         }
 
+        //whether people can join the room
         public bool Open => connections.Count < 2 && !started;
 
     }
+
+    //connectivity settings
     private int reliableChannelID;
     private int unreliableChannelID;
-
     private int hostID;
-
     private byte error;
-
-    private int port = 7777;
-
-    private bool running = false;
+    private readonly int port = 7777;
 
     public Room[] rooms = new Room[4];
+    public List<int> allConnections = new List<int>();
 
 
     // Start is called before the first frame update
@@ -66,7 +67,8 @@ public class ShieldServer : MonoBehaviour
             rooms[i] = new Room();
             rooms[i].roomID = i;
         }
-        //start of adapted code
+        //start of adapted code: https://docs.unity3d.com/Manual/UNetUsingTransport.html (UNet docs)
+        //https://www.youtube.com/watch?v=qGkkaNkq8co (N3K EN video)
         NetworkTransport.Init();
 
         //define the type of connections. Channels are basically data streams, probably used for different types of info
@@ -78,16 +80,10 @@ public class ShieldServer : MonoBehaviour
 
         //finish making the IP
         hostID = NetworkTransport.AddHost(topology, port);
-
-        running = true;
         //end of adapted code
     }
 
-    public List<int> allConnections = new List<int>();
 
-
-    private int positionLength = Encoding.UTF8.GetBytes(new Vector3(0, 0, 0).ToString("0.00")).Length;
-    // Update is called once per frame
     void Update()
     {
         byte[] recBuffer = new byte[1024];
@@ -98,7 +94,7 @@ public class ShieldServer : MonoBehaviour
             switch (packetType)
             {
                 case NetworkEventType.Nothing: break;
-                case NetworkEventType.ConnectEvent:
+                case NetworkEventType.ConnectEvent: //register connection ID in master list
                     if (!allConnections.Contains(connectionID))
                     {
                         allConnections.Add(connectionID);
@@ -113,7 +109,7 @@ public class ShieldServer : MonoBehaviour
 
                             break;
                         case MessageOps.MessageType.ROOM_CONNECT_REQUEST:
-                            //read request
+                            //read request to join the room and find the requested room reference
                             RoomJoinRequestMessage roomJoin = MessageOps.FromBytes<RoomJoinRequestMessage>(messageBuffer);
                             Room roomToJoin = rooms[roomJoin.roomID];
 
@@ -164,6 +160,7 @@ public class ShieldServer : MonoBehaviour
                             }
                             break;
 
+                            //the next several cases are identical: read message, get room ID, relay message with appropriate channel.
                         case MessageOps.MessageType.PLAYER_STATE:
                             PlayerStateMessage playerState = MessageOps.FromBytes<PlayerStateMessage>(messageBuffer);
                             MessageOps.SendDataToRoom(rooms[playerState.roomID], recBuffer, true, hostID, connectionID, unreliableChannelID, out error);
@@ -189,6 +186,7 @@ public class ShieldServer : MonoBehaviour
                             MessageOps.SendDataToRoom(rooms[aiDestroy.roomID], recBuffer, true, hostID, connectionID, reliableChannelID, out error);
                             break;
                         case MessageOps.MessageType.GAME_START:
+                            //check if room _can_ start before starting it.
                             GameStartMessage gameStart = MessageOps.FromBytes<GameStartMessage>(messageBuffer);
                             if (rooms[gameStart.roomID].connections.Count == 2)
                             {
@@ -198,12 +196,14 @@ public class ShieldServer : MonoBehaviour
                             break;
                         case MessageOps.MessageType.PILLAR_DAMAGE:
                             PillarDamageMessage pillarDamage = MessageOps.FromBytes<PillarDamageMessage>(messageBuffer);
+                            //check pillar health before sending message.
                             if (pillarDamage.newHealth > 0)
                             {
                                 MessageOps.SendDataToRoom(rooms[pillarDamage.roomID], recBuffer, false, hostID, connectionID, reliableChannelID, out error);
                             }
                             else
                             {
+                                //send game over message. It'll reset when people leave
                                 GameOverMessage gameOverMess = new GameOverMessage();
                                 gameOverMess.roomID = pillarDamage.roomID;
                                 sendBuffer = MessageOps.ToMessageArray(gameOverMess);
@@ -215,6 +215,7 @@ public class ShieldServer : MonoBehaviour
                     }
                     break;
                 case NetworkEventType.DisconnectEvent:
+                    //find the room that contains the disconnected player
                     Room room = Array.Find(rooms, room => room.connections.Contains(connectionID));
                     if (room != null) //they were in a room, quit from room
                     {
@@ -229,6 +230,7 @@ public class ShieldServer : MonoBehaviour
                         sendBuffer = MessageOps.ToMessageArray(dcMess);
                         MessageOps.SendDataToRoom(room, sendBuffer, true, hostID, connectionID, reliableChannelID, out error);
 
+                        //reset room if no one's in it or if the game had already started
                         if (room.connections.Count == 0 || room.started)
                         {
                             room.Reset();
@@ -253,19 +255,14 @@ public class ShieldServer : MonoBehaviour
         for (int i = 0; i < rooms.Length; i++)
         {
             Room room = rooms[i];
+            //if the game is currently running, decrement timer
             if (room.started && !room.gameOver)
             {
-                //run a timer, this is how frequent enemies spawn, if zero, gen valid coord, send create message
-                //gen random float 0 360
-                //multiply by deg to rad
-                //make a vector of
-                //cos of x (degtorad value)
-                //sin of z (degtorad value)
-                //multiply the vector by radius 45
                 room.timer -= Time.deltaTime;
                 //if we're ready to spawn enemies
                 if (room.timer <= 0.0f)
                 {
+                    //spawn enemies
                     for (int j = 0; j < room.AItoSpawn; j++)
                     {
                         //calculate AI position
@@ -289,6 +286,8 @@ public class ShieldServer : MonoBehaviour
                     room.timer = room.timerStorage;
                 }
 
+                //increment total time, and when a full second has passed, send the GameTimeMessage.
+                //could be used for future timing events
                 float tmp = room.totalTime + Time.deltaTime;
                 if (Mathf.FloorToInt(room.totalTime) == Mathf.FloorToInt(tmp) - 1)
                 {
@@ -300,10 +299,9 @@ public class ShieldServer : MonoBehaviour
                 room.totalTime = tmp;
             }
         }
-
-        
     }
 
+    //send lobby data to the client
     private void SendLobbyInfo(int hostID, int connectionID, out byte error)
     {
         LobbyInfoMessage lobbyMess = new LobbyInfoMessage();

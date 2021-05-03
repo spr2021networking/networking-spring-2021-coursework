@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// Authors: Scott Dagen & Ben Cooper
-/// Handles all player behavior for the local player (client)
+/// Player Input: Handles all player behavior for the local player (client)
 /// </summary>
 public class PlayerInput : MonoBehaviour
 {
@@ -45,7 +45,8 @@ public class PlayerInput : MonoBehaviour
         int dirZ = hasZInput ? Math.Sign(input.z) : 0;
         if (hasXInput || hasZInput)
         {
-            fireDirection = new Vector3(dirX, 0, dirZ).normalized; //update our fire position if we have nonzero input
+            //update our fire position if we have nonzero input, otherwise we fire in the last direction we intentionally moved
+            fireDirection = new Vector3(dirX, 0, dirZ).normalized;
         }
 
         rb.velocity = input * movementSpeed;
@@ -110,20 +111,26 @@ public class PlayerInput : MonoBehaviour
         int availableBulletIndex = FirstAvailableBullet(client.localBullets); //get the first available bullet index
         if (availableBulletIndex < 5)
         {
+            //instantiate bullet
             GameObject spawnedBullet = Instantiate(client.bullet, transform.position + fireDirection * bulletSpawnOffset, Quaternion.identity);
             BulletScript bulletScript = spawnedBullet.GetComponent<BulletScript>();
+
+            //initialize data
             Vector3 vel = fireDirection * bulletSpeed; //set the velocity based on the direction we shoot
             spawnedBullet.GetComponent<Rigidbody>().velocity = vel;
             bulletScript.id = availableBulletIndex;
             bulletScript.owner = this; //set the bullets owner
             bulletScript.bulletPlayerIndex = client.PlayerIndex;
-            client.SendBulletCreate(bulletScript, spawnedBullet.GetComponent<Rigidbody>().velocity);
+
+            //register bullet and send message
+            client.SendBulletCreate(bulletScript, vel);
             client.localBullets[availableBulletIndex] = bulletScript;
         }
 
 
     }
 
+    //search for the first null bullet slot and return that index.
     private int FirstAvailableBullet(BulletScript[] bullets)
     {
         for (int i = 0; i < bullets.Length; i++)
@@ -151,15 +158,5 @@ public class PlayerInput : MonoBehaviour
             Destroy(bullet.gameObject);
         }
 
-    }
-
-    public void DestroyRemoteBullet(int bulletIndex) //destroy remote bullets
-    {
-        BulletScript bullet = client.remoteBullets[bulletIndex];
-        if (bullet != null)
-        {
-            Destroy(bullet.gameObject);
-            client.remoteBullets[bulletIndex] = null;
-        }
     }
 }

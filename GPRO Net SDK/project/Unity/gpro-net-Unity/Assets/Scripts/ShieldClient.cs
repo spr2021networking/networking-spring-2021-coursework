@@ -15,7 +15,7 @@ public class ShieldClient : MonoBehaviour
     //network connectivity settings
     private const int MAX_CONNECTION = 100;
     private readonly int port = 7777;
-    private int hostID;
+    private int hostID = -1;
     private int reliableChannel;
     private int unreliableChannel;
     private int connectionID;
@@ -56,7 +56,7 @@ public class ShieldClient : MonoBehaviour
     public Dictionary<int, AIScript> AIDictionary = new Dictionary<int, AIScript>();
 
     //how many seconds the game has gone on for
-    public int timer;
+    public int gameTimer;
 
     //whether the game has ended.
     public bool gameOver;
@@ -165,14 +165,15 @@ public class ShieldClient : MonoBehaviour
                             }
                             Debug.Log("Received Player Index!");
                             break;
-                        case MessageOps.MessageType.PLAYER_STATE:
+                        case MessageOps.MessageType.PLAYER_STATE: //receiving the other player's state
                             PlayerStateMessage playerState = MessageOps.FromBytes<PlayerStateMessage>(subArr);
                             if (remotePlayer != null && playerState.playerIndex != PlayerIndex)
                             {
+                                //minor dead reckoning
                                 remotePlayer.ProcessInput(playerState);
                             }
                             break;
-                        case MessageOps.MessageType.BULLET_CREATE:
+                        case MessageOps.MessageType.BULLET_CREATE: //receiving a bullet create message from the other player
                             BulletCreateMessage bulletCreate = MessageOps.FromBytes<BulletCreateMessage>(subArr);
                             if (remotePlayer != null && bulletCreate.playerIndex != PlayerIndex && remoteBullets[bulletCreate.id] == null)
                             {
@@ -184,12 +185,12 @@ public class ShieldClient : MonoBehaviour
                                 remoteBullets[bullet.id] = bullet;
                             }
                             break;
-                        case MessageOps.MessageType.BULLET_STATE:
-
+                        case MessageOps.MessageType.BULLET_STATE: //receiving a bullet state message from the other player
                             BulletStateMessage bulletState = MessageOps.FromBytes<BulletStateMessage>(subArr);
                             BulletScript remoteBullet = remoteBullets[bulletState.bulletIndex];
                             if (remoteBullet != null)
                             {
+                                //minor dead reckoning
                                 remoteBullet.SetNewPositionAndVelocity(bulletState.position, bulletState.velocity);
                                 remoteBullet.hasHitShield = bulletState.hasHitShield;
                             }
@@ -199,27 +200,32 @@ public class ShieldClient : MonoBehaviour
                             }
 
                             break;
-                        case MessageOps.MessageType.BULLET_DESTROY:
-                            BulletDestroyMessage bulletDestroy = MessageOps.FromBytes<BulletDestroyMessage>(subArr);
-                            //call playerInput to destroy the bullet if need be
-                            //find the bullet with the correct ID and remove it from the list
-                            localPlayer.DestroyRemoteBullet(bulletDestroy.bulletIndex);
-                            //remoteBullets.Remove(remoteBullets[bulletDestroy.bulletIndex]);
-
+                        case MessageOps.MessageType.BULLET_DESTROY: //receiving a bullet destroy message from the other player
+                            BulletDestroyMessage bulletDestroyMessage = MessageOps.FromBytes<BulletDestroyMessage>(subArr);
+                            BulletScript bulletToDestroy = remoteBullets[bulletDestroyMessage.bulletIndex];
+                            if (bulletToDestroy != null)
+                            {
+                                Destroy(bulletToDestroy.gameObject);
+                                remoteBullets[bulletDestroyMessage.bulletIndex] = null;
+                            }
                             break;
-                        case MessageOps.MessageType.GAME_START:
+                        case MessageOps.MessageType.GAME_START: //set the start game flag
                             enteringGame = true;
                             break;
 
-                        case MessageOps.MessageType.AI_CREATE:
-                            Debug.Log("Received AI Message");
+                        case MessageOps.MessageType.AI_CREATE: //received AI create message from server
+                            Debug.Log("Received AI Create Message");
                             AICreateMessage aiCreate = MessageOps.FromBytes<AICreateMessage>(subArr);
                             GameObject spawnedAI = Instantiate(AI, aiCreate.position, Quaternion.identity);
                             AIScript ai = spawnedAI.GetComponent<AIScript>();
+
+                            //basic initialization
                             ai.id = aiCreate.id;
                             ai.pillar = pillarHealth;
-                            ai.InitVelocity();
+                            ai.SetVelocity();
                             AIDictionary.Add(ai.id, ai);
+
+                            //assign ownership
                             if (ai.id % 2 == PlayerIndex % 2)
                             {
                                 ai.client = this;
@@ -232,20 +238,22 @@ public class ShieldClient : MonoBehaviour
                                 Debug.Log("Remote");
                             }
                             break;
-                        case MessageOps.MessageType.AI_STATE:
+                        case MessageOps.MessageType.AI_STATE: //received AI state message from other player
                             AIStateMessage aiState = MessageOps.FromBytes<AIStateMessage>(subArr);
                             if (aiState.id % 2 != PlayerIndex % 2)
                             {
+                                //if AI exists, set position/velocity
                                 if (AIDictionary.TryGetValue(aiState.id, out AIScript AIToUpdate))
                                 {
                                     if (AIToUpdate != null)
                                     {
+                                        //sets variables for dead reckoning
                                         AIToUpdate.SetNewPositionAndVelocity(aiState.position, aiState.velocity);
                                     }
                                 }
                             }
                             break;
-                        case MessageOps.MessageType.AI_DESTROY:
+                        case MessageOps.MessageType.AI_DESTROY: //received AI destroy message from other player
                             AIDestroyMessage aiDestroy = MessageOps.FromBytes<AIDestroyMessage>(subArr);
                             AIScript AIToDestroy = AIDictionary[aiDestroy.id];
                             if (AIToDestroy != null)
@@ -254,35 +262,31 @@ public class ShieldClient : MonoBehaviour
                                 Destroy(AIToDestroy.gameObject);
                             }
                             break;
-                        case MessageOps.MessageType.PILLAR_DAMAGE:
+                        case MessageOps.MessageType.PILLAR_DAMAGE: //damage pillar
                             PillarDamageMessage pillarDamage = MessageOps.FromBytes<PillarDamageMessage>(subArr);
                             pillarHealth.CurrentHealth = pillarDamage.newHealth;
                             break;
-                        case MessageOps.MessageType.GAME_OVER:
+                        case MessageOps.MessageType.GAME_OVER: //end game
                             Destroy(pillarHealth.gameObject);
                             gameOver = true;
-                            FindObjectOfType<PlayerReference>().gameOver.text = $"Game Over! Time Survived: {timer} Seconds";
+                            //set UI
+                            FindObjectOfType<PlayerReference>().gameOver.text = $"Game Over! Time Survived: {gameTimer} Seconds";
+                            //send back to main menu after 5 seconds
                             Invoke(nameof(ResetClient), 5.0f);
                             break;
                         case MessageOps.MessageType.GAME_TIME:
+                            //set value for UI to pull from
                             GameTimeMessage time = MessageOps.FromBytes<GameTimeMessage>(subArr);
-                            timer = time.time;
+                            gameTimer = time.time;
                             break;
                     }
-                    //remotePlayer.InterpretPosition(Encoding.UTF8.GetString(recBuffer, 0, dataSize));
-                    //string str = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
-                    //text.text = str;
                     break;
                 case NetworkEventType.DisconnectEvent:
-                    //make disconnect case
-                    //call reset
-                    //then load the menu scene
-
                     break;
             }
         }
 
-
+        //local player only exists if the level has been loaded
         if (localPlayer && PlayerIndex >= 0)
         {
             SendPlayerState();
@@ -298,6 +302,7 @@ public class ShieldClient : MonoBehaviour
     {
         if (localPlayer && PlayerIndex >= 0)
         {
+            //set basic state information and send to server
             PlayerStateMessage mess = new PlayerStateMessage();
             mess.playerIndex = PlayerIndex;
             mess.position = localPlayer.transform.position;
@@ -359,7 +364,7 @@ public class ShieldClient : MonoBehaviour
     {
         for (int i = 0; i < localBullets.Length; i++)
         {
-            if (localBullets[i] != null)
+            if (localBullets[i] != null) //if this index in the bullet array isn't null, package the data and send it
             {
                 BulletStateMessage mess = new BulletStateMessage();
                 mess.bulletIndex = localBullets[i].GetComponent<BulletScript>().id;
@@ -382,7 +387,7 @@ public class ShieldClient : MonoBehaviour
         List<AIScript> ais = AIDictionary.Values.ToList();
         for (int i = 0; i < ais.Count; i++)
         {
-            if (ais[i] != null && ais[i].isControlledLocally)
+            if (ais[i] != null && ais[i].isControlledLocally) //loop through AIs. If locally controlled, send data
             {
                 AIStateMessage mess = new AIStateMessage();
                 mess.position = ais[i].transform.position;
@@ -396,11 +401,11 @@ public class ShieldClient : MonoBehaviour
         }
     }
 
-    public void DestroyLocalAI(int id)
+    public void DestroyLocalAI(int id) //kill AI by id and send the mssage to the server
     {
-        if (AIDictionary.TryGetValue(id, out AIScript ai))
+        if (AIDictionary.TryGetValue(id, out AIScript ai)) //key check
         {
-            if (ai != null && ai.isControlledLocally)
+            if (ai != null && ai.isControlledLocally) //null and local check
             {
                 AIDestroyMessage mess = new AIDestroyMessage();
                 mess.id = id;
@@ -413,14 +418,14 @@ public class ShieldClient : MonoBehaviour
         }
     }
 
-    public void SendStartRequest()
+    public void SendStartRequest() //tell server to try to start the game
     {
         GameStartMessage mess = new GameStartMessage();
         mess.roomID = roomID;
         MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
     }
 
-    public void SendPillarDamage()
+    public void SendPillarDamage() //tell server to decrement the pillar's health. If 0, game over.
     {
         PillarDamageMessage mess = new PillarDamageMessage();
         mess.newHealth = pillarHealth.CurrentHealth - 1;
@@ -428,35 +433,8 @@ public class ShieldClient : MonoBehaviour
         MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
     }
 
-    public void ResetClient()
-    {
-        NetworkTransport.Disconnect(hostID, connectionID, out error);
-        hostID = 0;
 
-        reliableChannel = 0;
-        unreliableChannel = 0;
-
-        connectionID = -1;
-        OtherPlayerConnected = false;
-
-        isGameStarted = false;
-        isConnected = false;
-        _playerIndex = -1;
-        enteringGame = false;
-        gameOver = false;
-        timer = 0;
-        remotePlayer = null;
-        Array.Clear(localBullets, 0, localBullets.Length);
-        Array.Clear(remoteBullets, 0, remoteBullets.Length);
-        AIDictionary.Clear();
-        pillarHealth = null;
-        error = 0;
-        roomID = -1;
-        receivedLobbyInfo = false;
-        lobbyStates = new bool[4];
-        SceneManager.LoadScene("ClientMenu");
-    }
-
+    //try to join the given room. Server can refuse.
     internal void SendRoomJoinRequest(int index)
     {
         if (lobbyStates[index])
@@ -465,6 +443,45 @@ public class ShieldClient : MonoBehaviour
             mess.roomID = index;
             MessageOps.SendMessageToServer(mess, hostID, connectionID, reliableChannel, out error);
         }
+    }
+
+    //reset all variables
+    public void ResetClient()
+    {
+        //disconnect before resetting
+        NetworkTransport.Disconnect(hostID, connectionID, out error);
+
+        //connectivity settings
+        hostID = -1;
+        reliableChannel = 0;
+        unreliableChannel = 0;
+        connectionID = -1;
+        isConnected = false;
+
+        error = 0;
+
+        //lobby info
+        receivedLobbyInfo = false;
+        lobbyStates = new bool[4];
+
+        //game loading states
+        _playerIndex = -1;
+        OtherPlayerConnected = false;
+        roomID = -1;
+        enteringGame = false;
+        isGameStarted = false;
+
+        //game data
+        gameTimer = 0;
+        remotePlayer = null;
+        localPlayer = null;
+        pillarHealth = null;
+        Array.Clear(localBullets, 0, localBullets.Length);
+        Array.Clear(remoteBullets, 0, remoteBullets.Length);
+        AIDictionary.Clear();
+        gameOver = false;
+
+        SceneManager.LoadScene("ClientMenu");
     }
 
 }

@@ -2,24 +2,24 @@ using UnityEngine;
 
 /// <summary>
 /// Authors: Scott Dagen & Ben Cooper
-/// Handles all player behavior for the the remote player
+/// Remote Input: Handles all player behavior for the the remote player
 /// </summary>
 public class RemoteInput : MonoBehaviour
 {
     Rigidbody _rb;
-    public ShieldClient client;
 
+    //shield rotation data
     public GameObject shieldHolder;
     public float targetRot = 0;
     public float rotSpeed = 180.0f;
-
+    //2 frame buffer for rotation checking
     private float CloseEnough => 2 * rotSpeed / 60f;
-    [SerializeField]
-    float maxOffset = 2.0f;
+
+    readonly float maxOffset = 2.0f;
     Vector3 tmpPos;
     Vector3 tmpVel;
 
-    static float COSTHIRTY = Mathf.Cos(30 * Mathf.Deg2Rad);
+    static readonly float COSTHIRTY = Mathf.Cos(30 * Mathf.Deg2Rad);
     // Start is called before the first frame update
     void Start()
     {
@@ -31,19 +31,17 @@ public class RemoteInput : MonoBehaviour
     {
         //dead reckoning
         Vector3 intendedPos = tmpPos;
-        Vector3 intendedVel = tmpVel;
         float dotProd = Vector3.Dot(_rb.velocity, tmpVel);
 
-        //dot prod of normalized direction, if less than 30 degrees
-        if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset) //snap position
+        //dot prod of normalized direction, if less than 30 degrees, snap position and assign velocity
+        if (dotProd < COSTHIRTY || (transform.position - tmpPos).magnitude > maxOffset)
         {
             _rb.velocity = tmpVel;
             transform.position = tmpPos;
         }
         else //we slerp and lerp to the new values
         {
-
-            intendedVel = Vector3.Slerp(_rb.velocity, tmpVel, 0.5f);
+            Vector3 intendedVel = Vector3.Slerp(_rb.velocity, tmpVel, 0.5f);
             intendedVel.y = 0;
             _rb.velocity = intendedVel;
 
@@ -81,9 +79,8 @@ public class RemoteInput : MonoBehaviour
         tmpPos = playerState.position;
         tmpVel = playerState.velocity;
 
+        //assign shield position and target rotation, it'll rotate on its own.
         shieldHolder.transform.rotation = Quaternion.Euler(0, playerState.currentShieldRot, 0);
         targetRot = playerState.targetShieldRot;
-        //need shield rotation
-        //time shenanigans?
     }
 }
