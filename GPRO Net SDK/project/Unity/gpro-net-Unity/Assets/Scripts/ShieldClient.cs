@@ -186,7 +186,7 @@ public class ShieldClient : MonoBehaviour
                             if (remoteBullet != null)
                             {
                                 
-                                remoteBullet.SetState(bulletState);
+                                remoteBullet.SetNewPositionAndVelocity(bulletState.position, bulletState.velocity);
                             }
                             else
                             {
@@ -361,7 +361,6 @@ public class ShieldClient : MonoBehaviour
                 mess.position = localBullets[i].transform.position;
                 mess.velocity = localBullets[i].GetComponent<Rigidbody>().velocity;
                 mess.roomID = roomID;
-                mess.hasHitShield = localBullets[i].hasHitShield;
 
                 MessageOps.SendMessageToServer(mess, hostID, connectionID, unreliableChannel, out error);
                 Debug.Log("L" + error);
