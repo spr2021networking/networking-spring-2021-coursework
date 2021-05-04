@@ -18,8 +18,11 @@ public class PlayerInput : MonoBehaviour
     public GameObject shieldHolder;
     public float targetRot = 0;
     public float rotSpeed = 180.0f;
+
+    //threshold for shield rotation calculations
     private float CloseEnough => 2 * rotSpeed / 60f;
 
+    //how far from player to spawn bullet
     private float bulletSpawnOffset = 7;
 
     private Vector3 fireDirection = Vector3.forward;

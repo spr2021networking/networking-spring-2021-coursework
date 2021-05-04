@@ -86,6 +86,9 @@ public class AIScript : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Recalculate velocity each frame
+    /// </summary>
     internal void SetVelocity()
     {
         if (!rb)
